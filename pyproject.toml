@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smarthack"
+# Single source of truth: `smarthack/__init__.py`. Bump it there, and in CHANGELOG.md.
+dynamic = ["version"]
+description = "TODO: one sentence about what this application does."
+readme = "README.md"
+requires-python = ">=3.12"
+# Core only: what a bare `pip install .` needs to import the package. Everything
+# a single domain needs goes in an extra below, so a base install stays fast.
+dependencies = [
+    "python-dotenv==1.2.4",
+]
+
+[project.optional-dependencies]
+# Per-domain extras go here, one per axis of "what is this install for", pinned to
+# an exact version. When the first one arrives, also:
+#   - add its import names to EXTRA_MODULES in tests/conftest.py (a test fails if
+#     you forget), so tests that need it skip on a core install instead of failing;
+#   - add `all = ["smarthack[<extra>,<extra>]"]` here, and build the registry that
+#     uses it with `utils/optional_imports.skip_if_optional`.
+#
+# Every tool below is pinned, so CI checks with the versions the code was checked
+# with locally: an unpinned black can turn CI red on a morning nobody changed a
+# line. black, isort and flake8 must match the `rev:` of each in
+# .pre-commit-config.yaml (tests/unit/test_repository_files.py enforces it).
+dev  = ["pytest==9.2.0", "pytest-cov==7.1.0", "black==26.10.1", "isort==9.0.2", "flake8==7.5.0",
+        "mypy==2.4.1", "docstr-coverage==2.3.2", "pre-commit==4.7.0"]
+docs = ["mkdocs==1.6.1", "mkdocs-material==9.8.0"]
+
+[tool.setuptools.dynamic]
+version = { attr = "smarthack.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["smarthack*"]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+markers = ["integration: chains steps, starts a process or talks to a service (tests/integration/), or a slow unit test kept out of the fast suite (tests/unit/)"]
+
+[tool.coverage.run]
+branch = true
+source = ["smarthack"]
+
+[tool.coverage.report]
+# `if __name__ == "__main__"` is exercised by tests/integration/, in a subprocess
+# coverage does not follow.
+exclude_also = ["if __name__ == .__main__.:"]
+
+[tool.mypy]
+files = ["smarthack", "tests"]
+disallow_untyped_defs = true
+warn_unused_ignores = true
+
+# A library that ships no `py.typed` marker is declared here explicitly, one
+# override per library, rather than silenced globally: every other import stays
+# checked. Template:
+#
+# [[tool.mypy.overrides]]
+# module = ["somelib.*"]
+# ignore_missing_imports = true

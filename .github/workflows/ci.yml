@@ -1,0 +1,84 @@
+# One job per intent, each calling the same Makefile target a developer runs locally,
+# so "passes on my machine" and "passes in CI" mean the same command.
+#
+# Python 3.12 only, no matrix: `requires-python` has one floor and it is the one tested.
+#
+# The jobs `lint`, `test`, `docs` and `docker` are what branch protection on `dev`
+# (and later `main`) should require. Pull requests run all four before they merge;
+# the push trigger re-runs them on the merge result.
+#
+# When the first optional extra arrives (pyproject.toml), add an `all-extras` job beside
+# `test`: `pip install -e ".[all,dev]"`, then a `python -c "import <every package of the
+# extras>"` step that fails loudly when an extra did not install (otherwise it only shows
+# up as skipped tests), then `make cov`. Keep `test` as it is: the core install must pass
+# on its own, with the extras' tests skipped.
+
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+# A new push to the same branch cancels the run it makes obsolete.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: pip install -e ".[dev]"
+      # Lint runs here only: it checks the code, not the install, and mypy needs the
+      # libraries the code imports, which `-e .` brings.
+      - run: make lint
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: pip install -e ".[dev]"
+      # Unit and integration tests, with the coverage floor.
+      - run: make cov
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: pip install -e ".[docs]"
+      # --strict: a broken link or a page missing from the nav fails the build.
+      - run: make docs
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build both final stages
+        run: |
+          docker build --target production -t smarthack:ci .
+          docker build --target serving -t smarthack-serving:ci .
+      - name: Smoke test the production image
+        run: docker run --rm smarthack:ci

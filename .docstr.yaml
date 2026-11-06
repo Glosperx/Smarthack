@@ -1,0 +1,8 @@
+paths:
+  - smarthack
+fail_under: 95
+skip_init: False
+skip_class_def: False
+skip_private: False
+skip_magic: False
+verbose: 2

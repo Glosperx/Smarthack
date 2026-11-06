@@ -1,0 +1,35 @@
+# Code hooks are scoped to ^(smarthack|tests)/: `tests/` must not go unlinted,
+# since the guards in tests/unit (layering, docstrings, repository files) are the
+# most valuable files in the project.
+#
+# `mypy` is deliberately absent here and lives only in `make lint` and CI: running
+# it through pre-commit would need every library's stubs declared as
+# additional_dependencies, duplicating the environment.
+#
+# The revs of black, isort and flake8 must equal their pins in pyproject.toml
+# (`dev` extra): tests/unit/test_repository_files.py fails when they drift.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+  - repo: https://github.com/psf/black
+    rev: 26.10.1
+    hooks:
+      - id: black
+        files: ^(smarthack|tests)/
+  - repo: https://github.com/PyCQA/isort
+    rev: 9.0.2
+    hooks:
+      - id: isort
+        files: ^(smarthack|tests)/
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.5.0
+    hooks:
+      - id: flake8
+        files: ^(smarthack|tests)/
