@@ -27,6 +27,16 @@ docs/             mkdocs site (make docs-serve)
 `make help` lists every target. The architecture, the testing approach and the definition
 of done are in [`docs/`](docs/index.md).
 
+## Branches
+
+| Branch | Role |
+|---|---|
+| `main` | Closed. Only receives releases, merged from `dev` through a pull request. |
+| `dev` | **Protected.** Nothing is pushed to it directly: a change merges only through a pull request with **one approval** and green CI (`lint`, `test`, `docs`, `docker`). |
+| `feature/<name>`, `fix/<name>` | Where the work happens: branch from `dev`, open the pull request into `dev`. |
+
+The full workflow and the definition of done are in [`docs/contributing.md`](docs/contributing.md).
+
 ## Tooling
 
 | What | Where |

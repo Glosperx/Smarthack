@@ -30,6 +30,10 @@ RUN /opt/venv/bin/pip install --no-deps --force-reinstall .
 # --- production: the smallest image that runs the application ----------------------
 FROM python:3.12-slim AS production
 
+# Where the image came from: GitHub's package page links back to the repository.
+LABEL org.opencontainers.image.title="smarthack" \
+      org.opencontainers.image.source="https://github.com/Glosperx/Smarthack"
+
 ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
