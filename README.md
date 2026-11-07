@@ -15,6 +15,16 @@ make lint && make test
 python -m smarthack
 ```
 
+## Run everything
+
+```bash
+make up                       # or: python scripts/run_all.py
+```
+
+Checks `.env` and dependencies, applies Flyway migrations, then starts the API (:8000), the
+frontend (:5173), the maintenance worker and the wind forecast worker. Ctrl+C stops all.
+Options: `--skip-migrate`, `--no-web`, `--no-workers`, `--prod`, `--port N`.
+
 ## Layout
 
 ```
