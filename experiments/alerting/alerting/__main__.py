@@ -27,6 +27,14 @@ in a throwaway file and the retry delay is reported, not waited:
     uv run python -m alerting escalate examples/04_email_si_apel_critica_vineri_seara.json \
         --simulate no-answer,busy,completed:human
 
+`dispatch` runs `alerting.dispatch.dispatch(alert, decision)`: email, then the call with
+escalation when the decision asks for it, once per alert. With `--simulate` the calls are
+scripted, the email goes to Mailpit only, and the state is a throwaway file:
+
+    uv run python -m alerting dispatch examples/04_email_si_apel_critica_vineri_seara.json
+    uv run python -m alerting dispatch examples/04_email_si_apel_critica_vineri_seara.json \
+        --simulate no-answer,completed:human
+
 The following can be imported from this module:
 - `main`
 """
@@ -40,6 +48,7 @@ import tempfile
 
 from alerting.caller import check_account, place_call, wait_for_call
 from alerting.config import PACKAGE_ROOT, environment
+from alerting.dispatch import dispatch
 from alerting.escalation import escalate
 from alerting.mailer import send_alert_email
 from alerting.models import Case, load_case
@@ -116,6 +125,24 @@ def _escalate(case: Case, script: str | None, people: list[OnCallPerson]) -> int
     return 0
 
 
+def _dispatch(case: Case, script: str | None) -> int:
+    if script is None:
+        summary = dispatch(case.alert, case.decision)
+    else:
+        # Scripted calls, email to the local Mailpit only, throwaway state.
+        with tempfile.TemporaryDirectory() as scratch:
+            summary = dispatch(
+                case.alert,
+                case.decision,
+                env=environment() | {"DRY_RUN": "false", "EMAIL_BACKEND": "mailpit"},
+                provider=SimulatedProvider(parse_outcomes(script)),
+                store=StateStore(Path(scratch) / "alerts.json"),
+                sleep=lambda seconds: logging.info("(simulated) waiting %.0f s", seconds),
+            )
+    print(json.dumps(summary, ensure_ascii=False, indent=2))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     """
     Parse arguments and run one command.
@@ -147,6 +174,13 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="with --simulate: pretend the rotation has this many people (copies of the first)",
     )
+    send = commands.add_parser("dispatch", help="email, then call with escalation, once per alert")
+    send.add_argument("case", help="JSON file with an alert and a decision")
+    send.add_argument(
+        "--simulate",
+        metavar="OUTCOMES",
+        help="scripted call outcomes; email goes to Mailpit only; nobody is phoned",
+    )
     arguments = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
@@ -158,6 +192,8 @@ def main(argv: list[str] | None = None) -> int:
         return _email(case)
     if arguments.command == "call":
         return _call(case)
+    if arguments.command == "dispatch":
+        return _dispatch(case, arguments.simulate)
     if arguments.command == "escalate":
         people = list(load_oncall().people)
         if arguments.simulate and arguments.people:
