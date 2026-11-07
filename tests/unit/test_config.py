@@ -38,6 +38,8 @@ def test_log_level_is_upper_cased(monkeypatch: pytest.MonkeyPatch) -> None:
     [
         (config.app_env, "APP_ENV", "development"),
         (config.log_level, "LOG_LEVEL", "INFO"),
+        (config.host, "SMARTHACK_HOST", "127.0.0.1"),
+        (config.example_service_url, "SMARTHACK_EXAMPLE_SERVICE_URL", "http://localhost:9000"),
     ],
 )
 def test_an_empty_variable_means_unset(
@@ -47,6 +49,17 @@ def test_an_empty_variable_means_unset(
     monkeypatch.setenv(name, "")
 
     assert accessor() == default
+
+
+def test_numeric_and_path_accessors(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Port and timeout parse numbers, directories resolve paths."""
+    assert config.port() == 8000
+    assert config.http_timeout() == 30.0
+
+    monkeypatch.setenv("SMARTHACK_PORT", "9999")
+    monkeypatch.setenv("SMARTHACK_HTTP_TIMEOUT", "15.5")
+    assert config.port() == 9999
+    assert config.http_timeout() == 15.5
 
 
 def test_values_are_read_on_every_call_not_at_import(monkeypatch: pytest.MonkeyPatch) -> None:
