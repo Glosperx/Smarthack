@@ -9,6 +9,7 @@ The following can be imported from this module:
 - `assess_turbine_health`
 - `format_health_report`
 - `get_maintenance_tool_spec`
+- `load_predictor`
 - `simulate_telemetry_stream`
 - `simulate_turbine_scenario`
 """
@@ -17,6 +18,7 @@ from smarthack.maintenance.agent_tool import (
     assess_turbine_health,
     format_health_report,
     get_maintenance_tool_spec,
+    load_predictor,
     simulate_turbine_scenario,
 )
 from smarthack.maintenance.predictor import TurbineHealthPredictor
@@ -28,6 +30,7 @@ __all__ = [
     "assess_turbine_health",
     "format_health_report",
     "get_maintenance_tool_spec",
+    "load_predictor",
     "simulate_telemetry_stream",
     "simulate_turbine_scenario",
 ]

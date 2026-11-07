@@ -15,6 +15,7 @@ from fastapi import Request
 import httpx
 
 from smarthack import config
+from smarthack.utils.dates import today_in_tz
 
 
 def get_http_client(request: Request) -> httpx.AsyncClient:
@@ -34,7 +35,8 @@ def get_today() -> date:
 
     :returns today: Calendar date object for the current day.
     """
-    return datetime.now(ZoneInfo(config.timezone())).date()
+    tz_name = config.timezone()
+    return today_in_tz(tz_name, now=datetime.now(ZoneInfo(tz_name)))
 
 
 __all__ = ["get_http_client", "get_today"]

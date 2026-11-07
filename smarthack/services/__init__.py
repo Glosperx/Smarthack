@@ -11,6 +11,8 @@ The following can be imported from this module:
 - `get_default_fleet_service`
 - `list_parks`
 - `list_turbines_for_park`
+- `run_prediction_cycle`
+- `scenario_for`
 """
 
 from smarthack.services.dispatch_service import (
@@ -18,6 +20,7 @@ from smarthack.services.dispatch_service import (
     get_default_dispatch_service,
 )
 from smarthack.services.fleet_service import FleetService, get_default_fleet_service
+from smarthack.services.maintenance_service import run_prediction_cycle, scenario_for
 from smarthack.services.parks_service import (
     clear_cache,
     list_parks,
@@ -32,4 +35,6 @@ __all__ = [
     "get_default_fleet_service",
     "list_parks",
     "list_turbines_for_park",
+    "run_prediction_cycle",
+    "scenario_for",
 ]

@@ -85,6 +85,39 @@ def test_mandatory_variables_raise_when_empty(
         accessor()
 
 
+def test_supabase_service_key_fallback_and_stripping(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Service key falls back to anon key and strips human prefixes."""
+    monkeypatch.delenv("SUPABASE_SERVICE_KEY", raising=False)
+    monkeypatch.delenv("SUPABASE_KEY", raising=False)
+    with pytest.raises(RuntimeError):
+        config.supabase_service_key()
+
+    monkeypatch.setenv("SUPABASE_KEY", "fallback-key")
+    assert config.supabase_service_key() == "fallback-key"
+
+    monkeypatch.setenv("SUPABASE_SERVICE_KEY", "service_role eyJhbGciOi...")
+    assert config.supabase_service_key() == "eyJhbGciOi..."
+
+
+def test_maintenance_interval_minutes(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Maintenance interval defaults to 60 minutes and parses positive integers."""
+    assert config.maintenance_interval_minutes() == 60
+    monkeypatch.setenv("MAINTENANCE_INTERVAL_MINUTES", "15")
+    assert config.maintenance_interval_minutes() == 15
+
+
+def test_maintenance_demo_scenarios(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Demo scenarios defaults to empty and parses turbine-to-scenario mapping."""
+    assert config.maintenance_demo_scenarios() == {}
+    monkeypatch.setenv("MAINTENANCE_DEMO_SCENARIOS", "101:bearing_failure, 102:gearbox_overheating")
+    assert config.maintenance_demo_scenarios() == {
+        101: "bearing_failure",
+        102: "gearbox_overheating",
+    }
+
+
 def test_numeric_and_path_accessors(monkeypatch: pytest.MonkeyPatch) -> None:
     """Port and timeout parse numbers, directories resolve paths."""
     assert config.port() == 8000

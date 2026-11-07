@@ -14,6 +14,8 @@ The following can be imported from this module:
 - `Park`
 - `ParkSweepResult`
 - `ParkTurbines`
+- `PredictionRow`
+- `RunSummary`
 - `SimulateDispatchRequest`
 - `TurbineHealthTriage`
 - `TurbineInfo`
@@ -33,6 +35,7 @@ from smarthack.schemas.dispatch import (
     TurbineInfo,
 )
 from smarthack.schemas.example import ExampleResult
+from smarthack.schemas.maintenance import PredictionRow, RunSummary
 from smarthack.schemas.parks import Park, ParkTurbines, TurbinePrediction, TurbineToday
 
 __all__ = [
@@ -45,6 +48,8 @@ __all__ = [
     "Park",
     "ParkSweepResult",
     "ParkTurbines",
+    "PredictionRow",
+    "RunSummary",
     "SimulateDispatchRequest",
     "TurbineHealthTriage",
     "TurbineInfo",
