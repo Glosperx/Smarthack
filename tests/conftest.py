@@ -30,10 +30,21 @@ import pytest
 #: The import names each optional extra of `pyproject.toml` brings, as far as the
 #: tests are concerned. A new extra gets a line here, and
 #: `test_repository_files.py` fails until it has one. Empty until the first extra.
-EXTRA_MODULES: dict[str, tuple[str, ...]] = {}
+EXTRA_MODULES: dict[str, tuple[str, ...]] = {
+    "wind": (
+        "catboost",
+        "joblib",
+        "lightgbm",
+        "numpy",
+        "pandas",
+        "requests",
+        "sklearn",
+        "xgboost",
+    ),
+}
 
 #: Variables of `.env.example` a developer may have set locally, removed for every test.
-_ENVIRONMENT_VARIABLES = ("APP_ENV", "LOG_LEVEL")
+_ENVIRONMENT_VARIABLES = ("APP_ENV", "LOG_LEVEL", "WIND_DATA_DIR", "WIND_MODELS_DIR")
 
 
 def extra_is_installed(extra: str) -> bool:

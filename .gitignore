@@ -13,6 +13,7 @@ dist/
 # Tool caches and reports
 .pytest_cache/
 .mypy_cache/
+catboost_info/
 .coverage
 .coverage.*
 coverage.xml
