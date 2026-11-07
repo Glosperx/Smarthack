@@ -4,12 +4,13 @@
 Orchestrates fleet-wide turbine health evaluation cycles and persistence.
 
 The following can be imported from this module:
+- `execute_fleet_maintenance_cycle`
 - `run_prediction_cycle`
 - `scenario_for`
 """
 
 from collections.abc import Awaitable, Callable
-from datetime import date
+from datetime import date, timedelta
 import logging
 import time
 from typing import Any
@@ -23,6 +24,7 @@ from smarthack.maintenance.agent_tool import assess_turbine_health, load_predict
 from smarthack.maintenance.constants import SCENARIO_NORMAL
 from smarthack.maintenance.predictor import TurbineHealthPredictor
 from smarthack.schemas.maintenance import PredictionRow, RunSummary
+from smarthack.utils.dates import today_in_tz
 
 logger = logging.getLogger(__name__)
 
@@ -147,4 +149,42 @@ async def run_prediction_cycle(
     return summary
 
 
-__all__ = ["run_prediction_cycle", "scenario_for"]
+async def execute_fleet_maintenance_cycle(
+    day: date | None = None,
+    dry_run: bool = False,
+    turbine_ids: list[int] | None = None,
+) -> RunSummary:
+    """
+    Execute a full fleet diagnostic assessment cycle and persist predictions to Supabase.
+
+    :param day: Target forecast date. Defaults to today and primes tomorrow for views.
+    :param dry_run: If True, evaluates predictions without writing to the database.
+    :param turbine_ids: Optional explicit turbine IDs to evaluate.
+
+    :returns summary: RunSummary of processed, written, and failed predictions.
+    """
+    tz_name = config.timezone()
+    today_date = today_in_tz(tz_name)
+    target_day = day if day is not None else today_date
+
+    timeout = config.http_timeout()
+    async with httpx.AsyncClient(timeout=timeout) as http:
+        summary = await run_prediction_cycle(
+            http=http,
+            day=target_day,
+            turbine_ids=turbine_ids,
+            dry_run=dry_run,
+        )
+        if day is None:
+            # Also populate tomorrow so upward_turbine_mentenance (predicted_date > CURRENT_DATE) is primed
+            tomorrow_date = today_date + timedelta(days=1)
+            await run_prediction_cycle(
+                http=http,
+                day=tomorrow_date,
+                turbine_ids=turbine_ids,
+                dry_run=dry_run,
+            )
+        return summary
+
+
+__all__ = ["execute_fleet_maintenance_cycle", "run_prediction_cycle", "scenario_for"]

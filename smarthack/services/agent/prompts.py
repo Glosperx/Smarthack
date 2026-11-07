@@ -12,9 +12,9 @@ The following can be imported from this module:
 
 import json
 import logging
-import os
 import re
 
+from smarthack import config
 from smarthack.schemas.dispatch import AlertChannel
 
 logger = logging.getLogger(__name__)
@@ -159,7 +159,7 @@ def generate_llm_alert_payload(
         f"Assigned Crew: {assigned_crew or 'DEFERRED (Next Shift)'}"
     )
 
-    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    api_key = config.gemini_api_key()
     if not api_key:
         return {
             "speech_text": default_speech,

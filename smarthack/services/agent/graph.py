@@ -34,6 +34,48 @@ from smarthack.services.agent.tools import (
 logger = logging.getLogger(__name__)
 
 
+def node_predict_maintenance(state: DispatchAgentState) -> dict[str, Any]:
+    """
+    Execute predictive maintenance inference cycle across fleet telemetry before triage.
+
+    Runs the fleet-wide maintenance model cycle (identical to the recurring background job),
+    persisting 7-day failure predictions to Supabase before candidate triage.
+
+    :param state: Current agent state.
+
+    :returns update: Updated dictionary with latest telemetry state.
+    """
+    if _use_database() and not state.get("triage_items"):
+        try:
+            import asyncio
+            import concurrent.futures
+
+            from smarthack.services.maintenance_service import execute_fleet_maintenance_cycle
+
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = None
+
+            if loop and loop.is_running():
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                    summary = pool.submit(asyncio.run, execute_fleet_maintenance_cycle()).result()
+            else:
+                summary = asyncio.run(execute_fleet_maintenance_cycle())
+
+            logger.info(
+                "Step 1: Fleet maintenance prediction cycle completed (written=%d, by_status=%s)",
+                summary.written,
+                summary.by_status,
+            )
+        except Exception as exc:
+            logger.warning(
+                "Step 1 predictive maintenance cycle encountered non-fatal error: %s", exc
+            )
+
+    return {}
+
+
 def node_triage_park(state: DispatchAgentState) -> dict[str, Any]:
     """
     Filter and identify all turbines in the wind park that require physical repair.
@@ -304,13 +346,15 @@ def build_dispatch_graph() -> Any:
     """
     builder: StateGraph = StateGraph(DispatchAgentState)
 
+    builder.add_node("predict_maintenance", node_predict_maintenance)
     builder.add_node("triage_park", node_triage_park)
     builder.add_node("check_crew_capacity", node_check_crew_capacity)
     builder.add_node("power_prioritization", node_power_prioritization)
     builder.add_node("rank_and_match_crews", node_rank_and_match_crews)
     builder.add_node("decide_and_dispatch_alerts", node_decide_and_dispatch_alerts)
 
-    builder.add_edge(START, "triage_park")
+    builder.add_edge(START, "predict_maintenance")
+    builder.add_edge("predict_maintenance", "triage_park")
     builder.add_edge("triage_park", "check_crew_capacity")
     builder.add_conditional_edges(
         "check_crew_capacity",
