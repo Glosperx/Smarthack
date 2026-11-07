@@ -26,7 +26,7 @@ The following can be imported from this module:
 - `DEFAULT_MAINTENANCE_DATA_DIR`
 - `DEFAULT_MAINTENANCE_MODELS_DIR`
 - `DEFAULT_PORT`
-- `DEFAULT_SUPABASE_PARKS_TABLE`
+- `DEFAULT_TIMEZONE`
 - `DEFAULT_WIND_DATA_DIR`
 - `DEFAULT_WIND_MODELS_DIR`
 - `agent_data_source`
@@ -41,14 +41,15 @@ The following can be imported from this module:
 - `maintenance_models_dir`
 - `port`
 - `supabase_key`
-- `supabase_parks_table`
 - `supabase_url`
+- `timezone`
 - `wind_data_dir`
 - `wind_models_dir`
 """
 
 import os
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 
@@ -73,8 +74,8 @@ DEFAULT_MAINTENANCE_DATA_DIR = "data/maintenance"
 #: The directory holding maintenance model artifacts when `MAINTENANCE_MODELS_DIR` is not set.
 DEFAULT_MAINTENANCE_MODELS_DIR = "models/maintenance"
 
-#: The default table name for wind parks in Supabase.
-DEFAULT_SUPABASE_PARKS_TABLE = "parks"
+#: The default IANA timezone when `SMARTHACK_TIMEZONE` is not set.
+DEFAULT_TIMEZONE = "UTC"
 #: The host to bind the server to when `SMARTHACK_HOST` is not set.
 DEFAULT_HOST = "127.0.0.1"
 
@@ -276,13 +277,16 @@ def supabase_key() -> str:
     return raw
 
 
-def supabase_parks_table() -> str:
+def timezone() -> str:
     """
-    Return the name of the Supabase table holding wind parks.
+    Return the application timezone for daily business logic.
 
-    :returns table: The table name. Defaults to `"parks"`.
+    :returns tz: Valid IANA timezone name. Defaults to `"UTC"`.
+    :raises ValueError: When `SMARTHACK_TIMEZONE` is not a valid IANA timezone.
     """
-    return (os.environ.get("SUPABASE_PARKS_TABLE") or DEFAULT_SUPABASE_PARKS_TABLE).strip()
+    raw = (os.environ.get("SMARTHACK_TIMEZONE") or DEFAULT_TIMEZONE).strip()
+    ZoneInfo(raw)
+    return raw
 
 
 __all__ = [
@@ -296,7 +300,7 @@ __all__ = [
     "DEFAULT_MAINTENANCE_DATA_DIR",
     "DEFAULT_MAINTENANCE_MODELS_DIR",
     "DEFAULT_PORT",
-    "DEFAULT_SUPABASE_PARKS_TABLE",
+    "DEFAULT_TIMEZONE",
     "DEFAULT_WIND_DATA_DIR",
     "DEFAULT_WIND_MODELS_DIR",
     "agent_data_source",
@@ -311,8 +315,8 @@ __all__ = [
     "maintenance_models_dir",
     "port",
     "supabase_key",
-    "supabase_parks_table",
     "supabase_url",
+    "timezone",
     "wind_data_dir",
     "wind_models_dir",
 ]
