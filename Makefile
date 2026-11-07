@@ -2,13 +2,36 @@ PACKAGE := smarthack
 IMAGE   ?= smarthack
 
 .DEFAULT_GOAL := help
-.PHONY: help install hooks format lint test test-fast cov docs docs-serve docker-build clean
+.PHONY: help install hooks format lint test test-fast cov docs docs-serve docker-build clean dev dev-api dev-web types build serve check
 
 help:                       # list the targets
 	@grep -E '^[a-z-]+:.*# ' $(MAKEFILE_LIST) | sed -E 's/:[^#]*# /\t/'
 
-install:                    # editable install with the dev and docs extras
+install:                    # editable install with backend dev extras and frontend npm dependencies
 	pip install -e ".[dev,docs]"
+	if [ -f frontend/package.json ]; then cd frontend && npm install; fi
+
+dev:                       # run both backend and frontend dev servers concurrently
+	$(MAKE) -j2 dev-api dev-web
+
+dev-api:                   # run FastAPI dev server with auto-reload on :8000
+	uvicorn smarthack.api.app:create_app --factory --reload --port 8000
+
+dev-web:                   # run Vite frontend dev server on :5173
+	cd frontend && npm run dev
+
+types:                     # export OpenAPI schema from FastAPI and generate TypeScript types
+	python -c "import json; from smarthack.api.app import create_app; print(json.dumps(create_app().openapi()))" > frontend/openapi.json
+	cd frontend && npx openapi-typescript openapi.json -o src/types/api.ts
+
+build:                     # build React application for production
+	cd frontend && npm run build
+
+serve: build               # run single-process demo serving API and static frontend assets
+	python -m smarthack
+
+check:                     # run linting, pytest, and frontend typecheck
+	pytest -rs && cd frontend && npx tsc --noEmit
 
 hooks:                      # install the git pre-commit hook
 	pre-commit install
