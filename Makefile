@@ -1,6 +1,6 @@
 PACKAGE := smarthack
 IMAGE   ?= smarthack
-VENV    ?= .venv
+VENV    ?= $(if $(wildcard /home/stefan/sandbox/.venv/bin/python),/home/stefan/sandbox/.venv,.venv)
 BIN     := $(if $(wildcard $(VENV)/bin/python),$(VENV)/bin,)
 PYTHON  := $(if $(BIN),$(BIN)/python,python3)
 PIP     := $(if $(BIN),$(BIN)/pip,pip3)
@@ -27,6 +27,9 @@ forecast:                  # refresh the 7-day park wind forecast once now
 
 forecast-worker:           # keep refreshing the park wind forecast twice a day
 	$(PYTHON) -m smarthack.jobs.wind_forecast_job --every $(ARGS)
+
+test-agent:                # run autonomous LangGraph agent dispatch test with live logs
+	$(PYTHON) scripts/test_agent.py $(ARGS)
 
 install:                    # editable install with backend dev extras and frontend npm dependencies
 	@if [ ! -d "$(VENV)" ]; then python3 -m venv $(VENV); fi
