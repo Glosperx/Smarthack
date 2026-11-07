@@ -27,7 +27,16 @@ from smarthack.maintenance.constants import (
     SENSOR_GEARBOX_OIL,
     SENSOR_GENERATOR_RPM,
     SENSOR_GRID_POWER,
+    SENSOR_HYDRAULIC_OIL,
+    SENSOR_NACELLE_TEMP,
     SENSOR_PITCH_ANGLE,
+    SENSOR_ROTOR_RPM,
+    SENSOR_STATOR_PHASE1,
+    SENSOR_STATOR_PHASE2,
+    SENSOR_STATOR_PHASE3,
+    SENSOR_TRANSFORMER_L1,
+    SENSOR_TRANSFORMER_L2,
+    SENSOR_TRANSFORMER_L3,
     SENSOR_WIND_SPEED,
 )
 
@@ -94,45 +103,52 @@ class ScadaSimulator:
         power_kw = power_norm * 2000.0 + self.rng.normal(0.0, 20.0, num_intervals)
         power_kw = np.clip(power_kw, 0.0, 2050.0)
 
-        # Generator RPM
+        # Generator & rotor rotational speeds
         rpm = np.clip(
-            800.0 + wind_speed * 70.0 + self.rng.normal(0.0, 15.0, num_intervals), 0.0, 1650.0
+            800.0 + wind_speed * 70.0 + self.rng.normal(0.0, 15.0, num_intervals),
+            0.0,
+            1650.0,
         )
+        rotor_rpm = (rpm / 100.0) + self.rng.normal(0.0, 0.1, num_intervals)
         pitch = np.where(wind_speed > 12.5, (wind_speed - 12.5) * 1.8, 0.0)
+        nacelle_temp = ambient_temp + 12.0 + (power_kw / 2000.0) * 4.0
 
         # Normal component thermal baselines
+        load_factor = power_kw / 2000.0
         bearing_de = (
-            ambient_temp
-            + 22.0
-            + (power_kw / 2000.0) * 8.0
-            + self.rng.normal(0.0, 1.0, num_intervals)
+            ambient_temp + 22.0 + load_factor * 8.0 + self.rng.normal(0.0, 1.0, num_intervals)
         )
         bearing_nde = (
-            ambient_temp
-            + 19.0
-            + (power_kw / 2000.0) * 6.0
-            + self.rng.normal(0.0, 0.9, num_intervals)
+            ambient_temp + 19.0 + load_factor * 6.0 + self.rng.normal(0.0, 0.9, num_intervals)
         )
         gearbox_bearing = (
-            ambient_temp
-            + 26.0
-            + (power_kw / 2000.0) * 10.0
-            + self.rng.normal(0.0, 1.1, num_intervals)
+            ambient_temp + 26.0 + load_factor * 10.0 + self.rng.normal(0.0, 1.1, num_intervals)
         )
         gearbox_oil = (
-            ambient_temp
-            + 24.0
-            + (power_kw / 2000.0) * 8.0
-            + self.rng.normal(0.0, 0.8, num_intervals)
+            ambient_temp + 24.0 + load_factor * 8.0 + self.rng.normal(0.0, 0.8, num_intervals)
         )
+        hydraulic_oil = (
+            ambient_temp + 18.0 + load_factor * 5.0 + self.rng.normal(0.0, 0.7, num_intervals)
+        )
+        trans_base = ambient_temp + 35.0 + load_factor * 12.0
+        trans_l1 = trans_base + self.rng.normal(0.0, 1.0, num_intervals)
+        trans_l2 = trans_base + 1.5 + self.rng.normal(0.0, 1.0, num_intervals)
+        trans_l3 = trans_base - 1.0 + self.rng.normal(0.0, 1.0, num_intervals)
+
+        stator_base = ambient_temp + 30.0 + load_factor * 10.0
+        stator_p1 = stator_base + self.rng.normal(0.0, 0.8, num_intervals)
+        stator_p2 = stator_base + 0.5 + self.rng.normal(0.0, 0.8, num_intervals)
+        stator_p3 = stator_base - 0.5 + self.rng.normal(0.0, 0.8, num_intervals)
 
         # Scenario fault injections
         if scenario == SCENARIO_BEARING_OVERHEATING:
             # Over the last half of the window, ramp up drive-end bearing temperature to ~92°C
             degradation_ramp = np.clip((t_fraction - 0.4) / 0.6, 0.0, 1.0) ** 1.8
-            thermal_surge = degradation_ramp * 42.0
-            variance_surge = degradation_ramp * self.rng.normal(0.0, 3.5, num_intervals)
-            bearing_de = bearing_de + thermal_surge + variance_surge
+            bearing_de = (
+                bearing_de
+                + degradation_ramp * 44.0
+                + degradation_ramp * self.rng.normal(0.0, 3.0, num_intervals)
+            )
 
         elif scenario == SCENARIO_GEARBOX_WEAR:
             # High-speed shaft and oil temperatures elevate significantly
@@ -142,9 +158,20 @@ class ScadaSimulator:
             )
             gearbox_oil = gearbox_oil + degradation_ramp * 26.0
 
-        elif scenario in (SCENARIO_HYDRAULIC_LEAK, SCENARIO_TRANSFORMER_OVERHEATING):
-            degradation_ramp = np.clip((t_fraction - 0.3) / 0.7, 0.0, 1.0)
-            bearing_de = bearing_de + degradation_ramp * 15.0
+        elif scenario == SCENARIO_HYDRAULIC_LEAK:
+            # Hydraulic oil temperature climbs above safe threshold
+            degradation_ramp = np.clip((t_fraction - 0.35) / 0.65, 0.0, 1.0) ** 1.4
+            hydraulic_oil = (
+                hydraulic_oil + degradation_ramp * 28.0 + self.rng.normal(0.0, 1.5, num_intervals)
+            )
+            pitch = pitch + degradation_ramp * self.rng.normal(0.0, 3.5, num_intervals)
+
+        elif scenario == SCENARIO_TRANSFORMER_OVERHEATING:
+            # Transformer temperature surges to ~110°C with severe inter-phase divergence
+            degradation_ramp = np.clip((t_fraction - 0.3) / 0.7, 0.0, 1.0) ** 1.6
+            trans_l1 = trans_l1 + degradation_ramp * 30.0
+            trans_l2 = trans_l2 + degradation_ramp * 48.0 + self.rng.normal(0.0, 2.5, num_intervals)
+            trans_l3 = trans_l3 + degradation_ramp * 58.0 + self.rng.normal(0.0, 3.0, num_intervals)
 
         return pd.DataFrame(
             {
@@ -154,11 +181,20 @@ class ScadaSimulator:
                 SENSOR_WIND_SPEED: np.round(wind_speed, 2),
                 SENSOR_PITCH_ANGLE: np.round(pitch, 2),
                 SENSOR_GENERATOR_RPM: np.round(rpm, 1),
+                SENSOR_ROTOR_RPM: np.round(rotor_rpm, 2),
                 SENSOR_GRID_POWER: np.round(power_kw, 1),
                 SENSOR_BEARING_DE: np.round(bearing_de, 2),
                 SENSOR_BEARING_NDE: np.round(bearing_nde, 2),
                 SENSOR_GEARBOX_BEARING: np.round(gearbox_bearing, 2),
                 SENSOR_GEARBOX_OIL: np.round(gearbox_oil, 2),
+                SENSOR_HYDRAULIC_OIL: np.round(hydraulic_oil, 2),
+                SENSOR_TRANSFORMER_L1: np.round(trans_l1, 2),
+                SENSOR_TRANSFORMER_L2: np.round(trans_l2, 2),
+                SENSOR_TRANSFORMER_L3: np.round(trans_l3, 2),
+                SENSOR_STATOR_PHASE1: np.round(stator_p1, 2),
+                SENSOR_STATOR_PHASE2: np.round(stator_p2, 2),
+                SENSOR_STATOR_PHASE3: np.round(stator_p3, 2),
+                SENSOR_NACELLE_TEMP: np.round(nacelle_temp, 2),
                 "scenario": scenario,
             }
         )
