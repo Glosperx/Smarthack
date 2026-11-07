@@ -9,6 +9,7 @@ The following can be imported from this module:
 - `CrewStatus`
 - `DispatchDecision`
 - `ExampleResult`
+- `ForecastRunSummary`
 - `FleetSweepReport`
 - `MaintenanceCrew`
 - `Park`
@@ -21,6 +22,7 @@ The following can be imported from this module:
 - `TurbineInfo`
 - `TurbinePrediction`
 - `TurbineToday`
+- `WindForecastRow`
 """
 
 from smarthack.schemas.dispatch import (
@@ -37,12 +39,14 @@ from smarthack.schemas.dispatch import (
 from smarthack.schemas.example import ExampleResult
 from smarthack.schemas.maintenance import PredictionRow, RunSummary
 from smarthack.schemas.parks import Park, ParkTurbines, TurbinePrediction, TurbineToday
+from smarthack.schemas.wind_forecast import ForecastRunSummary, WindForecastRow
 
 __all__ = [
     "AlertChannel",
     "CrewStatus",
     "DispatchDecision",
     "ExampleResult",
+    "ForecastRunSummary",
     "FleetSweepReport",
     "MaintenanceCrew",
     "Park",
@@ -55,4 +59,5 @@ __all__ = [
     "TurbineInfo",
     "TurbinePrediction",
     "TurbineToday",
+    "WindForecastRow",
 ]
