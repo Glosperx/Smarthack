@@ -17,6 +17,11 @@ The following can be imported from this module:
 - `PARK_TABLE`
 - `PARK_VIEW`
 - `TURBINE_TABLE`
+- `DEFAULT_WIND_FORECAST_INTERVAL_MINUTES`
+- `DEFAULT_WIND_FORECAST_OFFSET_MINUTES`
+- `WIND_FORECAST_DAYS`
+- `WIND_FORECAST_REPLACE_RPC`
+- `WIND_FORECAST_TABLE`
 """
 
 #: The application's name, used as the root logger name and in startup messages.
@@ -46,6 +51,21 @@ MAINTENANCE_INPUT_TABLE = "turbine_maintenance_input"
 #: Placeholder value stored when no subsystem is diagnosed for healthy turbines.
 NO_SUBSYSTEM = "none"
 
+#: Default interval in minutes between wind forecast refreshes: twice a day.
+DEFAULT_WIND_FORECAST_INTERVAL_MINUTES = 720
+
+#: Minute offset after the slot boundary for wind forecast refreshes (e.g. 00:05 and 12:05).
+DEFAULT_WIND_FORECAST_OFFSET_MINUTES = 5
+
+#: Forecast horizon, in days, stored per park.
+WIND_FORECAST_DAYS = 7
+
+#: Supabase table holding the hourly wind forecast per park, fully replaced on every refresh.
+WIND_FORECAST_TABLE = "park_wind_forecast"
+
+#: Supabase function that atomically replaces every row of `WIND_FORECAST_TABLE`.
+WIND_FORECAST_REPLACE_RPC = "replace_park_wind_forecast"
+
 __all__ = [
     "APP_NAME",
     "DEFAULT_MAINTENANCE_INTERVAL_MINUTES",
@@ -56,4 +76,9 @@ __all__ = [
     "PARK_TABLE",
     "PARK_VIEW",
     "TURBINE_TABLE",
+    "DEFAULT_WIND_FORECAST_INTERVAL_MINUTES",
+    "DEFAULT_WIND_FORECAST_OFFSET_MINUTES",
+    "WIND_FORECAST_DAYS",
+    "WIND_FORECAST_REPLACE_RPC",
+    "WIND_FORECAST_TABLE",
 ]

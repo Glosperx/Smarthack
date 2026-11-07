@@ -8,7 +8,7 @@ UVICORN := $(if $(BIN),$(BIN)/uvicorn,uvicorn)
 PYTEST  := $(if $(BIN),$(BIN)/pytest,pytest)
 
 .DEFAULT_GOAL := help
-.PHONY: help install hooks format lint test test-fast cov docs docs-serve docker-build clean dev dev-servers dev-api dev-web types build serve check test-db predict worker
+.PHONY: help install hooks format lint test test-fast cov docs docs-serve docker-build clean dev dev-servers dev-api dev-web types build serve check test-db predict worker forecast forecast-worker
 
 help:                       # list the targets
 	@grep -E '^[a-z-]+:.*# ' $(MAKEFILE_LIST) | sed -E 's/:[^#]*# /\t/'
@@ -21,6 +21,12 @@ predict:                   # run one maintenance prediction cycle now
 
 worker:                    # run continuous scheduled prediction loop
 	$(PYTHON) -m smarthack.jobs.maintenance_job --every 10 $(ARGS)
+
+forecast:                  # refresh the 7-day park wind forecast once now
+	$(PYTHON) -m smarthack.jobs.wind_forecast_job $(ARGS)
+
+forecast-worker:           # keep refreshing the park wind forecast twice a day
+	$(PYTHON) -m smarthack.jobs.wind_forecast_job --every $(ARGS)
 
 install:                    # editable install with backend dev extras and frontend npm dependencies
 	@if [ ! -d "$(VENV)" ]; then python3 -m venv $(VENV); fi
