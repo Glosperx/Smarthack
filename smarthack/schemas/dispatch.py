@@ -127,6 +127,10 @@ class DispatchDecision(BaseModel):
     assigned_crew_name: str | None = Field(
         default=None, description="Name of the assigned crew lead."
     )
+    repair_date: str | None = Field(
+        default=None,
+        description="ISO date chosen for the repair, or None when no day was left before failure.",
+    )
     notification_sent: bool = Field(
         default=False, description="Whether the notification was successfully triggered."
     )

@@ -9,27 +9,33 @@ The following can be imported from this module:
 - `run_park_dispatch_agent`
 """
 
+from datetime import timedelta
 import logging
 from typing import Any
 
 from langgraph.graph import END, START, StateGraph
 
+from smarthack import config
 from smarthack.clients.crew_client import get_default_crew_client
+from smarthack.constants import WIND_FORECAST_DAYS
 from smarthack.schemas.dispatch import AlertChannel, CrewStatus, DispatchDecision
 from smarthack.services.agent.prompts import (
     classify_alert_channel,
     generate_llm_alert_payload,
 )
+from smarthack.services.agent.repair_scheduler import RepairRequest, schedule_repairs
 from smarthack.services.agent.state import DispatchAgentState
 from smarthack.services.agent.tools import (
     _use_database,
     dispatch_voice_alert,
     dispatch_warning_email,
     get_available_crews_tool,
+    get_daily_wind_forecast,
     get_turbine_location,
     get_turbines_needing_attention,
     predict_wind_power_mwh,
 )
+from smarthack.utils.dates import today_in_tz
 
 logger = logging.getLogger(__name__)
 
@@ -208,6 +214,44 @@ def node_rank_and_match_crews(state: DispatchAgentState) -> dict[str, Any]:
     }
 
 
+def node_schedule_repairs(state: DispatchAgentState) -> dict[str, Any]:
+    """
+    Pick one repair day per failing turbine: single crew, calmest wind, before the failure day.
+
+    :param state: Current agent state with the prioritized turbines.
+
+    :returns update: State update with `repair_schedule` keyed by turbine id, each value holding
+        `day` (offset from today), `date` (ISO) and `wind_speed`; `day` and `date` are None
+        when no day was left before the predicted failure.
+    """
+    park_id = state.get("park_id", "wind_farm_a")
+    prioritized = state.get("prioritized_turbines", [])
+    if not prioritized:
+        return {"repair_schedule": {}}
+
+    requests = [
+        RepairRequest(
+            turbine_id=int(t["turbine_id"]),
+            failure_day=int(float(t.get("days_to_failure", WIND_FORECAST_DAYS))),
+            weight=1.0 if t.get("projected_mwh_7d") is None else float(t["projected_mwh_7d"]),
+        )
+        for t in prioritized
+    ]
+    slots = schedule_repairs(requests, get_daily_wind_forecast(park_id, WIND_FORECAST_DAYS))
+
+    today = today_in_tz(config.timezone())
+    schedule: dict[int, dict[str, Any]] = {
+        turbine_id: {
+            "day": slot.day,
+            "date": None if slot.day is None else (today + timedelta(days=slot.day)).isoformat(),
+            "wind_speed": slot.wind_speed,
+        }
+        for turbine_id, slot in slots.items()
+    }
+    logger.info("Park %s repair schedule: %s", park_id, schedule)
+    return {"repair_schedule": schedule}
+
+
 def node_decide_and_dispatch_alerts(state: DispatchAgentState) -> dict[str, Any]:
     """
     Determine the alerting channel (Voice Call TTS vs Email ticket) and execute dispatches.
@@ -272,11 +316,25 @@ def node_decide_and_dispatch_alerts(state: DispatchAgentState) -> dict[str, Any]
         )
 
         reason = llm_payload["decision_reason"]
+        repair = state.get("repair_schedule", {}).get(t_id)
+        repair_date = repair["date"] if repair else None
+        repair_line = ""
+        if repair is not None and repair_date:
+            wind_note = (
+                " (no wind forecast available)"
+                if repair["wind_speed"] is None
+                else f" (forecast wind {repair['wind_speed']:.1f} m/s)"
+            )
+            repair_line = f"Repair planned for {repair_date}{wind_note}."
+        elif repair is not None:
+            repair_line = "No repair day is left before the predicted failure."
+        if repair_line:
+            reason += f" {repair_line}"
         notification_sent = False
         message_body = ""
 
         if channel == AlertChannel.VOICE_CALL:
-            message_body = llm_payload["speech_text"]
+            message_body = f"{llm_payload['speech_text']} {repair_line}".strip()
             resp = dispatch_voice_alert(
                 phone_number=target_phone,
                 crew_name=target_name,
@@ -290,7 +348,7 @@ def node_decide_and_dispatch_alerts(state: DispatchAgentState) -> dict[str, Any]
 
         elif channel == AlertChannel.EMAIL:
             subject = llm_payload["email_subject"]
-            message_body = llm_payload["email_body"]
+            message_body = f"{llm_payload['email_body']}\n{repair_line}".strip()
             resp = dispatch_warning_email(
                 recipient_email=target_email,
                 crew_name=target_name,
@@ -302,6 +360,7 @@ def node_decide_and_dispatch_alerts(state: DispatchAgentState) -> dict[str, Any]
                     "subsystem_risks": item.get("subsystem_risks", {}),
                     "daily_forecast": item.get("daily_forecast", []),
                     "projected_mwh_7d": mwh,
+                    "repair_date": repair_date,
                 },
             )
             dispatched_notifications.append(resp)
@@ -319,6 +378,7 @@ def node_decide_and_dispatch_alerts(state: DispatchAgentState) -> dict[str, Any]
             alert_channel=channel,
             assigned_crew_id=assigned_crew_id,
             assigned_crew_name=assigned_crew_name,
+            repair_date=repair_date,
             notification_sent=notification_sent,
             notification_message=message_body,
             decision_reason=reason,
@@ -351,6 +411,7 @@ def build_dispatch_graph() -> Any:
     builder.add_node("check_crew_capacity", node_check_crew_capacity)
     builder.add_node("power_prioritization", node_power_prioritization)
     builder.add_node("rank_and_match_crews", node_rank_and_match_crews)
+    builder.add_node("schedule_repairs", node_schedule_repairs)
     builder.add_node("decide_and_dispatch_alerts", node_decide_and_dispatch_alerts)
 
     builder.add_edge(START, "predict_maintenance")
@@ -365,7 +426,8 @@ def build_dispatch_graph() -> Any:
         },
     )
     builder.add_edge("power_prioritization", "rank_and_match_crews")
-    builder.add_edge("rank_and_match_crews", "decide_and_dispatch_alerts")
+    builder.add_edge("rank_and_match_crews", "schedule_repairs")
+    builder.add_edge("schedule_repairs", "decide_and_dispatch_alerts")
     builder.add_edge("decide_and_dispatch_alerts", END)
 
     return builder.compile()
@@ -394,6 +456,7 @@ def run_park_dispatch_agent(
         "power_model_invoked": False,
         "prioritized_turbines": [],
         "crew_assignments": {},
+        "repair_schedule": {},
         "alert_decisions": [],
         "notifications_dispatched": [],
         "audit_summary": "",
