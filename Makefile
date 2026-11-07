@@ -8,7 +8,7 @@ UVICORN := $(if $(BIN),$(BIN)/uvicorn,uvicorn)
 PYTEST  := $(if $(BIN),$(BIN)/pytest,pytest)
 
 .DEFAULT_GOAL := help
-.PHONY: help install hooks format lint test test-fast cov docs docs-serve docker-build clean dev dev-api dev-web types build serve check test-db predict worker forecast forecast-worker
+.PHONY: help install hooks format lint test test-fast cov docs docs-serve docker-build clean dev dev-servers dev-api dev-web types build serve check test-db predict worker forecast forecast-worker
 
 help:                       # list the targets
 	@grep -E '^[a-z-]+:.*# ' $(MAKEFILE_LIST) | sed -E 's/:[^#]*# /\t/'
@@ -20,7 +20,7 @@ predict:                   # run one maintenance prediction cycle now
 	$(PYTHON) -m smarthack.jobs.maintenance_job $(ARGS)
 
 worker:                    # run continuous scheduled prediction loop
-	$(PYTHON) -m smarthack.jobs.maintenance_job --every 60 $(ARGS)
+	$(PYTHON) -m smarthack.jobs.maintenance_job --every 10 $(ARGS)
 
 forecast:                  # refresh the 7-day park wind forecast once now
 	$(PYTHON) -m smarthack.jobs.wind_forecast_job $(ARGS)
@@ -33,7 +33,10 @@ install:                    # editable install with backend dev extras and front
 	$(VENV)/bin/pip install -e ".[dev,docs]"
 	if [ -f frontend/package.json ]; then cd frontend && npm install; fi
 
-dev:                       # run both backend and frontend dev servers concurrently
+dev:                       # run backend API, frontend web, and maintenance worker concurrently
+	$(MAKE) -j3 dev-api dev-web worker
+
+dev-servers:               # run backend API and frontend web only (without background worker)
 	$(MAKE) -j2 dev-api dev-web
 
 dev-api:                   # run FastAPI dev server with auto-reload on :8000
