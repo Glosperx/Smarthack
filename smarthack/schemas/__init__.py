@@ -9,6 +9,7 @@ The following can be imported from this module:
 - `CrewStatus`
 - `DispatchDecision`
 - `ExampleResult`
+- `Park`
 - `FleetSweepReport`
 - `MaintenanceCrew`
 - `ParkSweepResult`
@@ -29,12 +30,14 @@ from smarthack.schemas.dispatch import (
     TurbineInfo,
 )
 from smarthack.schemas.example import ExampleResult
+from smarthack.schemas.parks import Park
 
 __all__ = [
     "AlertChannel",
     "CrewStatus",
     "DispatchDecision",
     "ExampleResult",
+    "Park",
     "FleetSweepReport",
     "MaintenanceCrew",
     "ParkSweepResult",

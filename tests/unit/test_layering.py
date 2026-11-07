@@ -333,6 +333,7 @@ def test_ranks_follow_the_top_level_name() -> None:
     assert rank_of(PACKAGE) == 0
     assert rank_of(f"{PACKAGE}.utils.logging_utils") == 0
     assert rank_of(f"{PACKAGE}.wind") == 1
+    assert rank_of(f"{PACKAGE}.maintenance") == 1
     assert rank_of(f"{PACKAGE}.schemas") == 1
     assert rank_of(f"{PACKAGE}.clients") == 2
     assert rank_of(f"{PACKAGE}.services") == 3

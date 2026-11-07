@@ -1,0 +1,95 @@
+import { useParks } from '../../api/hooks';
+import { useDrawerFlow } from './useDrawerFlow';
+import { ParkMap } from './ParkMap';
+import { MenuButton } from './MenuButton';
+import { ParkListDrawer } from './ParkListDrawer';
+import { ParkDetailsDrawer } from './ParkDetailsDrawer';
+
+/**
+ * Top-level Wind Park Map screen.
+ */
+export function MapPage() {
+  const { data: parks = [], isLoading, isError, error, refetch } = useParks();
+  const { open, selectedId, toggleList, selectPark, close } = useDrawerFlow();
+
+  const selectedPark = parks.find((p) => p.id === selectedId) || null;
+
+  return (
+    <div className="relative w-screen h-screen overflow-hidden bg-slate-950 font-sans">
+      {/* Top Left Brand Overlay */}
+      <div className="absolute top-4 left-4 z-20 flex items-center gap-3 bg-slate-900/90 backdrop-blur-md px-4 py-2.5 rounded-xl border border-slate-700/80 shadow-lg pointer-events-auto">
+        <div className="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+        <div>
+          <h1 className="text-sm font-bold text-slate-100 tracking-tight">Smarthack</h1>
+          <p className="text-[11px] text-slate-400 font-medium">Wind Park Network</p>
+        </div>
+      </div>
+
+      {/* Top Right Hamburger Menu Button */}
+      <MenuButton onClick={toggleList} disabled={isLoading} />
+
+      {/* Main Map View */}
+      <main className="w-full h-full">
+        <ParkMap
+          parks={parks}
+          selectedId={selectedId}
+          onSelectPark={selectPark}
+          onBackgroundClick={close}
+        />
+      </main>
+
+      {/* Loading Overlay */}
+      {isLoading && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs">
+          <div className="flex items-center gap-3 bg-slate-900/90 border border-slate-800 px-5 py-3 rounded-2xl shadow-2xl">
+            <div className="w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm font-medium text-slate-200">Loading wind parks...</span>
+          </div>
+        </div>
+      )}
+
+      {/* Error Banner with Retry */}
+      {isError && (
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30 max-w-md w-full px-4">
+          <div className="bg-rose-950/90 border border-rose-700 text-rose-200 p-4 rounded-xl shadow-2xl backdrop-blur-md flex items-center justify-between gap-4">
+            <div className="text-sm">
+              <span className="font-semibold block text-rose-100">Failed to load parks</span>
+              <span className="text-xs text-rose-300">
+                {error instanceof Error ? error.message : 'Unknown upstream error occurred'}
+              </span>
+            </div>
+            <button
+              onClick={() => refetch()}
+              className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Empty State Badge */}
+      {!isLoading && !isError && parks.length === 0 && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 bg-slate-900/90 border border-slate-800 px-4 py-2 rounded-xl text-xs text-slate-400 shadow-md">
+          No wind parks registered in database.
+        </div>
+      )}
+
+      {/* Slide-out List Drawer */}
+      <ParkListDrawer
+        isOpen={open === 'list'}
+        onClose={close}
+        parks={parks}
+        selectedId={selectedId}
+        onSelectPark={selectPark}
+      />
+
+      {/* Slide-out Details Drawer */}
+      <ParkDetailsDrawer
+        isOpen={open === 'details'}
+        onClose={close}
+        selectedPark={selectedPark}
+      />
+    </div>
+  );
+}

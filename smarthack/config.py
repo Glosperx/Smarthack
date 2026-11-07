@@ -25,6 +25,7 @@ The following can be imported from this module:
 - `DEFAULT_MAINTENANCE_DATA_DIR`
 - `DEFAULT_MAINTENANCE_MODELS_DIR`
 - `DEFAULT_PORT`
+- `DEFAULT_SUPABASE_PARKS_TABLE`
 - `DEFAULT_WIND_DATA_DIR`
 - `DEFAULT_WIND_MODELS_DIR`
 - `app_env`
@@ -37,6 +38,9 @@ The following can be imported from this module:
 - `maintenance_data_dir`
 - `maintenance_models_dir`
 - `port`
+- `supabase_key`
+- `supabase_parks_table`
+- `supabase_url`
 - `wind_data_dir`
 - `wind_models_dir`
 """
@@ -63,6 +67,9 @@ DEFAULT_MAINTENANCE_DATA_DIR = "data/maintenance"
 
 #: The directory holding maintenance model artifacts when `MAINTENANCE_MODELS_DIR` is not set.
 DEFAULT_MAINTENANCE_MODELS_DIR = "models/maintenance"
+
+#: The default table name for wind parks in Supabase.
+DEFAULT_SUPABASE_PARKS_TABLE = "parks"
 #: The host to bind the server to when `SMARTHACK_HOST` is not set.
 DEFAULT_HOST = "127.0.0.1"
 
@@ -227,6 +234,40 @@ def example_service_url() -> str:
     )
 
 
+def supabase_url() -> str:
+    """
+    Return the Supabase project base URL.
+
+    :returns url: Project base URL string without trailing slash or path.
+    """
+    raw = (os.environ.get("SUPABASE_URL") or "").strip().rstrip("/")
+    if raw.endswith("/rest/v1"):
+        raw = raw[:-8].rstrip("/")
+    return raw
+
+
+def supabase_key() -> str:
+    """
+    Return the Supabase API access key.
+
+    :returns key: Publishable anon key or secret service-role key.
+    """
+    raw = (os.environ.get("SUPABASE_KEY") or "").strip().strip('"').strip("'")
+    for prefix in ("service role", "service_role", "anon public", "anon", "publishable"):
+        if raw.lower().startswith(prefix):
+            raw = raw[len(prefix) :].strip()
+    return raw
+
+
+def supabase_parks_table() -> str:
+    """
+    Return the table name where wind parks are stored.
+
+    :returns name: Configured Supabase parks table name. Defaults to `"parks"`.
+    """
+    return (os.environ.get("SUPABASE_PARKS_TABLE") or DEFAULT_SUPABASE_PARKS_TABLE).strip()
+
+
 __all__ = [
     "DEFAULT_APP_ENV",
     "DEFAULT_DATA_DIR",
@@ -237,6 +278,7 @@ __all__ = [
     "DEFAULT_MAINTENANCE_DATA_DIR",
     "DEFAULT_MAINTENANCE_MODELS_DIR",
     "DEFAULT_PORT",
+    "DEFAULT_SUPABASE_PARKS_TABLE",
     "DEFAULT_WIND_DATA_DIR",
     "DEFAULT_WIND_MODELS_DIR",
     "app_env",
@@ -249,6 +291,9 @@ __all__ = [
     "maintenance_data_dir",
     "maintenance_models_dir",
     "port",
+    "supabase_key",
+    "supabase_parks_table",
+    "supabase_url",
     "wind_data_dir",
     "wind_models_dir",
 ]

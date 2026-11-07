@@ -90,6 +90,7 @@ module = [
     "catboost.*",
     "joblib.*",
     "lightgbm.*",
+    "numpy.*",
     "pandas.*",
     "requests.*",
     "sklearn.*",
