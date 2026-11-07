@@ -189,7 +189,7 @@ def find_violations(imports: list[tuple[Path, int, str, str]]) -> list[str]:
         if importer_rank is None or imported_rank is None:
             continue
         if imported_rank > importer_rank:
-            where = path.relative_to(PACKAGE_DIR.parent)
+            where = path.relative_to(PACKAGE_DIR.parent).as_posix()
             violations.append(
                 f"{where}:{line}: {importer} (rank {importer_rank}) imports "
                 f"{imported} (rank {imported_rank})"
