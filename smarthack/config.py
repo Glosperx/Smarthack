@@ -22,6 +22,8 @@ The following can be imported from this module:
 - `DEFAULT_HOST`
 - `DEFAULT_HTTP_TIMEOUT`
 - `DEFAULT_LOG_LEVEL`
+- `DEFAULT_MAINTENANCE_DATA_DIR`
+- `DEFAULT_MAINTENANCE_MODELS_DIR`
 - `DEFAULT_PORT`
 - `DEFAULT_WIND_DATA_DIR`
 - `DEFAULT_WIND_MODELS_DIR`
@@ -32,6 +34,8 @@ The following can be imported from this module:
 - `host`
 - `http_timeout`
 - `log_level`
+- `maintenance_data_dir`
+- `maintenance_models_dir`
 - `port`
 - `wind_data_dir`
 - `wind_models_dir`
@@ -54,6 +58,11 @@ DEFAULT_WIND_DATA_DIR = "data/wind"
 #: The directory holding trained model artifacts when `WIND_MODELS_DIR` is not set.
 DEFAULT_WIND_MODELS_DIR = "models/wind"
 
+#: The directory holding maintenance datasets when `MAINTENANCE_DATA_DIR` is not set.
+DEFAULT_MAINTENANCE_DATA_DIR = "data/maintenance"
+
+#: The directory holding maintenance model artifacts when `MAINTENANCE_MODELS_DIR` is not set.
+DEFAULT_MAINTENANCE_MODELS_DIR = "models/maintenance"
 #: The host to bind the server to when `SMARTHACK_HOST` is not set.
 DEFAULT_HOST = "127.0.0.1"
 
@@ -122,6 +131,30 @@ def wind_models_dir() -> Path:
     return path
 
 
+def maintenance_data_dir() -> Path:
+    """
+    Return the path to the directory containing maintenance observation datasets.
+
+    :returns path: Configured Path to maintenance data directory.
+    """
+    raw = os.environ.get("MAINTENANCE_DATA_DIR") or DEFAULT_MAINTENANCE_DATA_DIR
+    path = Path(raw)
+    if not path.is_absolute():
+        path = Path(__file__).resolve().parent.parent / path
+    return path
+
+
+def maintenance_models_dir() -> Path:
+    """
+    Return the path to the directory containing serialized maintenance model artifacts.
+
+    :returns path: Configured Path to maintenance models directory.
+    """
+    raw = os.environ.get("MAINTENANCE_MODELS_DIR") or DEFAULT_MAINTENANCE_MODELS_DIR
+    path = Path(raw)
+    if not path.is_absolute():
+        path = Path(__file__).resolve().parent.parent / path
+    return path
 def host() -> str:
     """
     Return the host the server listens on.
@@ -199,6 +232,8 @@ __all__ = [
     "DEFAULT_HOST",
     "DEFAULT_HTTP_TIMEOUT",
     "DEFAULT_LOG_LEVEL",
+    "DEFAULT_MAINTENANCE_DATA_DIR",
+    "DEFAULT_MAINTENANCE_MODELS_DIR",
     "DEFAULT_PORT",
     "DEFAULT_WIND_DATA_DIR",
     "DEFAULT_WIND_MODELS_DIR",
@@ -209,6 +244,8 @@ __all__ = [
     "host",
     "http_timeout",
     "log_level",
+    "maintenance_data_dir",
+    "maintenance_models_dir",
     "port",
     "wind_data_dir",
     "wind_models_dir",
