@@ -20,6 +20,7 @@ nav:
   - Home: index.md
   - Getting started: getting-started.md
   - Architecture: architecture.md
+  - Wind Forecasting: wind_walkthrough.md
   - Testing: testing.md
   - Contributing: contributing.md
   - Serving: serving.md

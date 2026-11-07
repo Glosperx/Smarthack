@@ -30,6 +30,17 @@ dependencies = [
 dev  = ["pytest==9.2.0", "pytest-cov==7.1.0", "black==26.10.1", "isort==9.0.2", "flake8==7.5.0",
         "mypy==2.4.1", "docstr-coverage==2.3.2", "pre-commit==4.7.0"]
 docs = ["mkdocs==1.6.1", "mkdocs-material==9.8.0"]
+wind = [
+    "catboost==1.2.10",
+    "joblib==1.6.0",
+    "lightgbm==4.7.0",
+    "numpy==2.5.4",
+    "pandas==3.1.1",
+    "requests==2.34.2",
+    "scikit-learn==1.9.1",
+    "xgboost==3.4.1",
+]
+all  = ["smarthack[wind]"]
 
 [tool.setuptools.dynamic]
 version = { attr = "smarthack.__version__" }
@@ -67,3 +78,15 @@ warn_unused_ignores = true
 # [[tool.mypy.overrides]]
 # module = ["somelib.*"]
 # ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "catboost.*",
+    "joblib.*",
+    "lightgbm.*",
+    "pandas.*",
+    "requests.*",
+    "sklearn.*",
+    "xgboost.*",
+]
+ignore_missing_imports = true

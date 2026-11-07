@@ -8,12 +8,13 @@ above. Today there is one: the foundation.
 ```
 smarthack/
 ├── __init__.py          # __version__ only
-├── __main__.py          # entry point: imports what it starts, imported by nothing
 ├── config.py            # the ONLY reader of os.environ
 ├── constants.py         # project-wide scalars
-└── utils/
-    ├── logging_utils.py     # the ONLY place that configures logging
-    └── optional_imports.py  # missing extra vs real bug
+├── utils/
+│   ├── logging_utils.py     # the ONLY place that configures logging
+│   └── optional_imports.py  # missing extra vs real bug
+├── wind/                # rank 1: wind turbine power forecasting, training & agent tool
+└── __main__.py          # rank 2 entry point: imports what it starts, imported by nothing
 ```
 
 `tests/unit/test_layering.py` parses every file with `ast` and fails the build when an
