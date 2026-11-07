@@ -7,6 +7,7 @@ The following can be imported from this module:
 - `dispatch_voice_alert`
 - `dispatch_warning_email`
 - `get_available_crews_tool`
+- `get_turbine_location`
 - `get_turbines_needing_attention`
 - `predict_wind_power_mwh`
 """
@@ -14,14 +15,25 @@ The following can be imported from this module:
 import logging
 from typing import Any
 
+from smarthack import config
 from smarthack.clients.crew_client import get_default_crew_client
 from smarthack.clients.email_client import get_default_email_client
 from smarthack.clients.voice_client import get_default_voice_client
 from smarthack.schemas.dispatch import CrewStatus
+from smarthack.services.agent import db_tools
 from smarthack.services.fleet_service import get_default_fleet_service
 from smarthack.wind.agent_tool import predict_wind_power
 
 logger = logging.getLogger(__name__)
+
+
+def _use_database() -> bool:
+    """
+    Tell whether the agent reads from Supabase instead of the in-memory seed data.
+
+    :returns flag: True when `AGENT_DATA_SOURCE=supabase`.
+    """
+    return config.agent_data_source() == "supabase"
 
 
 def get_turbines_needing_attention(
@@ -36,6 +48,13 @@ def get_turbines_needing_attention(
 
     :returns candidates: List of serialized triage dictionaries needing repair.
     """
+    if _use_database():
+        needing = db_tools.db_get_turbines_needing_attention(park_id=park_id)
+        logger.info(
+            "Found %d turbines needing repair (db) for park=%s", len(needing), park_id or "ALL"
+        )
+        return needing
+
     fleet_svc = get_default_fleet_service()
     if park_id:
         triage_list = fleet_svc.scan_park(park_id, scenarios=scenarios)
@@ -56,9 +75,34 @@ def get_available_crews_tool(park_id: str) -> list[dict[str, Any]]:
 
     :returns crews: List of available crew metadata dictionaries.
     """
+    if _use_database():
+        return db_tools.db_get_available_crews(park_id)
     crew_client = get_default_crew_client()
     crews = crew_client.get_crews_by_park(park_id=park_id, status=CrewStatus.AVAILABLE)
     return [c.model_dump() for c in crews]
+
+
+def get_turbine_location(turbine_id: int) -> dict[str, float]:
+    """
+    Look up the coordinates and rated capacity used to forecast a turbine's output.
+
+    :param turbine_id: Asset identifier.
+
+    :returns location: Dict with `latitude`, `longitude`, `capacity_kw`; site defaults if unknown.
+    """
+    if _use_database():
+        found = db_tools.db_get_turbine_location(turbine_id)
+        if found:
+            return {k: float(v) for k, v in found.items()}
+    else:
+        info = get_default_fleet_service().get_turbine_info(turbine_id)
+        if info:
+            return {
+                "latitude": info.latitude,
+                "longitude": info.longitude,
+                "capacity_kw": info.capacity_kw,
+            }
+    return {"latitude": 35.2, "longitude": -101.8, "capacity_kw": 2050.0}
 
 
 def predict_wind_power_mwh(
@@ -171,6 +215,7 @@ __all__ = [
     "dispatch_voice_alert",
     "dispatch_warning_email",
     "get_available_crews_tool",
+    "get_turbine_location",
     "get_turbines_needing_attention",
     "predict_wind_power_mwh",
 ]

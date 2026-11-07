@@ -22,10 +22,10 @@ from smarthack.services.agent.tools import (
     dispatch_voice_alert,
     dispatch_warning_email,
     get_available_crews_tool,
+    get_turbine_location,
     get_turbines_needing_attention,
     predict_wind_power_mwh,
 )
-from smarthack.services.fleet_service import get_default_fleet_service
 
 logger = logging.getLogger(__name__)
 
@@ -98,17 +98,14 @@ def node_power_prioritization(state: DispatchAgentState) -> dict[str, Any]:
 
     :returns update: State updates containing power_evaluations and annotated turbines.
     """
-    fleet_svc = get_default_fleet_service()
     failing = state.get("failing_turbines", [])
     power_map: dict[int, float] = {}
     updated_failing: list[dict[str, Any]] = []
 
     for t_item in failing:
         t_id = int(t_item["turbine_id"])
-        t_info = fleet_svc.get_turbine_info(t_id)
-        lat = t_info.latitude if t_info else 35.2
-        lon = t_info.longitude if t_info else -101.8
-        cap = t_info.capacity_kw if t_info else 2050.0
+        loc = get_turbine_location(t_id)
+        lat, lon, cap = loc["latitude"], loc["longitude"], loc["capacity_kw"]
 
         mwh = predict_wind_power_mwh(latitude=lat, longitude=lon, forecast_days=7, capacity_kw=cap)
         power_map[t_id] = mwh
