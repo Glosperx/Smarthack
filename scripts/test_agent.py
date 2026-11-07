@@ -159,9 +159,7 @@ def run_full_fleet_sweep() -> int:
         for pid in park_ids:
             logger.info("Sweeping park %s via LangGraph agent...", pid)
             res = run_park_dispatch_agent(park_id=pid)
-            decisions = [
-                DispatchDecision.model_validate(d) for d in res.get("alert_decisions", [])
-            ]
+            decisions = [DispatchDecision.model_validate(d) for d in res.get("alert_decisions", [])]
             failing = res.get("failing_turbines", [])
             crews = res.get("available_crews", [])
             scanned = len(res.get("triage_items", []))
@@ -237,7 +235,7 @@ def _print_results(result: dict[str, Any], title: str) -> None:
     print(f"Park Identifier:           {result.get('park_id')}")
     print(f"Turbines Needing Repair:   {len(result.get('failing_turbines', []))}")
     print(f"Available Park Technicians:{len(result.get('available_crews', []))}")
-    print(f"Crew Shortage Contention:  {result.get('has_conflict')}")
+    print(f"Overlapping Failures:      {result.get('has_conflict')}")
     print(f"Power Prioritization Run:  {result.get('power_model_invoked')}")
     if result.get("power_evaluations"):
         print(f"Projected 7-Day MWh Losses:{result.get('power_evaluations')}")

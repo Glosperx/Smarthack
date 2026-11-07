@@ -26,6 +26,7 @@ class DispatchAgentState(TypedDict, total=False):
     power_model_invoked: bool
     prioritized_turbines: list[dict[str, Any]]
     crew_assignments: dict[int, str]
+    repair_schedule: dict[int, dict[str, Any]]
     alert_decisions: list[dict[str, Any]]
     notifications_dispatched: list[dict[str, Any]]
     audit_summary: str
