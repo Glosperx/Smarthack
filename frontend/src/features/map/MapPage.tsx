@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParks } from '../../api/hooks';
 import { useDrawerFlow } from './useDrawerFlow';
 import { ParkMap } from './ParkMap';
@@ -5,6 +6,9 @@ import { MenuButton } from './MenuButton';
 import { ParkListDrawer } from './ParkListDrawer';
 import { ParkDetailsDrawer } from './ParkDetailsDrawer';
 import { MaintenanceCountdown } from './MaintenanceCountdown';
+import { useResourceSites, useResourceSummary } from '../resource/api';
+import { WindResourceLayer } from '../resource/WindResourceLayer';
+import { WindResourcePanel } from '../resource/WindResourcePanel';
 
 /**
  * Top-level Wind Park Map screen.
@@ -12,6 +16,10 @@ import { MaintenanceCountdown } from './MaintenanceCountdown';
 export function MapPage() {
   const { data: parks = [], isLoading, isError, error, refetch } = useParks();
   const { open, selectedId, toggleList, selectPark, close } = useDrawerFlow();
+  const [resourceOn, setResourceOn] = useState(false);
+  const [focusedSite, setFocusedSite] = useState<number | null>(null);
+  const resourceSummary = useResourceSummary(resourceOn);
+  const resourceSites = useResourceSites(resourceOn);
 
   const selectedPark = parks.find((p) => p.id === selectedId) || null;
 
@@ -23,6 +31,18 @@ export function MapPage() {
       {/* Top Right Hamburger Menu Button */}
       <MenuButton onClick={toggleList} disabled={isLoading} />
 
+      {/* Bottom Left Hill Wind Site Finder */}
+      <WindResourcePanel
+        enabled={resourceOn}
+        onToggle={() => setResourceOn((v) => !v)}
+        summary={resourceSummary.data}
+        sites={resourceSites.data ?? []}
+        isLoading={resourceSummary.isLoading || resourceSites.isLoading}
+        error={resourceSummary.error ?? resourceSites.error}
+        focusedRank={focusedSite}
+        onFocusSite={setFocusedSite}
+      />
+
       {/* Main Map View */}
       <main className="w-full h-full">
         <ParkMap
@@ -30,7 +50,15 @@ export function MapPage() {
           selectedId={selectedId}
           onSelectPark={selectPark}
           onBackgroundClick={close}
-        />
+        >
+          {resourceOn && resourceSummary.data && (
+            <WindResourceLayer
+              summary={resourceSummary.data}
+              sites={resourceSites.data ?? []}
+              focusedRank={focusedSite}
+            />
+          )}
+        </ParkMap>
       </main>
 
       {/* Loading Overlay */}
