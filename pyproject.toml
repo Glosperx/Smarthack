@@ -19,6 +19,7 @@ dependencies = [
     "pydantic>=2.8.0",
     "langchain-core>=1.7.0",
     "langgraph>=1.2.0",
+    "tzdata>=2024.1",
 ]
 
 [project.optional-dependencies]
@@ -89,6 +90,8 @@ warn_unused_ignores = true
 module = [
     "catboost.*",
     "joblib.*",
+    "langchain_core.*",
+    "langgraph.*",
     "lightgbm.*",
     "numpy.*",
     "pandas.*",

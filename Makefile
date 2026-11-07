@@ -14,7 +14,7 @@ help:                       # list the targets
 	@grep -E '^[a-z-]+:.*# ' $(MAKEFILE_LIST) | sed -E 's/:[^#]*# /\t/'
 
 test-db:                   # test connectivity to Supabase using .env credentials
-	$(PYTHON) -c 'import asyncio, httpx, json; from smarthack.clients.supabase_parks import fetch_parks; print(json.dumps(asyncio.run(fetch_parks(httpx.AsyncClient())), indent=2))'
+	$(PYTHON) -c 'import asyncio, httpx, json; from smarthack.clients.supabase import fetch_parks; print(json.dumps(asyncio.run(fetch_parks(httpx.AsyncClient())), indent=2))'
 
 install:                    # editable install with backend dev extras and frontend npm dependencies
 	@if [ ! -d "$(VENV)" ]; then python3 -m venv $(VENV); fi

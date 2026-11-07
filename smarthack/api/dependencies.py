@@ -5,10 +5,16 @@ FastAPI dependency providers for HTTP route handlers.
 
 The following can be imported from this module:
 - `get_http_client`
+- `get_today`
 """
+
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 
 from fastapi import Request
 import httpx
+
+from smarthack import config
 
 
 def get_http_client(request: Request) -> httpx.AsyncClient:
@@ -22,4 +28,13 @@ def get_http_client(request: Request) -> httpx.AsyncClient:
     return request.app.state.http
 
 
-__all__ = ["get_http_client"]
+def get_today() -> date:
+    """
+    Return today's date in the configured application timezone.
+
+    :returns today: Calendar date object for the current day.
+    """
+    return datetime.now(ZoneInfo(config.timezone())).date()
+
+
+__all__ = ["get_http_client", "get_today"]

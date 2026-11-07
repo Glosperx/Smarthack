@@ -7,6 +7,9 @@ export type HealthResponse =
 
 export type ExampleResult = components['schemas']['ExampleResult'];
 export type Park = components['schemas']['Park'];
+export type ParkTurbines = components['schemas']['ParkTurbines'];
+export type TurbineToday = components['schemas']['TurbineToday'];
+export type TurbinePrediction = components['schemas']['TurbinePrediction'];
 
 /**
  * Query hook for application health check.
@@ -38,5 +41,17 @@ export function useParks() {
     queryKey: ['parks'],
     queryFn: () => apiFetch<Park[]>('/api/parks'),
     staleTime: 5 * 60_000,
+  });
+}
+
+/**
+ * Query hook for fetching wind turbines and today's diagnostics for a park.
+ */
+export function useParkTurbines(parkId: number | null) {
+  return useQuery<ParkTurbines>({
+    queryKey: ['parks', parkId, 'turbines'],
+    queryFn: () => apiFetch<ParkTurbines>(`/api/parks/${parkId}/turbines`),
+    enabled: parkId !== null,
+    staleTime: 60_000,
   });
 }
