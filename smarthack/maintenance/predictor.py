@@ -17,6 +17,7 @@ import joblib
 import numpy as np
 import pandas as pd
 
+from smarthack.config import maintenance_models_dir
 from smarthack.maintenance.constants import (
     DEFAULT_HEALTH_THRESHOLD_CRITICAL,
     DEFAULT_HEALTH_THRESHOLD_WARNING,
@@ -46,7 +47,7 @@ def resolve_maintenance_models_dir(models_dir: str | Path | None = None) -> Path
     """
     if models_dir is not None:
         return Path(models_dir)
-    return Path("/home/stefan/Smarthack/models/maintenance")
+    return maintenance_models_dir()
 
 
 class TurbineHealthPredictor:

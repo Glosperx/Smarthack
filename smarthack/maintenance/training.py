@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import f1_score, roc_auc_score
 
+from smarthack.config import maintenance_data_dir, maintenance_models_dir
 from smarthack.maintenance.features import extract_maintenance_features
 
 logger = logging.getLogger(__name__)
@@ -35,7 +36,7 @@ def resolve_maintenance_data_dir(data_dir: str | Path | None = None) -> Path:
     """
     if data_dir is not None:
         return Path(data_dir)
-    return Path("/home/stefan/maintenance/maintenance/Wind Farm A")
+    return maintenance_data_dir()
 
 
 def load_event_dataset(
@@ -104,9 +105,7 @@ def train_fault_classifier(
 
     :returns metrics: Dictionary containing training AUC and F1 scores.
     """
-    target_models_dir = (
-        Path(models_dir) if models_dir else Path("/home/stefan/Smarthack/models/maintenance")
-    )
+    target_models_dir = Path(models_dir) if models_dir else maintenance_models_dir()
     target_models_dir.mkdir(parents=True, exist_ok=True)
 
     x_df, y_arr, _ = load_event_dataset(data_dir=data_dir)

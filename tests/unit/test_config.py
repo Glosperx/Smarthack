@@ -56,3 +56,14 @@ def test_values_are_read_on_every_call_not_at_import(monkeypatch: pytest.MonkeyP
 
     assert before == "INFO"
     assert config.log_level() == "ERROR"
+
+
+def test_maintenance_directories_default_to_relative_paths() -> None:
+    """Maintenance data and model accessors default to paths under data/ and models/."""
+    data_path = config.maintenance_data_dir()
+    models_path = config.maintenance_models_dir()
+
+    assert data_path.name == "maintenance"
+    assert models_path.name == "maintenance"
+    assert "data" in str(data_path)
+    assert "models" in str(models_path)

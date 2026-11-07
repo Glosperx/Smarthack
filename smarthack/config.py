@@ -18,10 +18,14 @@ running the tests. Nothing is stubbed out in advance.
 The following can be imported from this module:
 - `DEFAULT_APP_ENV`
 - `DEFAULT_LOG_LEVEL`
+- `DEFAULT_MAINTENANCE_DATA_DIR`
+- `DEFAULT_MAINTENANCE_MODELS_DIR`
 - `DEFAULT_WIND_DATA_DIR`
 - `DEFAULT_WIND_MODELS_DIR`
 - `app_env`
 - `log_level`
+- `maintenance_data_dir`
+- `maintenance_models_dir`
 - `wind_data_dir`
 - `wind_models_dir`
 """
@@ -42,6 +46,12 @@ DEFAULT_WIND_DATA_DIR = "data/wind"
 
 #: The directory holding trained model artifacts when `WIND_MODELS_DIR` is not set.
 DEFAULT_WIND_MODELS_DIR = "models/wind"
+
+#: The directory holding maintenance datasets when `MAINTENANCE_DATA_DIR` is not set.
+DEFAULT_MAINTENANCE_DATA_DIR = "data/maintenance"
+
+#: The directory holding maintenance model artifacts when `MAINTENANCE_MODELS_DIR` is not set.
+DEFAULT_MAINTENANCE_MODELS_DIR = "models/maintenance"
 
 # `load_dotenv()` looks for `.env` upward from this file in a script, but upward from the working
 # directory in a notebook or a REPL: a kernel started outside the repository then found none and a
@@ -96,13 +106,43 @@ def wind_models_dir() -> Path:
     return path
 
 
+def maintenance_data_dir() -> Path:
+    """
+    Return the path to the directory containing maintenance observation datasets.
+
+    :returns path: Configured Path to maintenance data directory.
+    """
+    raw = os.environ.get("MAINTENANCE_DATA_DIR") or DEFAULT_MAINTENANCE_DATA_DIR
+    path = Path(raw)
+    if not path.is_absolute():
+        path = Path(__file__).resolve().parent.parent / path
+    return path
+
+
+def maintenance_models_dir() -> Path:
+    """
+    Return the path to the directory containing serialized maintenance model artifacts.
+
+    :returns path: Configured Path to maintenance models directory.
+    """
+    raw = os.environ.get("MAINTENANCE_MODELS_DIR") or DEFAULT_MAINTENANCE_MODELS_DIR
+    path = Path(raw)
+    if not path.is_absolute():
+        path = Path(__file__).resolve().parent.parent / path
+    return path
+
+
 __all__ = [
     "DEFAULT_APP_ENV",
     "DEFAULT_LOG_LEVEL",
+    "DEFAULT_MAINTENANCE_DATA_DIR",
+    "DEFAULT_MAINTENANCE_MODELS_DIR",
     "DEFAULT_WIND_DATA_DIR",
     "DEFAULT_WIND_MODELS_DIR",
     "app_env",
     "log_level",
+    "maintenance_data_dir",
+    "maintenance_models_dir",
     "wind_data_dir",
     "wind_models_dir",
 ]
