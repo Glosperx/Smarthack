@@ -17,8 +17,9 @@ from langgraph.graph import END, START, StateGraph
 
 from smarthack import config
 from smarthack.clients.crew_client import get_default_crew_client
-from smarthack.constants import WIND_FORECAST_DAYS
+from smarthack.constants import CONFLICT_WINDOW_DAYS, WIND_FORECAST_DAYS
 from smarthack.schemas.dispatch import AlertChannel, CrewStatus, DispatchDecision
+from smarthack.services.agent.failure_overlap import failure_day, overlapping_failures
 from smarthack.services.agent.prompts import (
     classify_alert_channel,
     generate_llm_alert_payload,
@@ -100,9 +101,12 @@ def node_triage_park(state: DispatchAgentState) -> dict[str, Any]:
     return {"triage_items": triage_items, "failing_turbines": failing}
 
 
-def node_check_crew_capacity(state: DispatchAgentState) -> dict[str, Any]:
+def node_check_failure_overlap(state: DispatchAgentState) -> dict[str, Any]:
     """
-    Query available maintenance crews dedicated to the park and detect resource contention.
+    Load the park's crews and detect turbines predicted to fail in the same interval.
+
+    Two or more turbines of the park whose failure days are at most `CONFLICT_WINDOW_DAYS`
+    apart make a conflict: one repair has to come first, so their output must be compared.
 
     :param state: Current agent state.
 
@@ -112,33 +116,37 @@ def node_check_crew_capacity(state: DispatchAgentState) -> dict[str, Any]:
     failing = state.get("failing_turbines", [])
     crews = get_available_crews_tool(park_id=park_id)
 
-    # Conflict exists if multiple failing turbines compete for fewer available crews
-    has_conflict = len(failing) > len(crews) and len(failing) > 1
+    failure_days = {
+        int(t["turbine_id"]): failure_day(float(t.get("days_to_failure", WIND_FORECAST_DAYS)))
+        for t in failing
+    }
+    overlapping = overlapping_failures(failure_days, CONFLICT_WINDOW_DAYS)
+    has_conflict = bool(overlapping)
 
     logger.info(
-        "Park %s: %d failing turbines vs %d available crews -> conflict=%s",
+        "Park %s: %d failing turbines, %d available crews, overlapping failures=%s",
         park_id,
         len(failing),
         len(crews),
-        has_conflict,
+        sorted(overlapping),
     )
     return {"available_crews": crews, "has_conflict": has_conflict}
 
 
-def route_after_capacity_check(state: DispatchAgentState) -> str:
+def route_after_overlap_check(state: DispatchAgentState) -> str:
     """
     Conditional routing edge deciding whether the Wind Power Model must be invoked.
 
-    Only invoked when a choice between competing turbines must be made.
+    Only invoked when a choice between turbines failing in the same interval must be made.
 
     :param state: Current agent state.
 
     :returns next_node: 'power_prioritization' if conflict, otherwise 'rank_and_match_crews'.
     """
     if state.get("has_conflict", False):
-        logger.info("Resource contention detected! Routing to Power Model prioritization.")
+        logger.info("Failures overlap! Routing to Power Model prioritization.")
         return "power_prioritization"
-    logger.info("No resource contention. Skipping Power Model evaluation.")
+    logger.info("No overlapping failures. Skipping Power Model evaluation.")
     return "rank_and_match_crews"
 
 
@@ -232,11 +240,15 @@ def node_schedule_repairs(state: DispatchAgentState) -> dict[str, Any]:
     requests = [
         RepairRequest(
             turbine_id=int(t["turbine_id"]),
-            failure_day=int(float(t.get("days_to_failure", WIND_FORECAST_DAYS))),
+            failure_day=failure_day(float(t.get("days_to_failure", WIND_FORECAST_DAYS))),
             weight=1.0 if t.get("projected_mwh_7d") is None else float(t["projected_mwh_7d"]),
         )
         for t in prioritized
     ]
+    if not any(r.weight > 0 for r in requests):
+        # No usable output estimate (power model offline, or zero everywhere): weigh all equally
+        # so the wind forecast still decides the day instead of every day looking the same.
+        requests = [RepairRequest(r.turbine_id, r.failure_day) for r in requests]
     slots = schedule_repairs(requests, get_daily_wind_forecast(park_id, WIND_FORECAST_DAYS))
 
     today = today_in_tz(config.timezone())
@@ -408,7 +420,7 @@ def build_dispatch_graph() -> Any:
 
     builder.add_node("predict_maintenance", node_predict_maintenance)
     builder.add_node("triage_park", node_triage_park)
-    builder.add_node("check_crew_capacity", node_check_crew_capacity)
+    builder.add_node("check_failure_overlap", node_check_failure_overlap)
     builder.add_node("power_prioritization", node_power_prioritization)
     builder.add_node("rank_and_match_crews", node_rank_and_match_crews)
     builder.add_node("schedule_repairs", node_schedule_repairs)
@@ -416,10 +428,10 @@ def build_dispatch_graph() -> Any:
 
     builder.add_edge(START, "predict_maintenance")
     builder.add_edge("predict_maintenance", "triage_park")
-    builder.add_edge("triage_park", "check_crew_capacity")
+    builder.add_edge("triage_park", "check_failure_overlap")
     builder.add_conditional_edges(
-        "check_crew_capacity",
-        route_after_capacity_check,
+        "check_failure_overlap",
+        route_after_overlap_check,
         {
             "power_prioritization": "power_prioritization",
             "rank_and_match_crews": "rank_and_match_crews",

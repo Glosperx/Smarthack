@@ -67,6 +67,24 @@ def test_two_turbines_get_different_calm_days() -> None:
     assert all("Repair planned for" in d["decision_reason"] for d in result["alert_decisions"])
 
 
+def test_zero_output_estimates_still_use_the_wind_forecast(monkeypatch: pytest.MonkeyPatch) -> None:
+    """When the power model gives 0 MWh everywhere, days are still picked by wind, not by order."""
+    monkeypatch.setattr(
+        "smarthack.services.agent.graph.predict_wind_power_mwh", lambda **kwargs: 0.0
+    )
+    result = run_park_dispatch_agent(
+        "wind_farm_a", triage_items=[_turbine(0, 4.0), _turbine(1, 4.0)]
+    )
+
+    today = today_in_tz(config.timezone())
+    dates = {d["repair_date"] for d in result["alert_decisions"]}
+    assert result["power_model_invoked"] is True
+    assert dates == {
+        (today + timedelta(days=1)).isoformat(),
+        (today + timedelta(days=3)).isoformat(),
+    }
+
+
 def test_email_and_voice_texts_carry_the_repair_day() -> None:
     """The crew is told the day in the message it receives, not only in the audit trail."""
     email_client = get_default_email_client()

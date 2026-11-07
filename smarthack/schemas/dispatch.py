@@ -152,7 +152,7 @@ class ParkSweepResult(BaseModel):
     turbines_needing_repair: int = Field(description="Number of turbines with detected issues.")
     crews_available: int = Field(description="Number of active crews available in this park.")
     conflict_detected: bool = Field(
-        description="True if repair candidates exceeded available crews in this park."
+        description="True if two or more turbines of this park are predicted to fail in the same interval."
     )
     power_model_invoked: bool = Field(
         description="True if the wind power model was called to resolve competing candidates."

@@ -155,6 +155,53 @@ def test_conflict_invokes_power_model_and_prioritizes() -> None:
     assert "deferred" in d2["decision_reason"].lower()
 
 
+def test_overlapping_failures_invoke_power_model_even_with_enough_crews() -> None:
+    """Two turbines due the same day make a conflict although two crews are free."""
+    get_default_crew_client().reset_crews()
+    triage_items = [_failing(0, 4.0), _failing(1, 4.5)]
+
+    result = run_park_dispatch_agent("wind_farm_a", triage_items=triage_items)
+
+    assert len(result["available_crews"]) == 2
+    assert result["has_conflict"] is True
+    assert result["power_model_invoked"] is True
+
+
+def test_failures_far_apart_skip_power_model_even_with_one_crew() -> None:
+    """Turbines due days apart need no comparison, however few crews there are."""
+    crew_client = get_default_crew_client()
+    crew_client.reset_crews()
+    crew_client.update_crew_status("crew_a2", CrewStatus.OFF_SHIFT)
+    triage_items = [_failing(0, 2.0), _failing(1, 6.0)]
+
+    result = run_park_dispatch_agent("wind_farm_a", triage_items=triage_items)
+
+    assert len(result["available_crews"]) == 1
+    assert result["has_conflict"] is False
+    assert result["power_model_invoked"] is False
+
+
+def _failing(turbine_id: int, days_to_failure: float) -> dict[str, object]:
+    """
+    Build a triage item for a turbine that needs repair.
+
+    :param turbine_id: Turbine identifier.
+    :param days_to_failure: Predicted days until failure.
+
+    :returns item: Triage dictionary as the maintenance model produces it.
+    """
+    return {
+        "turbine_id": turbine_id,
+        "park_id": "wind_farm_a",
+        "health_status": "WARNING",
+        "fault_probability": 0.6,
+        "days_to_failure": days_to_failure,
+        "suspected_failure": "Gearbox Wear",
+        "recommended_action": "Inspect.",
+        "needs_repair": True,
+    }
+
+
 def test_critical_fault_triggers_voice_call() -> None:
     """Verify that a critical turbine triggers a text-to-speech voice alert."""
     voice_client = get_default_voice_client()

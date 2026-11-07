@@ -577,7 +577,7 @@ export interface components {
             crews_available: number;
             /**
              * Conflict Detected
-             * @description True if repair candidates exceeded available crews in this park.
+             * @description True if two or more turbines of this park are predicted to fail in the same interval.
              */
             conflict_detected: boolean;
             /**
