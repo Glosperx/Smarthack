@@ -4,6 +4,7 @@
 Scalars, failure scenarios, sensor mappings, and thresholds for predictive maintenance.
 
 The following can be imported from this module:
+- `DEFAULT_FORECAST_HORIZON_DAYS`
 - `DEFAULT_HEALTH_THRESHOLD_CRITICAL`
 - `DEFAULT_HEALTH_THRESHOLD_WARNING`
 - `DEFAULT_HEALTH_THRESHOLD_WATCH`
@@ -26,9 +27,21 @@ The following can be imported from this module:
 - `SENSOR_GEARBOX_OIL`
 - `SENSOR_GENERATOR_RPM`
 - `SENSOR_GRID_POWER`
+- `SENSOR_HYDRAULIC_OIL`
+- `SENSOR_NACELLE_TEMP`
 - `SENSOR_PITCH_ANGLE`
+- `SENSOR_ROTOR_RPM`
+- `SENSOR_STATOR_PHASE1`
+- `SENSOR_STATOR_PHASE2`
+- `SENSOR_STATOR_PHASE3`
+- `SENSOR_TRANSFORMER_L1`
+- `SENSOR_TRANSFORMER_L2`
+- `SENSOR_TRANSFORMER_L3`
 - `SENSOR_WIND_SPEED`
 """
+
+#: Default failure forecast horizon in days (1 week).
+DEFAULT_FORECAST_HORIZON_DAYS: int = 7
 
 #: SCADA column name for ambient temperature (°C).
 SENSOR_AMBIENT_TEMP: str = "sensor_0_avg"
@@ -51,11 +64,38 @@ SENSOR_BEARING_DE: str = "sensor_13_avg"
 #: SCADA column name for generator non-drive-end (NDE) bearing temperature (°C).
 SENSOR_BEARING_NDE: str = "sensor_14_avg"
 
+#: SCADA column name for generator stator winding temperature phase 1 (°C).
+SENSOR_STATOR_PHASE1: str = "sensor_15_avg"
+
+#: SCADA column name for generator stator winding temperature phase 2 (°C).
+SENSOR_STATOR_PHASE2: str = "sensor_16_avg"
+
+#: SCADA column name for generator stator winding temperature phase 3 (°C).
+SENSOR_STATOR_PHASE3: str = "sensor_17_avg"
+
 #: SCADA column name for generator rotational speed (rpm).
 SENSOR_GENERATOR_RPM: str = "sensor_18_avg"
 
 #: SCADA column name for grid active power output (kW).
 SENSOR_GRID_POWER: str = "power_30_avg"
+
+#: SCADA column name for high-voltage transformer temperature phase L1 (°C).
+SENSOR_TRANSFORMER_L1: str = "sensor_38_avg"
+
+#: SCADA column name for high-voltage transformer temperature phase L2 (°C).
+SENSOR_TRANSFORMER_L2: str = "sensor_39_avg"
+
+#: SCADA column name for high-voltage transformer temperature phase L3 (°C).
+SENSOR_TRANSFORMER_L3: str = "sensor_40_avg"
+
+#: SCADA column name for hydraulic group oil temperature (°C).
+SENSOR_HYDRAULIC_OIL: str = "sensor_41_avg"
+
+#: SCADA column name for nacelle internal temperature (°C).
+SENSOR_NACELLE_TEMP: str = "sensor_43_avg"
+
+#: SCADA column name for rotor rotational speed (rpm).
+SENSOR_ROTOR_RPM: str = "sensor_52_avg"
 
 #: Normal operational health status tag.
 HEALTH_STATUS_NORMAL: str = "NORMAL"
@@ -93,7 +133,7 @@ SCENARIO_BEARING_OVERHEATING: str = "bearing_overheating"
 #: Simulation scenario identifier for high-speed gearbox wear and oil degradation.
 SCENARIO_GEARBOX_WEAR: str = "gearbox_wear"
 
-#: Simulation scenario identifier for hydraulic group pressure decay.
+#: Simulation scenario identifier for hydraulic group pressure decay and overheating.
 SCENARIO_HYDRAULIC_LEAK: str = "hydraulic_leak"
 
 #: Simulation scenario identifier for transformer winding overheating.
@@ -108,6 +148,7 @@ FAULT_SUBSYSTEMS: list[str] = [
 ]
 
 __all__ = [
+    "DEFAULT_FORECAST_HORIZON_DAYS",
     "DEFAULT_HEALTH_THRESHOLD_CRITICAL",
     "DEFAULT_HEALTH_THRESHOLD_WARNING",
     "DEFAULT_HEALTH_THRESHOLD_WATCH",
@@ -130,6 +171,15 @@ __all__ = [
     "SENSOR_GEARBOX_OIL",
     "SENSOR_GENERATOR_RPM",
     "SENSOR_GRID_POWER",
+    "SENSOR_HYDRAULIC_OIL",
+    "SENSOR_NACELLE_TEMP",
     "SENSOR_PITCH_ANGLE",
+    "SENSOR_ROTOR_RPM",
+    "SENSOR_STATOR_PHASE1",
+    "SENSOR_STATOR_PHASE2",
+    "SENSOR_STATOR_PHASE3",
+    "SENSOR_TRANSFORMER_L1",
+    "SENSOR_TRANSFORMER_L2",
+    "SENSOR_TRANSFORMER_L3",
     "SENSOR_WIND_SPEED",
 ]

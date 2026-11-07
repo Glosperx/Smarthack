@@ -11,7 +11,37 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * Health Check
+         * @description Return the health status of the application.
+         *
+         *     :returns status: A dictionary containing the operational status string.
+         */
         get: operations["health_check_api_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/health/db": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Health Check Db
+         * @description Test connectivity to Supabase and query the configured table.
+         *
+         *     :param http: Injected application HTTP client.
+         *
+         *     :returns result: Connection test details including status, table name, and rows found.
+         */
+        get: operations["health_check_db_api_health_db_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -27,7 +57,42 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * Get Example
+         * @description Search or query the example upstream service.
+         *
+         *     :param q: Search query parameter.
+         *     :param http: Injected application HTTP client.
+         *
+         *     :returns result: Search result matching the query.
+         *     :raises HTTPException: 502 when upstream request fails.
+         */
         get: operations["get_example_api_example_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/parks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Parks
+         * @description Return all valid wind parks.
+         *
+         *     :param http: Injected application asynchronous HTTP client.
+         *
+         *     :returns parks: List of validated `Park` objects.
+         *     :raises HTTPException: 502 Bad Gateway if the upstream database query fails.
+         */
+        get: operations["get_parks_api_parks_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -40,22 +105,62 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * ExampleResult
+         * @description Result model for the example query endpoint.
+         *
+         *     Carries the echoed query and a list of matched item strings.
+         */
         ExampleResult: {
-            /** @description The input search query echoed back. */
+            /**
+             * Query
+             * @description The input search query echoed back.
+             */
             query: string;
             /**
+             * Items
              * @description Matched items or results.
-             * @default []
              */
             items?: string[];
         };
+        /** HTTPValidationError */
         HTTPValidationError: {
+            /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /**
+         * Park
+         * @description Wind park geographical coordinates and identification.
+         */
+        Park: {
+            /**
+             * Id
+             * @description Unique numeric park identifier.
+             */
+            id: number;
+            /**
+             * Latitude
+             * @description WGS84 latitude coordinate.
+             */
+            latitude: number;
+            /**
+             * Longitude
+             * @description WGS84 longitude coordinate.
+             */
+            longitude: number;
+        };
+        /** ValidationError */
         ValidationError: {
+            /** Location */
             loc: (string | number)[];
+            /** Message */
             msg: string;
+            /** Error Type */
             type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
         };
     };
     responses: never;
@@ -88,6 +193,28 @@ export interface operations {
             };
         };
     };
+    health_check_db_api_health_db_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
     get_example_api_example_get: {
         parameters: {
             query: {
@@ -115,6 +242,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_parks_api_parks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Park"][];
                 };
             };
         };

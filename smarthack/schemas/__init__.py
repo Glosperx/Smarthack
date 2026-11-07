@@ -6,8 +6,10 @@ These define the schema of requests and responses exposed via OpenAPI.
 
 The following can be imported from this module:
 - `ExampleResult`
+- `Park`
 """
 
 from smarthack.schemas.example import ExampleResult
+from smarthack.schemas.parks import Park
 
-__all__ = ["ExampleResult"]
+__all__ = ["ExampleResult", "Park"]

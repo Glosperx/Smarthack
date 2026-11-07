@@ -25,6 +25,7 @@ def test_get_maintenance_tool_spec_schema() -> None:
     props = spec["function"]["parameters"]["properties"]
     assert "asset_id" in props
     assert "window_hours" in props
+    assert "horizon_days" in props
     assert "scenario" in props
     assert "asset_id" in spec["function"]["parameters"]["required"]
 
@@ -36,7 +37,11 @@ def test_assess_turbine_health_normal() -> None:
     assert payload["status"] == "success"
     assert payload["asset_id"] == 0
     assert payload["health_status"] == HEALTH_STATUS_NORMAL
-    assert payload["health_score"] >= 80.0
+    assert payload["health_score"] >= 75.0
+    assert "subsystem_risks" in payload
+    assert "daily_forecast" in payload
+    assert len(payload["daily_forecast"]) == 7
+    assert "recommended_action" in payload
     assert "summary_text" in payload
     assert "Turbine #0" in payload["summary_text"]
 
@@ -53,6 +58,11 @@ def test_assess_turbine_health_fault_scenario() -> None:
     assert payload["asset_id"] == 3
     assert payload["health_status"] in (HEALTH_STATUS_WARNING, HEALTH_STATUS_CRITICAL)
     assert payload["estimated_days_to_failure"] is not None
+    assert payload["suspected_subsystem"] == "Generator Bearing"
+    assert "subsystem_risks" in payload
+    assert "daily_forecast" in payload
+    assert len(payload["daily_forecast"]) == 7
+    assert payload["subsystem_risks"]["Generator Bearing"] > 0.50
     assert "summary_text" in payload
     assert "ALERT" in payload["summary_text"] or "WARNING" in payload["summary_text"]
 
@@ -63,6 +73,7 @@ def test_simulate_turbine_scenario_convenience() -> None:
     assert payload["status"] == "success"
     assert payload["asset_id"] == 7
     assert payload["records_evaluated"] > 0
+    assert len(payload["daily_forecast"]) == 7
 
 
 def test_format_health_report() -> None:
@@ -74,3 +85,6 @@ def test_format_health_report() -> None:
     assert "Operational Status" in report
     assert "Overall Health Score" in report
     assert "Fault Risk Probability" in report
+    assert "Subsystem Risk Breakdown" in report
+    assert "7-Day Failure Risk Forecast" in report
+    assert "Recommended Action" in report

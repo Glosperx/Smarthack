@@ -25,6 +25,7 @@ The following can be imported from this module:
 - `DEFAULT_MAINTENANCE_DATA_DIR`
 - `DEFAULT_MAINTENANCE_MODELS_DIR`
 - `DEFAULT_PORT`
+- `DEFAULT_SUPABASE_PARKS_TABLE`
 - `DEFAULT_WIND_DATA_DIR`
 - `DEFAULT_WIND_MODELS_DIR`
 - `app_env`
@@ -38,6 +39,7 @@ The following can be imported from this module:
 - `maintenance_models_dir`
 - `port`
 - `supabase_key`
+- `supabase_parks_table`
 - `supabase_url`
 - `wind_data_dir`
 - `wind_models_dir`
@@ -65,6 +67,9 @@ DEFAULT_MAINTENANCE_DATA_DIR = "data/maintenance"
 
 #: The directory holding maintenance model artifacts when `MAINTENANCE_MODELS_DIR` is not set.
 DEFAULT_MAINTENANCE_MODELS_DIR = "models/maintenance"
+
+#: The default table name for wind parks in Supabase.
+DEFAULT_SUPABASE_PARKS_TABLE = "parks"
 #: The host to bind the server to when `SMARTHACK_HOST` is not set.
 DEFAULT_HOST = "127.0.0.1"
 
@@ -266,6 +271,7 @@ __all__ = [
     "DEFAULT_MAINTENANCE_DATA_DIR",
     "DEFAULT_MAINTENANCE_MODELS_DIR",
     "DEFAULT_PORT",
+    "DEFAULT_SUPABASE_PARKS_TABLE",
     "DEFAULT_WIND_DATA_DIR",
     "DEFAULT_WIND_MODELS_DIR",
     "app_env",
@@ -279,6 +285,7 @@ __all__ = [
     "maintenance_models_dir",
     "port",
     "supabase_key",
+    "supabase_parks_table",
     "supabase_url",
     "wind_data_dir",
     "wind_models_dir",

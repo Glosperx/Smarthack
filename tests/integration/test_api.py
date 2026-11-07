@@ -5,7 +5,6 @@ Smoke tests exercising API routes through Starlette's TestClient.
 """
 
 from fastapi.testclient import TestClient
-import httpx
 import pytest
 import respx
 
