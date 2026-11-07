@@ -5,12 +5,23 @@ Validates conditional power model prioritization, crew conflict resolution,
 park-scoped crew alerts, and dual-channel (TTS vs Email) alerting.
 """
 
+import pytest
+
 from smarthack.clients.crew_client import get_default_crew_client
 from smarthack.clients.email_client import get_default_email_client
 from smarthack.clients.voice_client import get_default_voice_client
 from smarthack.schemas.dispatch import AlertChannel, CrewStatus
 from smarthack.services.agent.graph import run_park_dispatch_agent
-from smarthack.services.agent.prompts import classify_alert_channel
+from smarthack.services.agent.prompts import (
+    classify_alert_channel,
+    generate_llm_alert_payload,
+)
+
+
+@pytest.fixture(autouse=True)
+def _isolate_unit_tests(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Ensure unit tests run deterministically without external API latency."""
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
 
 
 def test_classify_alert_channel() -> None:
@@ -141,7 +152,7 @@ def test_conflict_invokes_power_model_and_prioritizes() -> None:
 
     assert d2["priority_rank"] == 2
     assert d2["assigned_crew_id"] is None
-    assert "Deferred" in d2["decision_reason"]
+    assert "deferred" in d2["decision_reason"].lower()
 
 
 def test_critical_fault_triggers_voice_call() -> None:
@@ -207,3 +218,21 @@ def test_park_scoped_crew_isolation() -> None:
     assert len(emails) == 1
     assert emails[0]["park_id"] == "wind_farm_b"
     assert "gamma.crew@windfarmb.com" in emails[0]["recipient_email"]
+
+
+def test_generate_llm_alert_payload_fallback() -> None:
+    """Verify LLM helper fallback when GEMINI_API_KEY is not set."""
+    payload = generate_llm_alert_payload(
+        turbine_id=0,
+        park_id="wind_farm_a",
+        channel=AlertChannel.VOICE_CALL,
+        health_status="CRITICAL",
+        days_to_failure=1.0,
+        fault_probability=0.9,
+        suspected_failure="Bearing Overheating",
+        recommended_action="Controlled shutdown.",
+        mwh=15.0,
+        assigned_crew="Alpha Team",
+    )
+    assert "Alpha Team" in payload["speech_text"]
+    assert "CRITICAL" in payload["decision_reason"]

@@ -127,7 +127,9 @@ def _parse_point(location: Any) -> tuple[float, float] | None:
     """
     Extract (latitude, longitude) from a PostgREST geography value.
 
-    :param location: GeoJSON dict, or WKT / EWKT string.
+    Supports GeoJSON dicts, WKT POINT strings, and PostGIS EWKB hex strings.
+
+    :param location: GeoJSON dict, or WKT / EWKB hex string.
 
     :returns coords: `(lat, lon)` or None when unparseable.
     """
@@ -138,6 +140,18 @@ def _parse_point(location: Any) -> tuple[float, float] | None:
         m = re.search(r"POINT\s*\(\s*(-?[\d.]+)\s+(-?[\d.]+)\s*\)", location, re.IGNORECASE)
         if m:
             return float(m.group(2)), float(m.group(1))
+        clean_hex = location.strip()
+        if len(clean_hex) in (42, 50) and all(c in "0123456789abcdefABCDEF" for c in clean_hex):
+            try:
+                import binascii
+                import struct
+
+                raw = binascii.unhexlify(clean_hex)
+                offset = 9 if len(clean_hex) == 50 else 5
+                lon, lat = struct.unpack("<dd", raw[offset : offset + 16])
+                return float(lat), float(lon)
+            except Exception:
+                pass
     return None
 
 

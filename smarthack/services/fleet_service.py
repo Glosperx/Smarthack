@@ -177,7 +177,11 @@ class FleetService:
             health_status=status,
             fault_probability=fault_prob,
             days_to_failure=days_to_fail,
-            suspected_failure=str(health_report.get("suspected_failure", "None")),
+            suspected_failure=str(
+                health_report.get("suspected_subsystem")
+                or health_report.get("suspected_failure")
+                or "General Drivetrain"
+            ),
             subsystem_risks=health_report.get("subsystem_risks", {}),
             daily_forecast=health_report.get("daily_forecast", []),
             recommended_action=str(health_report.get("recommended_action", "No action needed.")),

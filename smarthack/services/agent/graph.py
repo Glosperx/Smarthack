@@ -16,9 +16,13 @@ from langgraph.graph import END, START, StateGraph
 
 from smarthack.clients.crew_client import get_default_crew_client
 from smarthack.schemas.dispatch import AlertChannel, CrewStatus, DispatchDecision
-from smarthack.services.agent.prompts import build_alert_explanation, classify_alert_channel
+from smarthack.services.agent.prompts import (
+    classify_alert_channel,
+    generate_llm_alert_payload,
+)
 from smarthack.services.agent.state import DispatchAgentState
 from smarthack.services.agent.tools import (
+    _use_database,
     dispatch_voice_alert,
     dispatch_warning_email,
     get_available_crews_tool,
@@ -212,25 +216,25 @@ def node_decide_and_dispatch_alerts(state: DispatchAgentState) -> dict[str, Any]
             else f"lead@{park_id}.com"
         )
 
-        reason = build_alert_explanation(
+        llm_payload = generate_llm_alert_payload(
             turbine_id=t_id,
             park_id=park_id,
             channel=channel,
             health_status=status,
             days_to_failure=days_to_fail,
+            fault_probability=fault_prob,
             suspected_failure=suspected,
+            recommended_action=str(item.get("recommended_action", "Inspect component.")),
             mwh=mwh,
             assigned_crew=assigned_crew_name,
         )
 
+        reason = llm_payload["decision_reason"]
         notification_sent = False
         message_body = ""
 
         if channel == AlertChannel.VOICE_CALL:
-            message_body = (
-                f"CRITICAL WARNING: Imminent {suspected} predicted in {days_to_fail:.1f} days "
-                f"with {fault_prob * 100:.1f}% probability. Action: {item.get('recommended_action')}."
-            )
+            message_body = llm_payload["speech_text"]
             resp = dispatch_voice_alert(
                 phone_number=target_phone,
                 crew_name=target_name,
@@ -243,14 +247,8 @@ def node_decide_and_dispatch_alerts(state: DispatchAgentState) -> dict[str, Any]
             notification_sent = True
 
         elif channel == AlertChannel.EMAIL:
-            subject = f"[{status}] Maintenance Work Ticket - Turbine {t_id} ({park_id})"
-            message_body = (
-                f"Predictive maintenance sweep detected {status} condition for Turbine {t_id}.\n"
-                f"Component: {suspected}\n"
-                f"Lead Time: {days_to_fail:.1f} days\n"
-                f"Recommended Action: {item.get('recommended_action')}\n"
-                f"Assigned Crew: {assigned_crew_name or 'DEFERRED - High queue priority'}"
-            )
+            subject = llm_payload["email_subject"]
+            message_body = llm_payload["email_body"]
             resp = dispatch_warning_email(
                 recipient_email=target_email,
                 crew_name=target_name,
@@ -268,7 +266,7 @@ def node_decide_and_dispatch_alerts(state: DispatchAgentState) -> dict[str, Any]
             notification_sent = True
 
         # If assigned, update crew status in client
-        if assigned_crew_id:
+        if assigned_crew_id and not _use_database():
             crew_client.update_crew_status(assigned_crew_id, CrewStatus.DISPATCHED)
 
         decision = DispatchDecision(

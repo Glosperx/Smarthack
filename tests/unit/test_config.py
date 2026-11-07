@@ -40,6 +40,7 @@ def test_log_level_is_upper_cased(monkeypatch: pytest.MonkeyPatch) -> None:
         (config.log_level, "LOG_LEVEL", "INFO"),
         (config.host, "SMARTHACK_HOST", "127.0.0.1"),
         (config.example_service_url, "SMARTHACK_EXAMPLE_SERVICE_URL", "http://localhost:9000"),
+        (config.supabase_parks_table, "SUPABASE_PARKS_TABLE", "parks"),
         (config.timezone, "SMARTHACK_TIMEZONE", "UTC"),
         (config.supabase_url, "SUPABASE_URL", ""),
         (config.supabase_key, "SUPABASE_KEY", ""),
@@ -52,6 +53,22 @@ def test_an_empty_variable_means_unset(
     monkeypatch.setenv(name, "")
 
     assert accessor() == default
+
+
+@pytest.mark.parametrize(
+    "accessor, name",
+    [
+        (config.supabase_url, "SUPABASE_URL"),
+        (config.supabase_key, "SUPABASE_KEY"),
+    ],
+)
+def test_mandatory_variables_raise_when_empty(
+    monkeypatch: pytest.MonkeyPatch, accessor: Callable[[], str], name: str
+) -> None:
+    """Mandatory configuration variables raise RuntimeError when unset or empty."""
+    monkeypatch.setenv(name, "")
+    with pytest.raises(RuntimeError):
+        accessor()
 
 
 def test_numeric_and_path_accessors(monkeypatch: pytest.MonkeyPatch) -> None:
