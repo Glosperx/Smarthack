@@ -16,6 +16,7 @@ the package works with no credentials present and no newcomer is blocked from
 running the tests. Nothing is stubbed out in advance.
 
 The following can be imported from this module:
+- `DEFAULT_AGENT_DATA_SOURCE`
 - `DEFAULT_APP_ENV`
 - `DEFAULT_DATA_DIR`
 - `DEFAULT_EXAMPLE_SERVICE_URL`
@@ -28,6 +29,7 @@ The following can be imported from this module:
 - `DEFAULT_SUPABASE_PARKS_TABLE`
 - `DEFAULT_WIND_DATA_DIR`
 - `DEFAULT_WIND_MODELS_DIR`
+- `agent_data_source`
 - `app_env`
 - `data_dir`
 - `example_service_url`
@@ -49,6 +51,9 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
+
+#: Where the dispatch agent reads its data from when `AGENT_DATA_SOURCE` is not set.
+DEFAULT_AGENT_DATA_SOURCE = "memory"
 
 #: The environment the application runs in when `APP_ENV` is not set.
 DEFAULT_APP_ENV = "development"
@@ -101,6 +106,16 @@ def app_env() -> str:
         `"staging"` or `"production"`. Defaults to `"development"`.
     """
     return (os.environ.get("APP_ENV") or DEFAULT_APP_ENV).strip().lower()
+
+
+def agent_data_source() -> str:
+    """
+    Return where the dispatch agent reads its crews, turbines and health predictions from.
+
+    :returns source: `"supabase"` to use the database tables; anything else means the
+        in-memory seed data. Defaults to `"memory"`.
+    """
+    return (os.environ.get("AGENT_DATA_SOURCE") or DEFAULT_AGENT_DATA_SOURCE).strip().lower()
 
 
 def log_level() -> str:
@@ -261,7 +276,17 @@ def supabase_key() -> str:
     return raw
 
 
+def supabase_parks_table() -> str:
+    """
+    Return the name of the Supabase table holding wind parks.
+
+    :returns table: The table name. Defaults to `"parks"`.
+    """
+    return (os.environ.get("SUPABASE_PARKS_TABLE") or DEFAULT_SUPABASE_PARKS_TABLE).strip()
+
+
 __all__ = [
+    "DEFAULT_AGENT_DATA_SOURCE",
     "DEFAULT_APP_ENV",
     "DEFAULT_DATA_DIR",
     "DEFAULT_EXAMPLE_SERVICE_URL",
@@ -274,6 +299,7 @@ __all__ = [
     "DEFAULT_SUPABASE_PARKS_TABLE",
     "DEFAULT_WIND_DATA_DIR",
     "DEFAULT_WIND_MODELS_DIR",
+    "agent_data_source",
     "app_env",
     "data_dir",
     "example_service_url",
