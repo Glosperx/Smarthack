@@ -21,6 +21,7 @@ nav:
   - Getting started: getting-started.md
   - Architecture: architecture.md
   - Wind Forecasting: wind_walkthrough.md
+  - Hill Wind Site Finder: wind_resource.md
   - Testing: testing.md
   - Contributing: contributing.md
   - Serving: serving.md

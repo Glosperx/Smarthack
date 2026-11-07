@@ -1,0 +1,130 @@
+{
+  "target_years": [
+    2027,
+    2028
+  ],
+  "data_until": 2025,
+  "reference_years": [
+    2008,
+    2017
+  ],
+  "bounds": {
+    "south": 43.5,
+    "west": 20.0,
+    "north": 48.5,
+    "east": 30.0
+  },
+  "elevation_band_m": [
+    200.0,
+    800.0
+  ],
+  "max_slope_deg": 10.0,
+  "legend": {
+    "vmin": 2.5,
+    "vmax": 7.5,
+    "colors": [
+      "#cde2fb",
+      "#9ec5f4",
+      "#6da7ec",
+      "#3987e5",
+      "#256abf",
+      "#184f95",
+      "#0d366b"
+    ],
+    "unit": "m/s"
+  },
+  "selected_estimator": "climatology_5y",
+  "backtest": [
+    {
+      "estimator": "climatology_5y",
+      "mae_validation": 0.1108,
+      "mae_test": 0.1093,
+      "mape_test": 0.0215,
+      "selected": true
+    },
+    {
+      "estimator": "exp_weighted_8y",
+      "mae_validation": 0.1158,
+      "mae_test": 0.0956,
+      "mape_test": 0.019,
+      "selected": false
+    },
+    {
+      "estimator": "climatology_10y",
+      "mae_validation": 0.1183,
+      "mae_test": 0.1017,
+      "mape_test": 0.0202,
+      "selected": false
+    },
+    {
+      "estimator": "climatology_all",
+      "mae_validation": 0.1223,
+      "mae_test": 0.0985,
+      "mape_test": 0.0198,
+      "selected": false
+    },
+    {
+      "estimator": "learned_blend",
+      "mae_validation": 0.1273,
+      "mae_test": 0.0954,
+      "mape_test": 0.019,
+      "selected": false
+    },
+    {
+      "estimator": "linear_trend_15y",
+      "mae_validation": 0.1361,
+      "mae_test": 0.1349,
+      "mape_test": 0.0268,
+      "selected": false
+    },
+    {
+      "estimator": "persistence",
+      "mae_validation": 0.1528,
+      "mae_test": 0.1624,
+      "mape_test": 0.0323,
+      "selected": false
+    }
+  ],
+  "validation_years": [
+    2004,
+    2015
+  ],
+  "test_years": [
+    2016,
+    2025
+  ],
+  "band_low_pct": -0.0379,
+  "band_high_pct": 0.0325,
+  "band_coverage_test": 0.778,
+  "rank_correlation_test": 0.9938,
+  "hill_area_km2": 100912.0,
+  "buildable_area_km2": 65542.0,
+  "hill_wind_p50_mean": 4.49,
+  "sources": [
+    {
+      "name": "NASA POWER (MERRA-2) monthly wind speed at 50 m, 1981-present",
+      "role": "Long-term record for the backtest and the forecast of the next years",
+      "url": "https://power.larc.nasa.gov/",
+      "license": "NASA open data, no restrictions"
+    },
+    {
+      "name": "Global Wind Atlas v3, mean wind speed at 100 m (250 m grid)",
+      "role": "Terrain-resolved long-term wind of the 2008-2017 reference period",
+      "url": "https://globalwindatlas.info/",
+      "license": "CC BY 4.0 (DTU / World Bank Group)"
+    },
+    {
+      "name": "Copernicus DEM GLO-90",
+      "role": "Elevation band (200-800 m) and terrain slope",
+      "url": "https://registry.opendata.aws/copernicus-dem/",
+      "license": "Copernicus DEM licence, free use with attribution (ESA / Airbus)"
+    },
+    {
+      "name": "OpenStreetMap Nominatim",
+      "role": "Names of the localities near the proposed sites",
+      "url": "https://nominatim.openstreetmap.org/",
+      "license": "ODbL, (c) OpenStreetMap contributors"
+    }
+  ],
+  "generated_at": "2026-11-07T21:23:05+00:00"
+}

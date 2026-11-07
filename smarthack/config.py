@@ -27,6 +27,8 @@ The following can be imported from this module:
 - `DEFAULT_MAINTENANCE_INTERVAL_MINUTES`
 - `DEFAULT_MAINTENANCE_MODELS_DIR`
 - `DEFAULT_PORT`
+- `DEFAULT_RESOURCE_ATLAS_DIR`
+- `DEFAULT_RESOURCE_CACHE_DIR`
 - `DEFAULT_TIMEZONE`
 - `DEFAULT_WIND_DATA_DIR`
 - `DEFAULT_WIND_MODELS_DIR`
@@ -46,6 +48,8 @@ The following can be imported from this module:
 - `maintenance_models_dir`
 - `open_meteo_url`
 - `port`
+- `resource_atlas_dir`
+- `resource_cache_dir`
 - `supabase_key`
 - `supabase_service_key`
 - `supabase_url`
@@ -86,6 +90,12 @@ DEFAULT_MAINTENANCE_DATA_DIR = "data/maintenance"
 
 #: The directory holding maintenance model artifacts when `MAINTENANCE_MODELS_DIR` is not set.
 DEFAULT_MAINTENANCE_MODELS_DIR = "models/maintenance"
+
+#: Where the hill wind atlas build caches its downloads when `RESOURCE_CACHE_DIR` is not set.
+DEFAULT_RESOURCE_CACHE_DIR = ".data/resource"
+
+#: Where the built hill wind atlas is written and served from when `RESOURCE_ATLAS_DIR` is not set.
+DEFAULT_RESOURCE_ATLAS_DIR = "models/resource"
 
 #: The default IANA timezone when `SMARTHACK_TIMEZONE` is not set.
 DEFAULT_TIMEZONE = "UTC"
@@ -165,6 +175,30 @@ def wind_models_dir() -> Path:
     """
     raw = os.environ.get("WIND_MODELS_DIR") or DEFAULT_WIND_MODELS_DIR
     path = Path(raw)
+    if not path.is_absolute():
+        path = Path(__file__).resolve().parent.parent / path
+    return path
+
+
+def resource_cache_dir() -> Path:
+    """
+    Return the directory where the wind atlas build caches its raw downloads.
+
+    :returns path: Configured Path, relative paths resolved against the repository root.
+    """
+    path = Path(os.environ.get("RESOURCE_CACHE_DIR") or DEFAULT_RESOURCE_CACHE_DIR)
+    if not path.is_absolute():
+        path = Path(__file__).resolve().parent.parent / path
+    return path
+
+
+def resource_atlas_dir() -> Path:
+    """
+    Return the directory holding the built hill wind atlas (heatmap, sites, grid).
+
+    :returns path: Configured Path, relative paths resolved against the repository root.
+    """
+    path = Path(os.environ.get("RESOURCE_ATLAS_DIR") or DEFAULT_RESOURCE_ATLAS_DIR)
     if not path.is_absolute():
         path = Path(__file__).resolve().parent.parent / path
     return path
@@ -397,6 +431,8 @@ __all__ = [
     "DEFAULT_MAINTENANCE_INTERVAL_MINUTES",
     "DEFAULT_MAINTENANCE_MODELS_DIR",
     "DEFAULT_PORT",
+    "DEFAULT_RESOURCE_ATLAS_DIR",
+    "DEFAULT_RESOURCE_CACHE_DIR",
     "DEFAULT_TIMEZONE",
     "DEFAULT_WIND_DATA_DIR",
     "DEFAULT_WIND_MODELS_DIR",
@@ -416,6 +452,8 @@ __all__ = [
     "maintenance_models_dir",
     "open_meteo_url",
     "port",
+    "resource_atlas_dir",
+    "resource_cache_dir",
     "supabase_key",
     "supabase_service_key",
     "supabase_url",

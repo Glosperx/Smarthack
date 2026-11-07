@@ -46,6 +46,7 @@ RANKS: dict[str, int] = {
     "schemas": 1,
     "wind": 1,
     "maintenance": 1,
+    "resource": 1,
     "clients": 2,
     "services": 3,
     "api": 4,

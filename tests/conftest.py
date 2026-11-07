@@ -31,6 +31,7 @@ import pytest
 #: tests are concerned. A new extra gets a line here, and
 #: `test_repository_files.py` fails until it has one. Empty until the first extra.
 EXTRA_MODULES: dict[str, tuple[str, ...]] = {
+    "resource": ("imagecodecs", "numpy", "PIL", "tifffile"),
     "wind": (
         "catboost",
         "joblib",
@@ -51,6 +52,8 @@ _ENVIRONMENT_VARIABLES = (
     "WIND_MODELS_DIR",
     "MAINTENANCE_MODELS_DIR",
     "MAINTENANCE_DATA_DIR",
+    "RESOURCE_CACHE_DIR",
+    "RESOURCE_ATLAS_DIR",
     "SMARTHACK_HOST",
     "SMARTHACK_PORT",
     "SMARTHACK_FRONTEND_DIST",
