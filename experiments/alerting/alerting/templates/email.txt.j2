@@ -1,0 +1,31 @@
+ALERTĂ {{ severity.adjective | upper }} – Parc {{ park }}
+
+{{ turbines_phrase | first_upper }} {{ "are" if turbines | length == 1 else "au" }} {{ severity.risk }} de defecțiune în {{ eta_long }}.
+{% if call %}
+Persoana de gardă este sunată și pe telefon.
+{% endif %}
+{% if rule %}
+
+ATENȚIE: decizia modelului a fost schimbată de o regulă.
+  Regula: {{ rule }}
+  Modelul propusese: {{ model_choice }}
+  Decizia finală: gravitate {{ severity.adjective }}, {{ channel_label }}
+{% endif %}
+
+Turbine la risc:
+{% for turbine in turbines %}
+  - turbina {{ turbine.number }} ({{ turbine.id }}): probabilitate de defecțiune {{ turbine.probability }}
+{% endfor %}
+
+Fereastra probabilă: {{ window }}
+Timp estimat până la defecțiune: {{ eta_long }}
+Pierdere estimată: {{ loss }}
+
+Decizie: gravitate {{ severity.adjective }}, {{ channel_label }}, încredere {{ confidence }}
+Probabilități: {% for option in probabilities %}{{ option.label }} {{ option.value }}{{ ", " if not loop.last }}{% endfor %}
+
+
+ID alertă: {{ alert_id }}
+Generată: {{ created_at }}
+
+Mesaj trimis automat de sistemul de monitorizare al parcului {{ park }}.

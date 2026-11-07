@@ -1,0 +1,20 @@
+{
+  "alert": {
+    "alert_id": "ALR-2026-11-11-0003",
+    "park": "Dealul Țarinii",
+    "turbines": [{"turbine_id": "T07", "probability": 0.82}],
+    "window_start": "2026-11-12T04:00:00+02:00",
+    "window_end": "2026-11-12T14:00:00+02:00",
+    "hours_to_failure": 18,
+    "estimated_loss_ron": 145000,
+    "created_at": "2026-11-11T14:05:00+02:00"
+  },
+  "decision": {
+    "alert_id": "ALR-2026-11-11-0003",
+    "severity": "ridicata",
+    "channel": "email_si_apel",
+    "probabilities": {"scazuta": 0.02, "medie": 0.12, "ridicata": 0.66, "critica": 0.20},
+    "confidence": 0.66,
+    "overridden_by_rule": null
+  }
+}
