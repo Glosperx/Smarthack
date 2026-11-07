@@ -28,11 +28,11 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from smarthack.clients.crew_client import get_default_crew_client
-from smarthack.clients.email_client import get_default_email_client
-from smarthack.clients.voice_client import get_default_voice_client
-from smarthack.services.agent.graph import run_park_dispatch_agent
-from smarthack.services.dispatch_service import get_default_dispatch_service
+from smarthack.clients.crew_client import get_default_crew_client  # noqa: E402
+from smarthack.clients.email_client import get_default_email_client  # noqa: E402
+from smarthack.clients.voice_client import get_default_voice_client  # noqa: E402
+from smarthack.services.agent.graph import run_park_dispatch_agent  # noqa: E402
+from smarthack.services.dispatch_service import get_default_dispatch_service  # noqa: E402
 
 
 def configure_runner_logging(verbose: bool = False) -> None:
@@ -128,17 +128,81 @@ def run_full_fleet_sweep() -> int:
     logger = logging.getLogger("agent.test")
     logger.info(">>> EXECUTING FULL FLEET SWEEP ACROSS ALL PARKS <<<")
 
-    dispatch_svc = get_default_dispatch_service()
-    report = dispatch_svc.run_daily_fleet_sweep()
+    if os.environ.get("AGENT_DATA_SOURCE") == "supabase":
+        import asyncio
+        from datetime import datetime, timezone
+        import httpx
+        from smarthack.clients import supabase
+        from smarthack.schemas.dispatch import (
+            AlertChannel,
+            DispatchDecision,
+            FleetSweepReport,
+            ParkSweepResult,
+        )
+
+        async def _get_park_ids() -> list[str]:
+            async with httpx.AsyncClient(timeout=10.0) as http:
+                parks = await supabase.fetch_parks(http)
+                return [str(p["id"]) for p in parks]
+
+        try:
+            park_ids = asyncio.run(_get_park_ids())
+        except Exception:
+            park_ids = ["1", "2", "3", "4", "5"]
+
+        park_results: dict[str, ParkSweepResult] = {}
+        total_scanned = 0
+        total_faults = 0
+        critical_alerts = 0
+        warning_alerts = 0
+
+        for pid in park_ids:
+            logger.info("Sweeping park %s via LangGraph agent...", pid)
+            res = run_park_dispatch_agent(park_id=pid)
+            decisions = [
+                DispatchDecision.model_validate(d) for d in res.get("alert_decisions", [])
+            ]
+            failing = res.get("failing_turbines", [])
+            crews = res.get("available_crews", [])
+            scanned = len(res.get("triage_items", []))
+            total_scanned += scanned
+            total_faults += len(failing)
+            for d in decisions:
+                if d.alert_channel == AlertChannel.VOICE_CALL:
+                    critical_alerts += 1
+                elif d.alert_channel == AlertChannel.EMAIL:
+                    warning_alerts += 1
+
+            park_results[pid] = ParkSweepResult(
+                park_id=pid,
+                turbines_scanned=scanned,
+                turbines_needing_repair=len(failing),
+                crews_available=len(crews),
+                conflict_detected=bool(res.get("has_conflict", False)),
+                power_model_invoked=bool(res.get("power_model_invoked", False)),
+                decisions=decisions,
+            )
+
+        report = FleetSweepReport(
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            total_turbines_scanned=total_scanned,
+            total_faults_detected=total_faults,
+            critical_alerts_count=critical_alerts,
+            warning_alerts_count=warning_alerts,
+            park_results=park_results,
+        )
+    else:
+        dispatch_svc = get_default_dispatch_service()
+        report = dispatch_svc.run_daily_fleet_sweep()
 
     print("\n" + "=" * 70)
     print(" FLEET SWEEP REPORT SUMMARY")
     print("=" * 70)
     print(f"Timestamp:                 {report.timestamp}")
     print(f"Total Turbines Scanned:    {report.total_turbines_scanned}")
-    print(f"Total Needing Repair:      {report.total_turbines_needing_repair}")
-    print(f"Critical Alerts (Voice):   {report.critical_alerts_dispatched}")
-    print(f"Warning Alerts (Email):    {report.warning_alerts_dispatched}")
+    print(f"Total Faults Detected:     {report.total_faults_detected}")
+    print(f"Critical Alerts (Voice):   {report.critical_alerts_count}")
+    print(f"Warning Alerts (Email):    {report.warning_alerts_count}")
     print("=" * 70)
 
     for pid, presult in report.park_results.items():
