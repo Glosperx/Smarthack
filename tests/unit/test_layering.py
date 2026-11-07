@@ -44,6 +44,7 @@ RANKS: dict[str, int] = {
     "constants": 0,
     "utils": 0,
     "wind": 1,
+    "maintenance": 1,
     "__main__": 2,
 }
 
