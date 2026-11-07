@@ -1,15 +1,23 @@
 """
 # Dispatch agent prompts and decision reasoning rules
 
-System instructions and heuristic decision rules for the alerting agent.
+System instructions, LLM synthesis helpers, and heuristic decision rules for the alerting agent.
 
 The following can be imported from this module:
 - `SYSTEM_DISPATCH_PROMPT`
 - `build_alert_explanation`
 - `classify_alert_channel`
+- `generate_llm_alert_payload`
 """
 
+import json
+import logging
+import os
+import re
+
 from smarthack.schemas.dispatch import AlertChannel
+
+logger = logging.getLogger(__name__)
 
 SYSTEM_DISPATCH_PROMPT = """
 You are the Autonomous Fleet Dispatch & Alerting Agent for industrial wind power parks.
@@ -90,4 +98,129 @@ def build_alert_explanation(
     return f"Turbine {turbine_id} in {park_id} is in normal operational condition."
 
 
-__all__ = ["SYSTEM_DISPATCH_PROMPT", "build_alert_explanation", "classify_alert_channel"]
+def generate_llm_alert_payload(
+    turbine_id: int,
+    park_id: str,
+    channel: AlertChannel,
+    health_status: str,
+    days_to_failure: float,
+    fault_probability: float,
+    suspected_failure: str,
+    recommended_action: str,
+    mwh: float | None = None,
+    assigned_crew: str | None = None,
+) -> dict[str, str]:
+    """
+    Generate dynamic reasoning and alert copy using the Google Gemini model.
+
+    Falls back to deterministic templating if GEMINI_API_KEY is not configured.
+
+    :param turbine_id: Asset identifier.
+    :param park_id: Wind park identifier.
+    :param channel: AlertChannel.VOICE_CALL or EMAIL.
+    :param health_status: Assessed health status.
+    :param days_to_failure: Days remaining to breakdown.
+    :param fault_probability: 7-day failure risk score.
+    :param suspected_failure: Failing subsystem name.
+    :param recommended_action: Maintenance instruction protocol.
+    :param mwh: Forecasted MWh generation if evaluated.
+    :param assigned_crew: Name of assigned maintenance crew lead.
+
+    :returns payload: Dict with keys 'speech_text', 'email_subject', 'email_body', 'decision_reason'.
+    """
+    default_reason = build_alert_explanation(
+        turbine_id=turbine_id,
+        park_id=park_id,
+        channel=channel,
+        health_status=health_status,
+        days_to_failure=days_to_failure,
+        suspected_failure=suspected_failure,
+        mwh=mwh,
+        assigned_crew=assigned_crew,
+    )
+
+    hours = days_to_failure * 24.0
+    default_speech = (
+        f"Emergency alert for {assigned_crew or 'maintenance crew'}. "
+        f"Turbine {turbine_id} in {park_id} is in CRITICAL condition. "
+        f"Imminent {suspected_failure} predicted in {hours:.0f} hours. "
+        f"Immediate intervention required: {recommended_action}."
+    )
+
+    default_subject = (
+        f"[{health_status}] Maintenance Work Ticket - Turbine {turbine_id} ({park_id})"
+    )
+    default_body = (
+        f"Predictive maintenance sweep detected {health_status} condition for Turbine {turbine_id} in {park_id}.\n"
+        f"Component: {suspected_failure}\n"
+        f"Lead Time: {days_to_failure:.1f} days ({hours:.0f} hours)\n"
+        f"Fault Probability: {fault_probability * 100:.1f}%\n"
+        f"Action: {recommended_action}\n"
+        f"Assigned Crew: {assigned_crew or 'DEFERRED (Next Shift)'}"
+    )
+
+    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not api_key:
+        return {
+            "speech_text": default_speech,
+            "email_subject": default_subject,
+            "email_body": default_body,
+            "decision_reason": default_reason,
+        }
+
+    try:
+        from google import genai
+
+        client = genai.Client(api_key=api_key)
+        prompt = (
+            f"You are the Autonomous Wind Turbine Dispatch Agent.\n"
+            f"Asset Diagnostics:\n"
+            f"- Turbine: {turbine_id}\n"
+            f"- Wind Park: {park_id}\n"
+            f"- Status: {health_status}\n"
+            f"- Component: {suspected_failure}\n"
+            f"- Lead Time: {days_to_failure:.1f} days ({hours:.0f} hours)\n"
+            f"- Probability: {fault_probability * 100:.1f}%\n"
+            f"- Projected MWh at risk: {mwh or 0.0:.1f} MWh\n"
+            f"- Assigned Crew: {assigned_crew or 'Deferred to next shift'}\n"
+            f"- Channel: {channel.value}\n"
+            f"- Recommended Action: {recommended_action}\n\n"
+            f"Output a valid JSON object with:\n"
+            f'1. "speech_text": Concise, urgent, realistic spoken alert for automated text-to-speech (under 35 words).\n'
+            f'2. "email_subject": Professional engineering subject line.\n'
+            f'3. "email_body": Clear technical body (2-3 sentences with telemetry details).\n'
+            f'4. "decision_reason": 1-2 sentence audit rationale explaining prioritization and alerting channel.\n'
+            f"Respond with JSON ONLY."
+        )
+
+        resp = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+        )
+        text = (resp.text or "").strip()
+        m = re.search(r"\{.*\}", text, re.DOTALL)
+        if m:
+            data = json.loads(m.group(0))
+            return {
+                "speech_text": str(data.get("speech_text") or default_speech),
+                "email_subject": str(data.get("email_subject") or default_subject),
+                "email_body": str(data.get("email_body") or default_body),
+                "decision_reason": str(data.get("decision_reason") or default_reason),
+            }
+    except Exception as exc:
+        logger.warning("Gemini dynamic alerting failed; falling back to templates: %s", exc)
+
+    return {
+        "speech_text": default_speech,
+        "email_subject": default_subject,
+        "email_body": default_body,
+        "decision_reason": default_reason,
+    }
+
+
+__all__ = [
+    "SYSTEM_DISPATCH_PROMPT",
+    "build_alert_explanation",
+    "classify_alert_channel",
+    "generate_llm_alert_payload",
+]
