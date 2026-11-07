@@ -8,7 +8,7 @@ UVICORN := $(if $(BIN),$(BIN)/uvicorn,uvicorn)
 PYTEST  := $(if $(BIN),$(BIN)/pytest,pytest)
 
 .DEFAULT_GOAL := help
-.PHONY: help install hooks format lint test test-fast cov docs docs-serve docker-build clean dev dev-servers dev-api dev-web types build serve check test-db predict worker forecast forecast-worker resource
+.PHONY: help install hooks format lint test test-fast cov docs docs-serve docker-build clean dev dev-servers dev-api dev-web types build serve check test-db predict worker forecast forecast-worker resource up
 
 help:                       # list the targets
 	@grep -E '^[a-z-]+:.*# ' $(MAKEFILE_LIST) | sed -E 's/:[^#]*# /\t/'
@@ -33,6 +33,9 @@ test-agent:                # run autonomous LangGraph agent dispatch test with l
 
 resource:                  # build the hill wind atlas (heatmap, sites, backtest); add ARGS=--no-names offline
 	$(PYTHON) scripts/build_wind_resource.py $(ARGS)
+
+up:                        # ONE command: setup checks, migrations, then API + web + all background jobs
+	$(PYTHON) scripts/run_all.py $(ARGS)
 
 install:                    # editable install with backend dev extras and frontend npm dependencies
 	@if [ ! -d "$(VENV)" ]; then python3 -m venv $(VENV); fi
