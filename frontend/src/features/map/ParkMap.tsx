@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { MapContainer, TileLayer, Marker, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
@@ -10,6 +10,8 @@ interface ParkMapProps {
   selectedId: number | null;
   onSelectPark: (id: number) => void;
   onBackgroundClick: () => void;
+  /** Extra map layers (for example the wind resource atlas), rendered inside the map. */
+  children?: ReactNode;
 }
 
 /**
@@ -77,6 +79,7 @@ export function ParkMap({
   selectedId,
   onSelectPark,
   onBackgroundClick,
+  children,
 }: ParkMapProps) {
   const selectedPark = parks.find((p) => p.id === selectedId) || null;
 
@@ -122,6 +125,7 @@ export function ParkMap({
             </Marker>
           ))}
         </MarkerClusterGroup>
+        {children}
       </MapContainer>
     </div>
   );

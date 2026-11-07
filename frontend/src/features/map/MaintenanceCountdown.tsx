@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 
 /**
  * Calculates remaining seconds until the next maintenance prediction run slot.
- * The backend worker runs on an aligned hourly schedule: interval 60m, offset 2m (:02 of every hour).
+ * The backend worker runs on an aligned schedule: default interval 10m, offset 2m (:02, :12, :22, ...).
  */
 export function getSecondsUntilNextRun(
   now = new Date(),
-  intervalMin = 60,
+  intervalMin = 10,
   offsetMin = 2
 ): number {
   const midnight = new Date(now);
@@ -59,7 +59,7 @@ export function MaintenanceCountdown() {
   return (
     <div
       className="absolute top-4 left-4 z-20 flex items-center gap-3 bg-slate-900/90 backdrop-blur-md px-4 py-2.5 rounded-xl border border-slate-700/80 shadow-lg pointer-events-auto select-none"
-      title="Scheduled fleet predictive maintenance evaluation runs hourly at :02"
+      title="Scheduled fleet predictive maintenance evaluation runs every 10 minutes at :02, :12, :22, :32, :42, :52"
     >
       {/* Animated status beacon */}
       <div className="relative flex items-center justify-center">
@@ -83,7 +83,7 @@ export function MaintenanceCountdown() {
           <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
             Next Prediction
           </span>
-          <span className="text-[10px] text-slate-500 font-mono">(:02)</span>
+          <span className="text-[10px] text-slate-500 font-mono">(10m)</span>
         </div>
         <div className="text-sm font-bold font-mono tracking-tight text-slate-100 flex items-center gap-1">
           {isRunning ? (

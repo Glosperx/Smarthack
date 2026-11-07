@@ -1,0 +1,23 @@
+{
+  "alert": {
+    "alert_id": "ALR-2026-11-13-0004",
+    "park": "Măgura Nord",
+    "turbines": [
+      {"turbine_id": "T11", "probability": 0.91},
+      {"turbine_id": "T12", "probability": 0.64}
+    ],
+    "window_start": "2026-11-14T02:00:00+02:00",
+    "window_end": "2026-11-14T08:00:00+02:00",
+    "hours_to_failure": 6.5,
+    "estimated_loss_ron": 312000,
+    "created_at": "2026-11-13T21:40:00+02:00"
+  },
+  "decision": {
+    "alert_id": "ALR-2026-11-13-0004",
+    "severity": "critica",
+    "channel": "email_si_apel",
+    "probabilities": {"scazuta": 0.01, "medie": 0.08, "ridicata": 0.55, "critica": 0.36},
+    "confidence": 0.55,
+    "overridden_by_rule": "R4 – în afara programului, pierdere peste 100.000 lei ⇒ critică cu apel"
+  }
+}

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ subject }}</title>
+</head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111827;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;">
+<tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;">
+  <tr>
+    <td style="background:{{ severity.color }};color:#ffffff;padding:16px 24px;">
+      <div style="font-size:13px;letter-spacing:1px;">ALERTĂ {{ severity.adjective | upper }}</div>
+      <div style="font-size:20px;font-weight:bold;margin-top:4px;">Parc {{ park }}</div>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:20px 24px 8px 24px;font-size:16px;line-height:1.5;">
+      <strong>{{ turbines_phrase | first_upper }} {{ "are" if turbines | length == 1 else "au" }} {{ severity.risk }} de defecțiune în {{ eta_long }}.</strong>
+      {% if call %}<br>Persoana de gardă este sunată și pe telefon.{% endif %}
+    </td>
+  </tr>
+  {% if rule %}
+  <tr>
+    <td style="padding:8px 24px;">
+      <div style="border-left:4px solid #b45309;background:#fffbeb;padding:12px 16px;font-size:14px;line-height:1.5;">
+        <strong>Decizia modelului a fost schimbată de o regulă.</strong><br>
+        Regula: {{ rule }}<br>
+        Modelul propusese: {{ model_choice }}<br>
+        Decizia finală: gravitate {{ severity.adjective }}, {{ channel_label }}
+      </div>
+    </td>
+  </tr>
+  {% endif %}
+  <tr>
+    <td style="padding:12px 24px;">
+      <table role="presentation" width="100%" cellpadding="6" cellspacing="0" style="font-size:14px;border-collapse:collapse;">
+        <tr style="background:#f9fafb;"><th align="left" style="border-bottom:1px solid #e5e7eb;">Turbina</th><th align="left" style="border-bottom:1px solid #e5e7eb;">Cod</th><th align="right" style="border-bottom:1px solid #e5e7eb;">Probabilitate de defecțiune</th></tr>
+        {% for turbine in turbines %}
+        <tr><td style="border-bottom:1px solid #f3f4f6;">turbina {{ turbine.number }}</td><td style="border-bottom:1px solid #f3f4f6;">{{ turbine.id }}</td><td align="right" style="border-bottom:1px solid #f3f4f6;">{{ turbine.probability }}</td></tr>
+        {% endfor %}
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:8px 24px;">
+      <table role="presentation" width="100%" cellpadding="6" cellspacing="0" style="font-size:14px;">
+        <tr><td style="color:#6b7280;width:45%;">Fereastra probabilă</td><td>{{ window }}</td></tr>
+        <tr><td style="color:#6b7280;">Timp estimat până la defecțiune</td><td>{{ eta_long }}</td></tr>
+        <tr><td style="color:#6b7280;">Pierdere estimată</td><td>{{ loss }}</td></tr>
+        <tr><td style="color:#6b7280;">Gravitate</td><td>{{ severity.adjective }}</td></tr>
+        <tr><td style="color:#6b7280;">Canal</td><td>{{ channel_label }}</td></tr>
+        <tr><td style="color:#6b7280;">Încredere model</td><td>{{ confidence }}</td></tr>
+        <tr><td style="color:#6b7280;">Probabilități</td><td>{% for option in probabilities %}{{ option.label }} {{ option.value }}{{ ", " if not loop.last }}{% endfor %}</td></tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:16px 24px 20px 24px;font-size:12px;color:#6b7280;border-top:1px solid #e5e7eb;">
+      ID alertă: {{ alert_id }}<br>
+      Generată: {{ created_at }}<br>
+      Mesaj trimis automat de sistemul de monitorizare al parcului {{ park }}.
+    </td>
+  </tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>

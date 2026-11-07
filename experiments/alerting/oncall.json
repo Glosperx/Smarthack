@@ -1,0 +1,10 @@
+{
+  "people": [
+    {
+      "id": "garda",
+      "name": "Gardă",
+      "email": "${ONCALL_EMAIL}",
+      "phone": "${ONCALL_PHONE}"
+    }
+  ]
+}

@@ -13,6 +13,7 @@ The following can be imported from this module:
 - `fetch_rows`
 - `fetch_turbines_with_predictions`
 - `parse_ewkb_point`
+- `replace_wind_forecast`
 - `select_rows`
 - `upsert_predictions`
 """
@@ -32,6 +33,7 @@ from smarthack.constants import (
     PARK_TABLE,
     PARK_VIEW,
     TURBINE_TABLE,
+    WIND_FORECAST_REPLACE_RPC,
 )
 
 logger = logging.getLogger(__name__)
@@ -348,6 +350,32 @@ async def fetch_maintenance_inputs(
     return inputs
 
 
+async def replace_wind_forecast(http: httpx.AsyncClient, rows: list[dict[str, Any]]) -> int:
+    """
+    Replace every row of `public.park_wind_forecast` with `rows`, atomically.
+
+    Calls the `replace_park_wind_forecast` database function, which deletes and inserts in
+    one transaction, so readers never see the table empty. Needs the service-role key.
+
+    :param http: Shared asynchronous HTTP client.
+    :param rows: JSON-ready forecast rows, keyed by the table's column names.
+
+    :returns written: Number of rows the database inserted.
+    :raises httpx.HTTPError: When the call fails or Supabase answers with an error status.
+    """
+    resp = await http.post(
+        _url(f"rpc/{WIND_FORECAST_REPLACE_RPC}"),
+        headers=_write_headers(),
+        json={"rows": rows},
+    )
+    if resp.is_error:
+        logger.error(
+            "Supabase %s failed (%s): %s", WIND_FORECAST_REPLACE_RPC, resp.status_code, resp.text
+        )
+    resp.raise_for_status()
+    return int(resp.json())
+
+
 __all__ = [
     "_headers",
     "_write_headers",
@@ -357,6 +385,7 @@ __all__ = [
     "fetch_rows",
     "fetch_turbines_with_predictions",
     "parse_ewkb_point",
+    "replace_wind_forecast",
     "select_rows",
     "upsert_predictions",
 ]

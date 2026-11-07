@@ -14,7 +14,6 @@ import argparse
 import asyncio
 from datetime import datetime, timedelta
 import logging
-import math
 import sys
 from zoneinfo import ZoneInfo
 
@@ -23,35 +22,10 @@ import httpx
 from smarthack import config
 from smarthack.constants import DEFAULT_MAINTENANCE_OFFSET_MINUTES
 from smarthack.services.maintenance_service import run_prediction_cycle
-from smarthack.utils.dates import today_in_tz
+from smarthack.utils.dates import seconds_until_next_run, today_in_tz
 from smarthack.utils.logging_utils import configure_logging
 
 logger = logging.getLogger(__name__)
-
-
-def seconds_until_next_run(
-    now: datetime,
-    interval_min: int,
-    offset_min: int = DEFAULT_MAINTENANCE_OFFSET_MINUTES,
-) -> float:
-    """
-    Calculate seconds until the next slot aligned to local midnight + offset.
-
-    :param now: Current timezone-aware datetime.
-    :param interval_min: Interval in minutes between execution slots.
-    :param offset_min: Minute offset after boundary slot. Defaults to 2.
-
-    :returns seconds: Float seconds until next scheduled slot.
-    """
-    midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    elapsed_min = (now - midnight).total_seconds() / 60.0
-    k = max(math.floor((elapsed_min - offset_min) / interval_min) + 1, 0)
-    next_min = offset_min + k * interval_min
-    if next_min >= 24 * 60:
-        next_run = midnight + timedelta(days=1, minutes=offset_min)
-    else:
-        next_run = midnight + timedelta(minutes=next_min)
-    return max((next_run - now).total_seconds(), 0.0)
 
 
 async def run_once(dry_run: bool = False, turbine_ids: list[int] | None = None) -> int:
@@ -119,7 +93,7 @@ async def run_worker(
 
         tz_name = config.timezone()
         now = datetime.now(ZoneInfo(tz_name))
-        delay = seconds_until_next_run(now, interval_min)
+        delay = seconds_until_next_run(now, interval_min, DEFAULT_MAINTENANCE_OFFSET_MINUTES)
         logger.info(
             "Worker sleeping %.1fs until next slot at %s", delay, now + timedelta(seconds=delay)
         )

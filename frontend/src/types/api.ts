@@ -266,6 +266,374 @@ export interface components {
             /** Context */
             ctx?: Record<string, never>;
         };
+        /**
+         * ResourceBacktestRow
+         * @description Out-of-sample score of one forecasting method.
+         */
+        ResourceBacktestRow: {
+            /**
+             * Estimator
+             * @description Method identifier, such as `climatology_10y`.
+             */
+            estimator: string;
+            /**
+             * Mae Validation
+             * @description Mean absolute error (m/s), validation period.
+             */
+            mae_validation: number;
+            /**
+             * Mae Test
+             * @description Mean absolute error (m/s), held-out test period.
+             */
+            mae_test: number;
+            /**
+             * Mape Test
+             * @description Mean absolute percentage error, test period (0-1).
+             */
+            mape_test: number;
+            /**
+             * Selected
+             * @description True for the method chosen on the validation period.
+             */
+            selected: boolean;
+        };
+        /**
+         * ResourceBounds
+         * @description Geographic extent of the heatmap image, in WGS84 degrees.
+         */
+        ResourceBounds: {
+            /**
+             * South
+             * @description Southern edge latitude.
+             */
+            south: number;
+            /**
+             * West
+             * @description Western edge longitude.
+             */
+            west: number;
+            /**
+             * North
+             * @description Northern edge latitude.
+             */
+            north: number;
+            /**
+             * East
+             * @description Eastern edge longitude.
+             */
+            east: number;
+        };
+        /**
+         * ResourceLegend
+         * @description How heatmap colours map to wind speed.
+         */
+        ResourceLegend: {
+            /**
+             * Vmin
+             * @description Wind speed (m/s) at the lightest colour.
+             */
+            vmin: number;
+            /**
+             * Vmax
+             * @description Wind speed (m/s) at the darkest colour.
+             */
+            vmax: number;
+            /**
+             * Colors
+             * @description Hex colours from vmin to vmax, evenly spaced.
+             */
+            colors: string[];
+            /**
+             * Unit
+             * @description Unit of the legend values.
+             * @default "m/s"
+             */
+            unit?: string;
+        };
+        /**
+         * ResourcePoint
+         * @description The atlas answer for one clicked point.
+         */
+        ResourcePoint: {
+            /**
+             * Latitude
+             * @description Queried latitude.
+             */
+            latitude: number;
+            /**
+             * Longitude
+             * @description Queried longitude.
+             */
+            longitude: number;
+            /**
+             * Inside Country
+             * @description False outside Romania (no atlas data).
+             */
+            inside_country: boolean;
+            /**
+             * In Band
+             * @description True when the elevation is inside the hill band.
+             */
+            in_band: boolean;
+            /**
+             * Buildable
+             * @description True when in the band and gentle enough to build on.
+             */
+            buildable: boolean;
+            /**
+             * Elevation M
+             * @description Mean elevation of the cell.
+             */
+            elevation_m?: number | null;
+            /**
+             * Slope Deg
+             * @description Mean slope of the cell.
+             */
+            slope_deg?: number | null;
+            /**
+             * Wind P50
+             * @description Forecast mean wind (m/s).
+             */
+            wind_p50?: number | null;
+            /**
+             * Wind P10
+             * @description Low end of the band (m/s).
+             */
+            wind_p10?: number | null;
+            /**
+             * Wind P90
+             * @description High end of the band (m/s).
+             */
+            wind_p90?: number | null;
+            /**
+             * Reference Wind
+             * @description Reference-period mean.
+             */
+            reference_wind?: number | null;
+            /**
+             * Change Pct
+             * @description Forecast vs reference (0-1).
+             */
+            change_pct?: number | null;
+            /**
+             * Percentile
+             * @description Share of hill terrain with less wind (0-100).
+             */
+            percentile?: number | null;
+            /**
+             * Explanation
+             * @description Plain-language reading of the numbers.
+             */
+            explanation: string;
+        };
+        /**
+         * ResourceSite
+         * @description A proposed wind park site: the best park-sized window of its area.
+         */
+        ResourceSite: {
+            /**
+             * Rank
+             * @description 1 for the windiest proposed site.
+             */
+            rank: number;
+            /**
+             * Name
+             * @description Nearby locality and county.
+             */
+            name?: string | null;
+            /**
+             * Latitude
+             * @description Site centre latitude.
+             */
+            latitude: number;
+            /**
+             * Longitude
+             * @description Site centre longitude.
+             */
+            longitude: number;
+            /**
+             * Wind P50
+             * @description Forecast mean wind at 100 m (m/s), median.
+             */
+            wind_p50: number;
+            /**
+             * Wind P10
+             * @description Low end of the 80 % band (m/s).
+             */
+            wind_p10: number;
+            /**
+             * Wind P90
+             * @description High end of the 80 % band (m/s).
+             */
+            wind_p90: number;
+            /**
+             * Reference Wind
+             * @description Long-term mean of the reference period (m/s).
+             */
+            reference_wind: number;
+            /**
+             * Change Pct
+             * @description Forecast relative to the reference period (0-1).
+             */
+            change_pct: number;
+            /**
+             * Elevation M
+             * @description Mean elevation of the site window.
+             */
+            elevation_m: number;
+            /**
+             * Slope Deg
+             * @description Mean terrain slope of the site window.
+             */
+            slope_deg: number;
+            /**
+             * Buildable Fraction
+             * @description Share of the window that is buildable hill.
+             */
+            buildable_fraction: number;
+            /**
+             * Percentile
+             * @description Share of hill terrain with less wind (0-100).
+             */
+            percentile: number;
+            /**
+             * Explanation
+             * @description Why the site was proposed, in one sentence.
+             */
+            explanation: string;
+        };
+        /**
+         * ResourceSource
+         * @description A public dataset the atlas is built from.
+         */
+        ResourceSource: {
+            /**
+             * Name
+             * @description Dataset name.
+             */
+            name: string;
+            /**
+             * Role
+             * @description What the atlas uses it for.
+             */
+            role: string;
+            /**
+             * Url
+             * @description Where it comes from.
+             */
+            url: string;
+            /**
+             * License
+             * @description Licence or terms of use.
+             */
+            license: string;
+        };
+        /**
+         * ResourceSummary
+         * @description Everything the map needs to draw and explain the atlas.
+         */
+        ResourceSummary: {
+            /**
+             * Target Years
+             * @description First and last forecast year, inclusive.
+             */
+            target_years: number[];
+            /**
+             * Data Until
+             * @description Last complete year of wind data used.
+             */
+            data_until: number;
+            /**
+             * Reference Years
+             * @description Period of the fine-scale reference atlas.
+             */
+            reference_years: number[];
+            /**
+             * bounds
+             * @description Extent of the heatmap image.
+             */
+            bounds: components["schemas"]["ResourceBounds"];
+            /**
+             * Elevation Band M
+             * @description Minimum and maximum elevation shown.
+             */
+            elevation_band_m: number[];
+            /**
+             * Max Slope Deg
+             * @description Steepest mean slope a proposed site may have.
+             */
+            max_slope_deg: number;
+            /**
+             * legend
+             * @description Colour scale of the heatmap.
+             */
+            legend: components["schemas"]["ResourceLegend"];
+            /**
+             * Selected Estimator
+             * @description Forecast method chosen by the backtest.
+             */
+            selected_estimator: string;
+            /**
+             * Backtest
+             * @description Scores of every method compared.
+             */
+            backtest: components["schemas"]["ResourceBacktestRow"][];
+            /**
+             * Validation Years
+             * @description Target years used to select the method.
+             */
+            validation_years: number[];
+            /**
+             * Test Years
+             * @description Target years held out to report its error.
+             */
+            test_years: number[];
+            /**
+             * Band Low Pct
+             * @description P10 as a relative deviation from P50 (e.g. -0.04).
+             */
+            band_low_pct: number;
+            /**
+             * Band High Pct
+             * @description P90 as a relative deviation from P50 (e.g. 0.03).
+             */
+            band_high_pct: number;
+            /**
+             * Band Coverage Test
+             * @description Share of test outcomes inside the P10-P90 band (nominal 0.8).
+             */
+            band_coverage_test: number;
+            /**
+             * Rank Correlation Test
+             * @description Spearman correlation between forecast and actual ranking of areas.
+             */
+            rank_correlation_test: number;
+            /**
+             * Hill Area Km2
+             * @description Area of hill terrain in the elevation band.
+             */
+            hill_area_km2: number;
+            /**
+             * Buildable Area Km2
+             * @description Hill area that is also gentle enough.
+             */
+            buildable_area_km2: number;
+            /**
+             * Hill Wind P50 Mean
+             * @description Mean forecast wind over all hill terrain.
+             */
+            hill_wind_p50_mean: number;
+            /**
+             * Sources
+             * @description Datasets used, with licences.
+             */
+            sources: components["schemas"]["ResourceSource"][];
+            /**
+             * Generated At
+             * @description When the atlas was built (ISO 8601, UTC).
+             */
+            generated_at: string;
+        };
     };
     responses: never;
     parameters: never;

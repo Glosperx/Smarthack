@@ -30,6 +30,7 @@ The following can be imported from this module:
 - `DEFAULT_TIMEZONE`
 - `DEFAULT_WIND_DATA_DIR`
 - `DEFAULT_WIND_MODELS_DIR`
+- `DEFAULT_OPEN_METEO_URL`
 - `agent_data_source`
 - `app_env`
 - `data_dir`
@@ -43,12 +44,14 @@ The following can be imported from this module:
 - `maintenance_demo_scenarios`
 - `maintenance_interval_minutes`
 - `maintenance_models_dir`
+- `open_meteo_url`
 - `port`
 - `supabase_key`
 - `supabase_service_key`
 - `supabase_url`
 - `timezone`
 - `wind_data_dir`
+- `wind_forecast_interval_minutes`
 - `wind_models_dir`
 """
 
@@ -58,7 +61,10 @@ from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 
-from smarthack.constants import DEFAULT_MAINTENANCE_INTERVAL_MINUTES
+from smarthack.constants import (
+    DEFAULT_MAINTENANCE_INTERVAL_MINUTES,
+    DEFAULT_WIND_FORECAST_INTERVAL_MINUTES,
+)
 
 #: Where the dispatch agent reads its data from when `AGENT_DATA_SOURCE` is not set.
 DEFAULT_AGENT_DATA_SOURCE = "memory"
@@ -94,6 +100,9 @@ DEFAULT_HTTP_TIMEOUT = 30.0
 
 #: The default URL for the example upstream service.
 DEFAULT_EXAMPLE_SERVICE_URL = "http://localhost:9000"
+
+#: The Open-Meteo forecast endpoint when `OPEN_METEO_URL` is not set.
+DEFAULT_OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 
 #: The default data directory relative to repository root.
 DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
@@ -338,6 +347,27 @@ def maintenance_interval_minutes() -> int:
     return int(raw.strip())
 
 
+def wind_forecast_interval_minutes() -> int:
+    """
+    Return the scheduled interval in minutes between wind forecast refreshes.
+
+    :returns minutes: Integer minutes between refreshes. Defaults to `720` (twice a day).
+    """
+    raw = os.environ.get("WIND_FORECAST_INTERVAL_MINUTES")
+    if raw is None or not raw.strip():
+        return DEFAULT_WIND_FORECAST_INTERVAL_MINUTES
+    return int(raw.strip())
+
+
+def open_meteo_url() -> str:
+    """
+    Return the Open-Meteo forecast endpoint the wind forecast job calls.
+
+    :returns url: Endpoint URL without trailing slash.
+    """
+    return (os.environ.get("OPEN_METEO_URL") or DEFAULT_OPEN_METEO_URL).strip().rstrip("/")
+
+
 def maintenance_demo_scenarios() -> dict[int, str]:
     """
     Return mapping from turbine ID to simulated demo failure scenario.
@@ -370,6 +400,7 @@ __all__ = [
     "DEFAULT_TIMEZONE",
     "DEFAULT_WIND_DATA_DIR",
     "DEFAULT_WIND_MODELS_DIR",
+    "DEFAULT_OPEN_METEO_URL",
     "agent_data_source",
     "app_env",
     "data_dir",
@@ -383,11 +414,13 @@ __all__ = [
     "maintenance_demo_scenarios",
     "maintenance_interval_minutes",
     "maintenance_models_dir",
+    "open_meteo_url",
     "port",
     "supabase_key",
     "supabase_service_key",
     "supabase_url",
     "timezone",
     "wind_data_dir",
+    "wind_forecast_interval_minutes",
     "wind_models_dir",
 ]
