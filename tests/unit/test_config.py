@@ -38,6 +38,8 @@ def test_log_level_is_upper_cased(monkeypatch: pytest.MonkeyPatch) -> None:
     [
         (config.app_env, "APP_ENV", "development"),
         (config.log_level, "LOG_LEVEL", "INFO"),
+        (config.host, "SMARTHACK_HOST", "127.0.0.1"),
+        (config.example_service_url, "SMARTHACK_EXAMPLE_SERVICE_URL", "http://localhost:9000"),
     ],
 )
 def test_an_empty_variable_means_unset(
@@ -49,6 +51,17 @@ def test_an_empty_variable_means_unset(
     assert accessor() == default
 
 
+def test_numeric_and_path_accessors(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Port and timeout parse numbers, directories resolve paths."""
+    assert config.port() == 8000
+    assert config.http_timeout() == 30.0
+
+    monkeypatch.setenv("SMARTHACK_PORT", "9999")
+    monkeypatch.setenv("SMARTHACK_HTTP_TIMEOUT", "15.5")
+    assert config.port() == 9999
+    assert config.http_timeout() == 15.5
+
+
 def test_values_are_read_on_every_call_not_at_import(monkeypatch: pytest.MonkeyPatch) -> None:
     """Setting a variable after the package was imported changes the next answer."""
     before = config.log_level()
@@ -56,3 +69,14 @@ def test_values_are_read_on_every_call_not_at_import(monkeypatch: pytest.MonkeyP
 
     assert before == "INFO"
     assert config.log_level() == "ERROR"
+
+
+def test_maintenance_directories_default_to_relative_paths() -> None:
+    """Maintenance data and model accessors default to paths under data/ and models/."""
+    data_path = config.maintenance_data_dir()
+    models_path = config.maintenance_models_dir()
+
+    assert data_path.name == "maintenance"
+    assert models_path.name == "maintenance"
+    assert "data" in str(data_path)
+    assert "models" in str(models_path)

@@ -1,0 +1,19 @@
+[
+  "sensor_0_avg",
+  "wind_speed_3_avg",
+  "sensor_18_avg",
+  "power_30_avg",
+  "thermal_lift_bearing_de",
+  "thermal_lift_bearing_nde",
+  "thermal_lift_gearbox_oil",
+  "thermal_lift_gearbox_bearing",
+  "bearing_temp_ratio",
+  "bearing_de_roll_mean_6h",
+  "bearing_de_roll_std_6h",
+  "bearing_de_roll_max_6h",
+  "bearing_de_drift_24h",
+  "gearbox_oil_roll_mean_6h",
+  "gearbox_oil_roll_std_6h",
+  "gearbox_bearing_drift_24h",
+  "rpm_deviation"
+]

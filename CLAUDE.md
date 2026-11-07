@@ -32,3 +32,12 @@ commits, pushes, branches, merges, rebases, tags, remotes, and pull/merge reques
 
 Run `make lint` and `make test`; both must pass. See `docs/contributing.md` for the
 definition of done and `docs/architecture.md` for where new code goes.
+
+## Full-Stack & Hackathon Conventions
+
+- **Layering ranks:** `config/constants/utils (0)` -> `schemas (1)` -> `clients (2)` -> `services (3)` -> `api (4)` -> `__main__ (5)`. Imports must only point downward.
+- **Routes stay thin:** Parse request, call client/service, return schema. If >20 lines, extract into `services/`.
+- **Environment:** Only `smarthack/config.py` touches `os.environ`. Document every variable in `.env.example`.
+- **API Contract:** TypeScript types are generated from FastAPI OpenAPI. Run `make types` whenever a Pydantic model or route changes, and commit `openapi.json` + `frontend/src/types/api.ts`.
+- **Frontend styling:** Tailwind CSS utility classes only; avoid custom CSS files. Keep `src/index.css` to `@import "tailwindcss";`.
+
