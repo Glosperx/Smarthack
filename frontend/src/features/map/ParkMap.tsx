@@ -114,7 +114,7 @@ export function ParkMap({
                 click: () => onSelectPark(park.id),
               }}
             >
-              <Tooltip direction="top" offset={[0, -10]} opacity={0.95}>
+              <Tooltip direction="top" offset={[0, -15]} opacity={0.95}>
                 <span className="font-sans font-semibold text-xs text-slate-900">
                   {park.name}
                 </span>

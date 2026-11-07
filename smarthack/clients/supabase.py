@@ -6,21 +6,35 @@ the `public` schema with the key from `config.supabase_key`.
 
 The following can be imported from this module:
 - `_headers`
+- `_write_headers`
+- `fetch_all_turbine_ids`
+- `fetch_maintenance_inputs`
 - `fetch_parks`
 - `fetch_rows`
 - `fetch_turbines_with_predictions`
 - `parse_ewkb_point`
 - `select_rows`
+- `upsert_predictions`
 """
 
 from datetime import date
+from itertools import batched
+import logging
 import struct
 from typing import Any
 
 import httpx
 
 from smarthack import config
-from smarthack.constants import MAINTENANCE_TABLE, PARK_TABLE, PARK_VIEW, TURBINE_TABLE
+from smarthack.constants import (
+    MAINTENANCE_INPUT_TABLE,
+    MAINTENANCE_TABLE,
+    PARK_TABLE,
+    PARK_VIEW,
+    TURBINE_TABLE,
+)
+
+logger = logging.getLogger(__name__)
 
 
 def _headers() -> dict[str, str]:
@@ -30,6 +44,19 @@ def _headers() -> dict[str, str]:
     :returns headers: Dictionary containing apikey and optional Bearer auth header.
     """
     key = config.supabase_key()
+    headers = {"apikey": key}
+    if key.startswith("eyJ"):
+        headers["Authorization"] = f"Bearer {key}"
+    return headers
+
+
+def _write_headers() -> dict[str, str]:
+    """
+    Construct administrative write headers with service role privileges.
+
+    :returns headers: Dictionary containing apikey and Authorization header for writes.
+    """
+    key = config.supabase_service_key()
     headers = {"apikey": key}
     if key.startswith("eyJ"):
         headers["Authorization"] = f"Bearer {key}"
@@ -202,11 +229,134 @@ async def fetch_turbines_with_predictions(
     return resp.json()
 
 
+async def fetch_all_turbine_ids(http: httpx.AsyncClient) -> list[int]:
+    """
+    Retrieve all turbine identifiers across all parks, using pagination.
+
+    :param http: Shared asynchronous HTTP client.
+
+    :returns ids: Exhaustive list of numeric turbine identifiers.
+    :raises httpx.HTTPError: When the HTTP request to Supabase fails.
+    """
+    ids: list[int] = []
+    while True:
+        resp = await http.get(
+            _url(TURBINE_TABLE),
+            params={"select": "id", "order": "id.asc", "limit": 1000, "offset": len(ids)},
+            headers=_headers(),
+        )
+        resp.raise_for_status()
+        page: list[dict[str, Any]] = resp.json()
+        ids.extend([int(row["id"]) for row in page if "id" in row])
+        if len(page) < 1000:
+            return ids
+
+
+async def upsert_predictions(http: httpx.AsyncClient, rows: list[dict[str, Any]]) -> None:
+    """
+    Upsert daily turbine health predictions into database with conflict resolution on (turbine_id, predicted_date).
+
+    :param http: Shared asynchronous HTTP client.
+    :param rows: Serialized diagnostic prediction dictionaries.
+    :raises httpx.HTTPError: When the upsert request fails.
+    """
+    headers = {
+        **_write_headers(),
+        "Prefer": "resolution=merge-duplicates,return=minimal",
+    }
+    core_cols = {
+        "turbine_id",
+        "predicted_date",
+        "daily_fault_probability",
+        "cumulative_fault_probability",
+        "status",
+        "suspected_subsystem",
+    }
+    for chunk in batched(rows, 500):
+        chunk_list = list(chunk)
+        resp = await http.post(
+            _url(MAINTENANCE_TABLE),
+            params={"on_conflict": "turbine_id,predicted_date"},
+            headers=headers,
+            json=chunk_list,
+        )
+        if resp.status_code == 400:
+            logger.warning("Initial upsert with all columns returned 400: %s", resp.text)
+            fallback_chunk = [
+                {k: v for k, v in item.items() if k in core_cols} for item in chunk_list
+            ]
+            resp = await http.post(
+                _url(MAINTENANCE_TABLE),
+                params={"on_conflict": "turbine_id,predicted_date"},
+                headers=headers,
+                json=fallback_chunk,
+            )
+            if resp.status_code == 400 and any(
+                k in resp.text.lower() for k in ("unique", "42p10", "conflict")
+            ):
+                logger.warning(
+                    "Database missing UNIQUE (turbine_id, predicted_date) constraint on %s; "
+                    "falling back to direct INSERT. (Run db/migrations/V14__turbine_mentenance_unique.sql): %s",
+                    MAINTENANCE_TABLE,
+                    resp.text,
+                )
+                resp = await http.post(
+                    _url(MAINTENANCE_TABLE),
+                    headers=_write_headers(),
+                    json=fallback_chunk,
+                )
+        if resp.is_error:
+            logger.error("Supabase upsert/insert failed (%s): %s", resp.status_code, resp.text)
+        resp.raise_for_status()
+
+
+async def fetch_maintenance_inputs(
+    http: httpx.AsyncClient, turbine_ids: list[int] | None = None
+) -> dict[int, dict[str, Any]]:
+    """
+    Fetch pre-computed feature inputs from `public.turbine_maintenance_input`.
+
+    :param http: Shared asynchronous HTTP client.
+    :param turbine_ids: Optional list of turbine IDs to filter for.
+
+    :returns mapping: Mapping from turbine_id to latest feature input row.
+    :raises httpx.HTTPError: When the HTTP request to Supabase fails.
+    """
+    inputs: dict[int, dict[str, Any]] = {}
+    offset = 0
+    while True:
+        params: dict[str, Any] = {
+            "select": "*",
+            "order": "turbine_id.asc",
+            "limit": 1000,
+            "offset": offset,
+        }
+        if turbine_ids:
+            params["turbine_id"] = f"in.({','.join(str(i) for i in turbine_ids)})"
+        resp = await http.get(_url(MAINTENANCE_INPUT_TABLE), params=params, headers=_headers())
+        if resp.status_code == 404:
+            return {}
+        resp.raise_for_status()
+        page: list[dict[str, Any]] = resp.json()
+        for row in page:
+            tid = row.get("turbine_id")
+            if tid is not None:
+                inputs[int(tid)] = row
+        offset += len(page)
+        if len(page) < 1000:
+            break
+    return inputs
+
+
 __all__ = [
     "_headers",
+    "_write_headers",
+    "fetch_all_turbine_ids",
+    "fetch_maintenance_inputs",
     "fetch_parks",
     "fetch_rows",
     "fetch_turbines_with_predictions",
     "parse_ewkb_point",
     "select_rows",
+    "upsert_predictions",
 ]

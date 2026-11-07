@@ -9,6 +9,9 @@ export function formatTurbine(t: TurbineToday): string {
   const p = t.prediction;
   if (!p) return `Turbine ${t.id}, no prediction for today`;
   const pct = (p.daily_fault_probability * 100).toFixed(1);
+  if (!p.suspected_subsystem || p.suspected_subsystem.toLowerCase() === 'none') {
+    return `Turbine ${t.id}, status ${p.status}, ${pct}%`;
+  }
   return `Turbine ${t.id}, status ${p.status}, ${pct}% for ${p.suspected_subsystem}`;
 }
 

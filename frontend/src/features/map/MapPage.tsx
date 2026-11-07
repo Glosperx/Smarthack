@@ -4,6 +4,7 @@ import { ParkMap } from './ParkMap';
 import { MenuButton } from './MenuButton';
 import { ParkListDrawer } from './ParkListDrawer';
 import { ParkDetailsDrawer } from './ParkDetailsDrawer';
+import { MaintenanceCountdown } from './MaintenanceCountdown';
 
 /**
  * Top-level Wind Park Map screen.
@@ -16,14 +17,8 @@ export function MapPage() {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-slate-950 font-sans">
-      {/* Top Left Brand Overlay */}
-      <div className="absolute top-4 left-4 z-20 flex items-center gap-3 bg-slate-900/90 backdrop-blur-md px-4 py-2.5 rounded-xl border border-slate-700/80 shadow-lg pointer-events-auto">
-        <div className="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-        <div>
-          <h1 className="text-sm font-bold text-slate-100 tracking-tight">Smarthack</h1>
-          <p className="text-[11px] text-slate-400 font-medium">Wind Park Network</p>
-        </div>
-      </div>
+      {/* Top Left Maintenance Prediction Countdown */}
+      <MaintenanceCountdown />
 
       {/* Top Right Hamburger Menu Button */}
       <MenuButton onClick={toggleList} disabled={isLoading} />

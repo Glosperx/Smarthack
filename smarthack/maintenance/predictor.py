@@ -391,5 +391,123 @@ class TurbineHealthPredictor:
             "records_evaluated": len(telemetry_df),
         }
 
+    def evaluate_features(
+        self,
+        features_record: dict[str, Any],
+        asset_id: int = 0,
+        horizon_days: int = DEFAULT_FORECAST_HORIZON_DAYS,
+    ) -> dict[str, Any]:
+        """
+        Score a single feature row from `turbine_maintenance_input` for impending failure risk.
+
+        :param features_record: Pre-computed feature dictionary (e.g. from database input table).
+        :param asset_id: Turbine asset identifier.
+        :param horizon_days: Days ahead to project daily risk probabilities.
+
+        :returns evaluation: Health assessment dictionary.
+        """
+        if self.model is None:
+            self.load_model()
+
+        row_dict = {
+            col: float(features_record.get(col) if features_record.get(col) is not None else 0.0)
+            for col in self.feature_columns
+        }
+        x_eval = pd.DataFrame([row_dict])[self.feature_columns]
+
+        prob = float(self.model.predict_proba(x_eval)[0, 1])
+
+        subsystem_risks: dict[str, float] = {}
+        if self.subsystem_model is not None:
+            subsys_probs = self.subsystem_model.predict_proba(x_eval)[0]
+            for cls_name, p in zip(self.subsystem_model.classes_, subsys_probs):
+                name_str = str(cls_name)
+                if name_str != "Normal":
+                    subsystem_risks[name_str] = round(float(p), 3)
+
+        anomalous_sensors: list[str] = []
+
+        bearing_lift = float(features_record.get("thermal_lift_bearing_de") or 0.0)
+        bearing_ratio = float(features_record.get("bearing_temp_ratio") or 1.0)
+        if bearing_lift > 45.0 or bearing_ratio > 1.35:
+            anomalous_sensors.append(f"bearing_de_thermal_lift ({bearing_lift:.1f}°C)")
+            subsystem_risks["Generator Bearing"] = max(
+                subsystem_risks.get("Generator Bearing", 0.0),
+                0.94 if bearing_lift > 55.0 else 0.75,
+            )
+
+        gb_lift = float(features_record.get("thermal_lift_gearbox_bearing") or 0.0)
+        gb_oil_lift = float(features_record.get("thermal_lift_gearbox_oil") or 0.0)
+        if gb_lift > 45.0 or gb_oil_lift > 40.0:
+            anomalous_sensors.append(f"gearbox_oil_lift ({gb_oil_lift:.1f}°C)")
+            subsystem_risks["Gearbox"] = max(
+                subsystem_risks.get("Gearbox", 0.0),
+                0.92 if gb_lift > 50.0 else 0.70,
+            )
+
+        hyd_lift = float(features_record.get("thermal_lift_hydraulic_oil") or 0.0)
+        if hyd_lift > 25.0:
+            anomalous_sensors.append(f"hydraulic_oil_lift ({hyd_lift:.1f}°C)")
+            subsystem_risks["Hydraulic Group"] = max(
+                subsystem_risks.get("Hydraulic Group", 0.0),
+                0.88 if hyd_lift > 32.0 else 0.65,
+            )
+
+        trans_lift = float(features_record.get("thermal_lift_transformer") or 0.0)
+        trans_imbalance = float(features_record.get("transformer_phase_imbalance") or 0.0)
+        if trans_lift > 50.0 or trans_imbalance > 15.0:
+            anomalous_sensors.append(f"transformer_lift ({trans_lift:.1f}°C)")
+            subsystem_risks["Transformer"] = max(
+                subsystem_risks.get("Transformer", 0.0),
+                0.95 if trans_lift > 65.0 else 0.70,
+            )
+
+        max_subsys_risk = max(subsystem_risks.values()) if subsystem_risks else 0.0
+        combined_prob = max(prob, max_subsys_risk)
+        health_score = round(float(np.clip(100.0 * (1.0 - combined_prob), 0.0, 100.0)), 1)
+
+        if combined_prob >= DEFAULT_HEALTH_THRESHOLD_CRITICAL:
+            status = HEALTH_STATUS_CRITICAL
+        elif combined_prob >= DEFAULT_HEALTH_THRESHOLD_WARNING:
+            status = HEALTH_STATUS_WARNING
+        elif combined_prob >= DEFAULT_HEALTH_THRESHOLD_WATCH:
+            status = HEALTH_STATUS_WATCH
+        else:
+            status = HEALTH_STATUS_NORMAL
+
+        days_to_failure: float | None = None
+        suspected_subsystem: str | None = None
+
+        if combined_prob >= DEFAULT_HEALTH_THRESHOLD_WATCH:
+            days_to_failure = round(float(max(1.0, (1.0 - combined_prob) * 9.0 + 1.2)), 1)
+            if subsystem_risks:
+                suspected_subsystem = max(subsystem_risks.items(), key=lambda item: item[1])[0]
+            else:
+                suspected_subsystem = "Drivetrain Mechanical Group"
+
+        recommended_action = _get_recommended_action(suspected_subsystem, status)
+
+        daily_forecast = self.compute_daily_forecast(
+            fault_prob=combined_prob,
+            days_to_failure=days_to_failure,
+            subsystem=suspected_subsystem,
+            start_date=None,
+            horizon_days=horizon_days,
+        )
+
+        return {
+            "asset_id": asset_id,
+            "status": status,
+            "health_score": health_score,
+            "fault_probability": round(combined_prob, 3),
+            "estimated_days_to_failure": days_to_failure,
+            "suspected_subsystem": suspected_subsystem,
+            "subsystem_risks": subsystem_risks,
+            "daily_forecast": daily_forecast,
+            "recommended_action": recommended_action,
+            "anomalous_sensors": anomalous_sensors,
+            "records_evaluated": 1,
+        }
+
 
 __all__ = ["TurbineHealthPredictor", "resolve_maintenance_models_dir"]

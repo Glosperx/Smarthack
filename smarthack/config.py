@@ -24,6 +24,7 @@ The following can be imported from this module:
 - `DEFAULT_HTTP_TIMEOUT`
 - `DEFAULT_LOG_LEVEL`
 - `DEFAULT_MAINTENANCE_DATA_DIR`
+- `DEFAULT_MAINTENANCE_INTERVAL_MINUTES`
 - `DEFAULT_MAINTENANCE_MODELS_DIR`
 - `DEFAULT_PORT`
 - `DEFAULT_TIMEZONE`
@@ -38,9 +39,12 @@ The following can be imported from this module:
 - `http_timeout`
 - `log_level`
 - `maintenance_data_dir`
+- `maintenance_demo_scenarios`
+- `maintenance_interval_minutes`
 - `maintenance_models_dir`
 - `port`
 - `supabase_key`
+- `supabase_service_key`
 - `supabase_url`
 - `timezone`
 - `wind_data_dir`
@@ -52,6 +56,8 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
+
+from smarthack.constants import DEFAULT_MAINTENANCE_INTERVAL_MINUTES
 
 #: Where the dispatch agent reads its data from when `AGENT_DATA_SOURCE` is not set.
 DEFAULT_AGENT_DATA_SOURCE = "memory"
@@ -289,6 +295,56 @@ def timezone() -> str:
     return raw
 
 
+def supabase_service_key() -> str:
+    """
+    Return the secret service-role Supabase key for administrative background jobs.
+
+    :returns key: Service role key string with RLS bypass privileges.
+    :raises RuntimeError: When neither `SUPABASE_SERVICE_KEY` nor `SUPABASE_KEY` is set.
+    """
+    raw = (
+        (os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_KEY") or "")
+        .strip()
+        .strip('"')
+        .strip("'")
+    )
+    for prefix in ("service role", "service_role", "anon public", "anon", "publishable"):
+        if raw.lower().startswith(prefix):
+            raw = raw[len(prefix) :].strip()
+    if not raw:
+        raise RuntimeError("SUPABASE_SERVICE_KEY or SUPABASE_KEY is not set; see .env.example")
+    return raw
+
+
+def maintenance_interval_minutes() -> int:
+    """
+    Return the scheduled interval in minutes between background maintenance runs.
+
+    :returns minutes: Integer minutes between cycles. Defaults to `60`.
+    """
+    raw = os.environ.get("MAINTENANCE_INTERVAL_MINUTES")
+    if raw is None or not raw.strip():
+        return DEFAULT_MAINTENANCE_INTERVAL_MINUTES
+    return int(raw.strip())
+
+
+def maintenance_demo_scenarios() -> dict[int, str]:
+    """
+    Return mapping from turbine ID to simulated demo failure scenario.
+
+    :returns scenarios: Dictionary mapping asset ID integer to scenario name string.
+    """
+    raw = (os.environ.get("MAINTENANCE_DEMO_SCENARIOS") or "").strip()
+    if not raw:
+        return {}
+    scenarios: dict[int, str] = {}
+    for item in raw.split(","):
+        parts = item.strip().split(":")
+        if len(parts) == 2 and parts[0].strip().isdigit():
+            scenarios[int(parts[0].strip())] = parts[1].strip()
+    return scenarios
+
+
 __all__ = [
     "DEFAULT_AGENT_DATA_SOURCE",
     "DEFAULT_APP_ENV",
@@ -298,6 +354,7 @@ __all__ = [
     "DEFAULT_HTTP_TIMEOUT",
     "DEFAULT_LOG_LEVEL",
     "DEFAULT_MAINTENANCE_DATA_DIR",
+    "DEFAULT_MAINTENANCE_INTERVAL_MINUTES",
     "DEFAULT_MAINTENANCE_MODELS_DIR",
     "DEFAULT_PORT",
     "DEFAULT_TIMEZONE",
@@ -312,9 +369,12 @@ __all__ = [
     "http_timeout",
     "log_level",
     "maintenance_data_dir",
+    "maintenance_demo_scenarios",
+    "maintenance_interval_minutes",
     "maintenance_models_dir",
     "port",
     "supabase_key",
+    "supabase_service_key",
     "supabase_url",
     "timezone",
     "wind_data_dir",

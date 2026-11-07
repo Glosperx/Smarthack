@@ -9,6 +9,7 @@ The following can be imported from this module:
 - `EmailNotificationClient`
 - `VoiceNotificationClient`
 - `fetch_example`
+- `fetch_maintenance_inputs`
 - `fetch_parks`
 - `fetch_turbines_with_predictions`
 - `get_data_file_path`
@@ -20,7 +21,11 @@ The following can be imported from this module:
 from smarthack.clients.crew_client import CrewClient, get_default_crew_client
 from smarthack.clients.email_client import EmailNotificationClient, get_default_email_client
 from smarthack.clients.example_service import fetch_example, get_data_file_path
-from smarthack.clients.supabase import fetch_parks, fetch_turbines_with_predictions
+from smarthack.clients.supabase import (
+    fetch_maintenance_inputs,
+    fetch_parks,
+    fetch_turbines_with_predictions,
+)
 from smarthack.clients.voice_client import VoiceNotificationClient, get_default_voice_client
 
 __all__ = [
@@ -28,6 +33,7 @@ __all__ = [
     "EmailNotificationClient",
     "VoiceNotificationClient",
     "fetch_example",
+    "fetch_maintenance_inputs",
     "fetch_parks",
     "fetch_turbines_with_predictions",
     "get_data_file_path",
