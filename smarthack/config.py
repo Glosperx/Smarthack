@@ -34,6 +34,7 @@ The following can be imported from this module:
 - `data_dir`
 - `example_service_url`
 - `frontend_dist_dir`
+- `gemini_api_key`
 - `host`
 - `http_timeout`
 - `log_level`
@@ -277,6 +278,15 @@ def supabase_key() -> str:
     return raw
 
 
+def gemini_api_key() -> str:
+    """
+    Return the Google Gemini API key if configured.
+
+    :returns key: API key string or empty string when unset.
+    """
+    return (os.environ.get("GEMINI_API_KEY") or "").strip()
+
+
 def timezone() -> str:
     """
     Return the application timezone for daily business logic.
@@ -308,6 +318,7 @@ __all__ = [
     "data_dir",
     "example_service_url",
     "frontend_dist_dir",
+    "gemini_api_key",
     "host",
     "http_timeout",
     "log_level",
