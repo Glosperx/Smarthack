@@ -17,11 +17,22 @@ running the tests. Nothing is stubbed out in advance.
 
 The following can be imported from this module:
 - `DEFAULT_APP_ENV`
+- `DEFAULT_DATA_DIR`
+- `DEFAULT_EXAMPLE_SERVICE_URL`
+- `DEFAULT_HOST`
+- `DEFAULT_HTTP_TIMEOUT`
 - `DEFAULT_LOG_LEVEL`
+- `DEFAULT_PORT`
 - `DEFAULT_WIND_DATA_DIR`
 - `DEFAULT_WIND_MODELS_DIR`
 - `app_env`
+- `data_dir`
+- `example_service_url`
+- `frontend_dist_dir`
+- `host`
+- `http_timeout`
 - `log_level`
+- `port`
 - `wind_data_dir`
 - `wind_models_dir`
 """
@@ -42,6 +53,21 @@ DEFAULT_WIND_DATA_DIR = "data/wind"
 
 #: The directory holding trained model artifacts when `WIND_MODELS_DIR` is not set.
 DEFAULT_WIND_MODELS_DIR = "models/wind"
+
+#: The host to bind the server to when `SMARTHACK_HOST` is not set.
+DEFAULT_HOST = "127.0.0.1"
+
+#: The port to bind the server to when `SMARTHACK_PORT` is not set.
+DEFAULT_PORT = 8000
+
+#: The default HTTP request timeout in seconds when `SMARTHACK_HTTP_TIMEOUT` is not set.
+DEFAULT_HTTP_TIMEOUT = 30.0
+
+#: The default URL for the example upstream service.
+DEFAULT_EXAMPLE_SERVICE_URL = "http://localhost:9000"
+
+#: The default data directory relative to repository root.
+DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 # `load_dotenv()` looks for `.env` upward from this file in a script, but upward from the working
 # directory in a notebook or a REPL: a kernel started outside the repository then found none and a
@@ -96,13 +122,94 @@ def wind_models_dir() -> Path:
     return path
 
 
+def host() -> str:
+    """
+    Return the host the server listens on.
+
+    :returns host: An IP address or hostname. Defaults to `"127.0.0.1"`.
+    """
+    return (os.environ.get("SMARTHACK_HOST") or DEFAULT_HOST).strip()
+
+
+def port() -> int:
+    """
+    Return the port the server listens on.
+
+    :returns port: An integer port number. Defaults to `8000`.
+    """
+    raw = os.environ.get("SMARTHACK_PORT")
+    if raw is None or not raw.strip():
+        return DEFAULT_PORT
+    return int(raw.strip())
+
+
+def frontend_dist_dir() -> Path:
+    """
+    Return the path to the built frontend distribution directory.
+
+    :returns path: The directory containing `index.html` and static assets.
+    """
+    raw = os.environ.get("SMARTHACK_FRONTEND_DIST")
+    if raw and raw.strip():
+        return Path(raw.strip()).resolve()
+    return Path(__file__).resolve().parent.parent / "frontend" / "dist"
+
+
+def http_timeout() -> float:
+    """
+    Return the default timeout in seconds for outbound HTTP requests.
+
+    :returns seconds: Float timeout value in seconds. Defaults to `30.0`.
+    """
+    raw = os.environ.get("SMARTHACK_HTTP_TIMEOUT")
+    if raw is None or not raw.strip():
+        return DEFAULT_HTTP_TIMEOUT
+    return float(raw.strip())
+
+
+def data_dir() -> Path:
+    """
+    Return the base directory for local data files.
+
+    :returns path: Resolved Path object for the data directory.
+    """
+    raw = os.environ.get("SMARTHACK_DATA_DIR")
+    if raw and raw.strip():
+        return Path(raw.strip()).resolve()
+    return DEFAULT_DATA_DIR
+
+
+def example_service_url() -> str:
+    """
+    Return the base URL for the example upstream service.
+
+    :returns url: The base service URL without trailing slash.
+    """
+    return (
+        (os.environ.get("SMARTHACK_EXAMPLE_SERVICE_URL") or DEFAULT_EXAMPLE_SERVICE_URL)
+        .strip()
+        .rstrip("/")
+    )
+
+
 __all__ = [
     "DEFAULT_APP_ENV",
+    "DEFAULT_DATA_DIR",
+    "DEFAULT_EXAMPLE_SERVICE_URL",
+    "DEFAULT_HOST",
+    "DEFAULT_HTTP_TIMEOUT",
     "DEFAULT_LOG_LEVEL",
+    "DEFAULT_PORT",
     "DEFAULT_WIND_DATA_DIR",
     "DEFAULT_WIND_MODELS_DIR",
     "app_env",
+    "data_dir",
+    "example_service_url",
+    "frontend_dist_dir",
+    "host",
+    "http_timeout",
     "log_level",
+    "port",
     "wind_data_dir",
     "wind_models_dir",
 ]

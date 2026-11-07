@@ -44,7 +44,18 @@ EXTRA_MODULES: dict[str, tuple[str, ...]] = {
 }
 
 #: Variables of `.env.example` a developer may have set locally, removed for every test.
-_ENVIRONMENT_VARIABLES = ("APP_ENV", "LOG_LEVEL", "WIND_DATA_DIR", "WIND_MODELS_DIR")
+_ENVIRONMENT_VARIABLES = (
+    "APP_ENV",
+    "LOG_LEVEL",
+    "WIND_DATA_DIR",
+    "WIND_MODELS_DIR",
+    "SMARTHACK_HOST",
+    "SMARTHACK_PORT",
+    "SMARTHACK_FRONTEND_DIST",
+    "SMARTHACK_HTTP_TIMEOUT",
+    "SMARTHACK_DATA_DIR",
+    "SMARTHACK_EXAMPLE_SERVICE_URL",
+)
 
 
 def extra_is_installed(extra: str) -> bool:
