@@ -37,6 +37,8 @@ The following can be imported from this module:
 - `maintenance_data_dir`
 - `maintenance_models_dir`
 - `port`
+- `supabase_key`
+- `supabase_url`
 - `wind_data_dir`
 - `wind_models_dir`
 """
@@ -155,6 +157,8 @@ def maintenance_models_dir() -> Path:
     if not path.is_absolute():
         path = Path(__file__).resolve().parent.parent / path
     return path
+
+
 def host() -> str:
     """
     Return the host the server listens on.
@@ -225,6 +229,33 @@ def example_service_url() -> str:
     )
 
 
+def supabase_url() -> str:
+    """
+    Return the base URL of the Supabase project.
+
+    :returns url: The project URL without trailing slash, such as
+        `"https://<project-ref>.supabase.co"`.
+    :raises RuntimeError: When `SUPABASE_URL` is not set.
+    """
+    raw = (os.environ.get("SUPABASE_URL") or "").strip().rstrip("/")
+    if not raw:
+        raise RuntimeError("SUPABASE_URL is not set; see .env.example")
+    return raw
+
+
+def supabase_key() -> str:
+    """
+    Return the Supabase API key used for REST requests.
+
+    :returns key: The `anon` or `service_role` key from the Supabase dashboard.
+    :raises RuntimeError: When `SUPABASE_KEY` is not set.
+    """
+    raw = (os.environ.get("SUPABASE_KEY") or "").strip()
+    if not raw:
+        raise RuntimeError("SUPABASE_KEY is not set; see .env.example")
+    return raw
+
+
 __all__ = [
     "DEFAULT_APP_ENV",
     "DEFAULT_DATA_DIR",
@@ -247,6 +278,8 @@ __all__ = [
     "maintenance_data_dir",
     "maintenance_models_dir",
     "port",
+    "supabase_key",
+    "supabase_url",
     "wind_data_dir",
     "wind_models_dir",
 ]
