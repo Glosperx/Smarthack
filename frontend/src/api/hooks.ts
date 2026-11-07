@@ -6,6 +6,7 @@ export type HealthResponse =
   operations['health_check_api_health_get']['responses'][200]['content']['application/json'];
 
 export type ExampleResult = components['schemas']['ExampleResult'];
+export type Park = components['schemas']['Park'];
 
 /**
  * Query hook for application health check.
@@ -26,5 +27,16 @@ export function useExampleQuery(query: string) {
     queryFn: () =>
       apiFetch<ExampleResult>(`/api/example?q=${encodeURIComponent(query)}`),
     enabled: Boolean(query.trim()),
+  });
+}
+
+/**
+ * Query hook for fetching wind park coordinates.
+ */
+export function useParks() {
+  return useQuery<Park[]>({
+    queryKey: ['parks'],
+    queryFn: () => apiFetch<Park[]>('/api/parks'),
+    staleTime: 5 * 60_000,
   });
 }
