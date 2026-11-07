@@ -1,5 +1,7 @@
 import { Drawer } from './Drawer';
+import { useParkTurbines } from '../../api/hooks';
 import type { Park } from '../../api/hooks';
+import { TurbineRow } from './TurbineRow';
 
 interface ParkDetailsDrawerProps {
   isOpen: boolean;
@@ -8,57 +10,106 @@ interface ParkDetailsDrawerProps {
 }
 
 /**
- * Slide-out details drawer showing selected wind park coordinates.
+ * Slide-out details drawer showing selected wind park info and today's turbine diagnostics.
  */
 export function ParkDetailsDrawer({ isOpen, onClose, selectedPark }: ParkDetailsDrawerProps) {
+  const parkId = isOpen && selectedPark ? selectedPark.id : null;
+  const { data, isLoading, isFetching, isError, error, refetch } = useParkTurbines(parkId);
+
+  // If park changed and query is still fetching the new park's data
+  const isDataForCurrentPark = data?.park_id === selectedPark?.id;
+  const showSkeleton = isLoading || (!isDataForCurrentPark && isFetching);
+
+  const turbines = (isDataForCurrentPark ? data?.turbines : []) ?? [];
+
   return (
     <Drawer
       isOpen={isOpen}
       onClose={onClose}
-      title={selectedPark ? `Park #${selectedPark.id}` : 'Park Details'}
+      title={selectedPark ? selectedPark.name : 'Park Details'}
     >
       {selectedPark ? (
-        <div className="space-y-6">
-          {/* Geographic Coordinates Card */}
-          <div className="bg-slate-800/60 border border-slate-700/80 rounded-xl p-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
-              Geographic Coordinates
-            </h3>
-            <div className="space-y-3 font-mono text-sm">
-              <div className="flex justify-between items-center py-1.5 border-b border-slate-700/50">
-                <span className="text-slate-400">Latitude</span>
-                <span className="text-emerald-400 font-medium">
-                  {selectedPark.latitude.toFixed(6)}°
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-1.5">
-                <span className="text-slate-400">Longitude</span>
-                <span className="text-emerald-400 font-medium">
-                  {selectedPark.longitude.toFixed(6)}°
-                </span>
-              </div>
+        <div className="space-y-5">
+          {/* Subtitle Card: Coordinates & Evaluation Date */}
+          <div className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-3.5 space-y-2">
+            <div className="flex items-center justify-between text-xs font-mono text-slate-400">
+              <span className="flex items-center gap-1.5">
+                <span className="text-slate-500">ID:</span>
+                <span className="text-slate-300 font-semibold">#{selectedPark.id}</span>
+              </span>
+              <span>
+                {selectedPark.latitude.toFixed(5)}°, {selectedPark.longitude.toFixed(5)}°
+              </span>
             </div>
+            {data?.date && (
+              <div className="text-[11px] font-mono text-emerald-400/90 pt-1.5 border-t border-slate-700/50 flex items-center justify-between">
+                <span>Evaluation Window</span>
+                <span>Predictions for {data.date}</span>
+              </div>
+            )}
           </div>
 
-          {/* Reserved slot for future details */}
-          <div className="border border-dashed border-slate-700/80 rounded-xl p-5 text-center bg-slate-800/20">
-            <svg
-              className="w-8 h-8 text-slate-600 mx-auto mb-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-              />
-            </svg>
-            <p className="text-xs text-slate-400 font-medium">Turbine Specifications & Output</p>
-            <p className="text-xs text-slate-500 mt-1">
-              Detailed metrics, capacity, and active weather forecasts will appear here.
-            </p>
+          {/* Turbines Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Turbines & Health Status
+              </h3>
+              {!showSkeleton && !isError && isDataForCurrentPark && (
+                <span className="text-xs font-mono text-slate-400">
+                  {turbines.length} {turbines.length === 1 ? 'turbine' : 'turbines'}
+                </span>
+              )}
+            </div>
+
+            {/* Loading Skeleton */}
+            {showSkeleton && (
+              <div className="space-y-2.5">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="animate-pulse bg-slate-800/40 border border-slate-700/40 rounded-xl p-3.5 flex items-center justify-between"
+                  >
+                    <div className="space-y-2 flex-1">
+                      <div className="h-3.5 bg-slate-700/60 rounded-md w-3/4" />
+                      <div className="h-2.5 bg-slate-700/40 rounded-md w-1/2" />
+                    </div>
+                    <div className="h-5 w-12 bg-slate-700/50 rounded-md ml-3" />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Error Banner with Retry */}
+            {!showSkeleton && isError && (
+              <div className="bg-rose-950/60 border border-rose-800/80 rounded-xl p-4 text-center space-y-3">
+                <p className="text-xs text-rose-200">
+                  {error instanceof Error ? error.message : 'Could not load turbine diagnostics'}
+                </p>
+                <button
+                  onClick={() => refetch()}
+                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!showSkeleton && !isError && isDataForCurrentPark && turbines.length === 0 && (
+              <div className="border border-dashed border-slate-700/80 rounded-xl p-6 text-center bg-slate-800/20">
+                <p className="text-xs text-slate-400 font-medium">No turbines registered for this park.</p>
+              </div>
+            )}
+
+            {/* Turbines List */}
+            {!showSkeleton && !isError && isDataForCurrentPark && turbines.length > 0 && (
+              <div className="space-y-2 max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
+                {turbines.map((turbine) => (
+                  <TurbineRow key={turbine.id} turbine={turbine} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       ) : (

@@ -5,15 +5,69 @@ Outbound HTTP client for the Supabase REST API (PostgREST). Reads tables and vie
 the `public` schema with the key from `config.supabase_key`.
 
 The following can be imported from this module:
+- `_headers`
+- `fetch_parks`
 - `fetch_rows`
+- `fetch_turbines_with_predictions`
+- `parse_ewkb_point`
 - `select_rows`
 """
 
+from datetime import date
+import struct
 from typing import Any
 
 import httpx
 
 from smarthack import config
+from smarthack.constants import MAINTENANCE_TABLE, PARK_TABLE, PARK_VIEW, TURBINE_TABLE
+
+
+def _headers() -> dict[str, str]:
+    """
+    Construct authentication headers for the Supabase PostgREST API.
+
+    :returns headers: Dictionary containing apikey and optional Bearer auth header.
+    """
+    key = config.supabase_key()
+    headers = {"apikey": key}
+    if key.startswith("eyJ"):
+        headers["Authorization"] = f"Bearer {key}"
+    return headers
+
+
+def _url(resource: str) -> str:
+    """
+    Construct resource URL under Supabase PostgREST endpoint.
+
+    :param resource: Database table or view name.
+
+    :returns url: Full endpoint URL string.
+    """
+    return f"{config.supabase_url()}/rest/v1/{resource}"
+
+
+def parse_ewkb_point(hex_str: str) -> tuple[float, float] | None:
+    """
+    Parse a PostGIS WKB or EWKB hex string for a 2D Point.
+
+    :param hex_str: Hexadecimal string representing geometry.
+
+    :returns coords: Tuple of (latitude, longitude) or None if malformed.
+    """
+    try:
+        raw = bytes.fromhex(hex_str)
+        if len(raw) < 21:
+            return None
+        bo = "<" if raw[0] == 1 else ">"
+        gtype = struct.unpack_from(bo + "I", raw, 1)[0]
+        offset = 9 if bool(gtype & 0x20000000) else 5
+        if len(raw) < offset + 16:
+            return None
+        lon, lat = struct.unpack_from(bo + "2d", raw, offset)
+        return lat, lon
+    except Exception:
+        return None
 
 
 async def fetch_rows(
@@ -68,4 +122,91 @@ def select_rows(relation: str, params: dict[str, str] | None = None) -> list[dic
     return rows
 
 
-__all__ = ["fetch_rows", "select_rows"]
+async def fetch_parks(http: httpx.AsyncClient) -> list[dict[str, Any]]:
+    """
+    Fetch wind parks records from Supabase PostgREST endpoint.
+
+    Attempts to query `park_map` view, falling back to base `park` table if absent.
+
+    :param http: Shared asynchronous HTTP client.
+
+    :returns rows: Raw list of dictionaries returned by PostgREST.
+    :raises httpx.HTTPError: When the HTTP request to Supabase fails.
+    """
+    resp = await http.get(
+        _url(PARK_VIEW),
+        params={"select": "id,name,latitude,longitude", "order": "id.asc", "limit": "1000"},
+        headers=_headers(),
+    )
+    if resp.status_code == 404:
+        # Fall back to base table `park`
+        resp = await http.get(
+            _url(PARK_TABLE),
+            params={"select": "*", "order": "id.asc", "limit": "1000"},
+            headers=_headers(),
+        )
+        resp.raise_for_status()
+        raw_rows = resp.json()
+        parsed_rows: list[dict[str, Any]] = []
+        for r in raw_rows:
+            loc = r.get("location")
+            if loc and isinstance(loc, str):
+                coords = parse_ewkb_point(loc)
+                if coords:
+                    parsed_rows.append(
+                        {
+                            "id": r["id"],
+                            "name": r.get("name", f"Park #{r['id']}"),
+                            "latitude": coords[0],
+                            "longitude": coords[1],
+                        }
+                    )
+                    continue
+            parsed_rows.append(r)
+        return parsed_rows
+
+    resp.raise_for_status()
+    return resp.json()
+
+
+async def fetch_turbines_with_predictions(
+    http: httpx.AsyncClient, park_id: int, day: date
+) -> list[dict[str, Any]]:
+    """
+    Fetch wind turbines and their daily maintenance predictions for a specific park and date.
+
+    :param http: Shared asynchronous HTTP client.
+    :param park_id: Unique numeric wind park identifier.
+    :param day: Target calendar date for prediction records.
+
+    :returns rows: Raw list of turbine dictionaries with embedded maintenance records.
+    :raises httpx.HTTPError: When the HTTP request to Supabase fails.
+    """
+    cols = (
+        "entry_id,predicted_date,daily_fault_probability,"
+        "cumulative_fault_probability,status,suspected_subsystem"
+    )
+    resp = await http.get(
+        _url(TURBINE_TABLE),
+        params={
+            "select": f"id,{MAINTENANCE_TABLE}({cols})",
+            "park_id": f"eq.{park_id}",
+            f"{MAINTENANCE_TABLE}.predicted_date": f"eq.{day.isoformat()}",
+            f"{MAINTENANCE_TABLE}.order": "entry_id.desc",
+            "order": "id.asc",
+            "limit": "1000",
+        },
+        headers=_headers(),
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+
+__all__ = [
+    "_headers",
+    "fetch_parks",
+    "fetch_rows",
+    "fetch_turbines_with_predictions",
+    "parse_ewkb_point",
+    "select_rows",
+]

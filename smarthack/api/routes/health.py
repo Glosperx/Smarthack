@@ -14,7 +14,8 @@ import httpx
 
 from smarthack import config
 from smarthack.api.dependencies import get_http_client
-from smarthack.clients.supabase_parks import _headers
+from smarthack.clients.supabase import _headers
+from smarthack.constants import PARK_VIEW
 
 router = APIRouter(prefix="/health", tags=["health"])
 
@@ -41,7 +42,7 @@ async def health_check_db(
     :returns result: Connection test details including status, table name, and rows found.
     """
     supabase_url = config.supabase_url()
-    table = config.supabase_parks_table()
+    table = PARK_VIEW
 
     if not supabase_url or not config.supabase_key():
         return {

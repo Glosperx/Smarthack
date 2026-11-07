@@ -101,6 +101,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/parks/{park_id}/turbines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Park Turbines
+         * @description Return all turbines and today's maintenance predictions for a specific park.
+         *
+         *     :param park_id: Unique numeric identifier of the park.
+         *     :param http: Injected application asynchronous HTTP client.
+         *     :param today: Target calendar date provided by dependency injection.
+         *
+         *     :returns result: Park turbines diagnostics collection.
+         *     :raises HTTPException: 502 Bad Gateway if the upstream database query fails.
+         */
+        get: operations["get_park_turbines_api_parks__park_id__turbines_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -139,6 +166,11 @@ export interface components {
              */
             id: number;
             /**
+             * Name
+             * @description Display name of the wind park.
+             */
+            name: string;
+            /**
              * Latitude
              * @description WGS84 latitude coordinate.
              */
@@ -148,6 +180,78 @@ export interface components {
              * @description WGS84 longitude coordinate.
              */
             longitude: number;
+        };
+        /**
+         * ParkTurbines
+         * @description Collection of turbines and today's diagnostics for a specific wind park.
+         */
+        ParkTurbines: {
+            /**
+             * Park Id
+             * @description Unique numeric identifier of the parent park.
+             */
+            park_id: number;
+            /**
+             * Date
+             * Format: date
+             * @description The evaluation date for which predictions were retrieved.
+             */
+            date: string;
+            /**
+             * Turbines
+             * @description Turbines registered under this park.
+             */
+            turbines?: components["schemas"]["TurbineToday"][];
+        };
+        /**
+         * TurbinePrediction
+         * @description Single diagnostic maintenance prediction record for a wind turbine.
+         */
+        TurbinePrediction: {
+            /**
+             * Entry Id
+             * @description Unique prediction database sequence identifier.
+             */
+            entry_id: number;
+            /**
+             * Predicted Date
+             * Format: date
+             * @description Target forecast date of the prediction.
+             */
+            predicted_date: string;
+            /**
+             * Daily Fault Probability
+             * @description Probability of failure within 24 hours.
+             */
+            daily_fault_probability: number;
+            /**
+             * Cumulative Fault Probability
+             * @description Multi-day aggregated probability of failure.
+             */
+            cumulative_fault_probability: number;
+            /**
+             * Status
+             * @description Operational health status code or label.
+             */
+            status: string;
+            /**
+             * Suspected Subsystem
+             * @description Primary turbine subsystem at risk.
+             */
+            suspected_subsystem: string;
+        };
+        /**
+         * TurbineToday
+         * @description Turbine operational status with today's maintenance prediction if available.
+         */
+        TurbineToday: {
+            /**
+             * Id
+             * @description Unique numeric turbine identifier.
+             */
+            id: number;
+            /** @description Diagnostic prediction for today, or None if unavailable. */
+            prediction?: components["schemas"]["TurbinePrediction"] | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -262,6 +366,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Park"][];
+                };
+            };
+        };
+    };
+    get_park_turbines_api_parks__park_id__turbines_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                park_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParkTurbines"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

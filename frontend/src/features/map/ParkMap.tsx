@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import { dotIcon, selectedIcon, clusterIcon } from './mapIcons';
@@ -113,7 +113,13 @@ export function ParkMap({
               eventHandlers={{
                 click: () => onSelectPark(park.id),
               }}
-            />
+            >
+              <Tooltip direction="top" offset={[0, -10]} opacity={0.95}>
+                <span className="font-sans font-semibold text-xs text-slate-900">
+                  {park.name}
+                </span>
+              </Tooltip>
+            </Marker>
           ))}
         </MarkerClusterGroup>
       </MapContainer>

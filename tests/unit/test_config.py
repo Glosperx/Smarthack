@@ -41,6 +41,9 @@ def test_log_level_is_upper_cased(monkeypatch: pytest.MonkeyPatch) -> None:
         (config.host, "SMARTHACK_HOST", "127.0.0.1"),
         (config.example_service_url, "SMARTHACK_EXAMPLE_SERVICE_URL", "http://localhost:9000"),
         (config.supabase_parks_table, "SUPABASE_PARKS_TABLE", "parks"),
+        (config.timezone, "SMARTHACK_TIMEZONE", "UTC"),
+        (config.supabase_url, "SUPABASE_URL", ""),
+        (config.supabase_key, "SUPABASE_KEY", ""),
     ],
 )
 def test_an_empty_variable_means_unset(
@@ -97,3 +100,14 @@ def test_maintenance_directories_default_to_relative_paths() -> None:
     assert models_path.name == "maintenance"
     assert "data" in str(data_path)
     assert "models" in str(models_path)
+
+
+def test_timezone_accessor(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Timezone defaults to UTC, accepts valid IANA names, rejects invalid names."""
+    assert config.timezone() == "UTC"
+    monkeypatch.setenv("SMARTHACK_TIMEZONE", "Europe/Bucharest")
+    assert config.timezone() == "Europe/Bucharest"
+
+    monkeypatch.setenv("SMARTHACK_TIMEZONE", "Invalid/Timezone_Name")
+    with pytest.raises(Exception):
+        config.timezone()

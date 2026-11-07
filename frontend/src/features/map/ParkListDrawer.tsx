@@ -25,7 +25,13 @@ export function ParkListDrawer({
   const filteredParks = useMemo(() => {
     if (!filterText.trim()) return parks;
     const query = filterText.toLowerCase();
-    return parks.filter((p) => `park #${p.id}`.includes(query) || `${p.id}`.includes(query));
+    return parks.filter(
+      (p) =>
+        p.name.toLowerCase().includes(query) ||
+        `park #${p.id}`.includes(query) ||
+        `#${p.id}`.includes(query) ||
+        `${p.id}`.includes(query)
+    );
   }, [parks, filterText]);
 
   return (
@@ -36,7 +42,7 @@ export function ParkListDrawer({
           type="text"
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          placeholder="Filter parks..."
+          placeholder="Filter by name or ID..."
           className="w-full bg-slate-800/90 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-400"
         />
       </div>
@@ -61,9 +67,13 @@ export function ParkListDrawer({
               }`}
             >
               <div>
-                <div className="font-semibold text-sm">Park #{park.id}</div>
-                <div className="text-xs font-mono text-slate-400 mt-0.5">
-                  {park.latitude.toFixed(4)}, {park.longitude.toFixed(4)}
+                <div className="font-semibold text-sm text-slate-100">{park.name}</div>
+                <div className="text-xs font-mono text-slate-400 mt-1 flex items-center gap-2">
+                  <span className="text-slate-500 font-medium">#{park.id}</span>
+                  <span>&bull;</span>
+                  <span>
+                    {park.latitude.toFixed(4)}°, {park.longitude.toFixed(4)}°
+                  </span>
                 </div>
               </div>
               <svg
