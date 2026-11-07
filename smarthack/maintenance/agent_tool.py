@@ -7,6 +7,7 @@ The following can be imported from this module:
 - `assess_turbine_health`
 - `format_health_report`
 - `get_maintenance_tool_spec`
+- `load_predictor`
 - `simulate_turbine_scenario`
 """
 
@@ -87,25 +88,13 @@ def get_maintenance_tool_spec() -> dict[str, Any]:
     }
 
 
-def assess_turbine_health(
-    asset_id: int = 0,
-    telemetry_records: list[dict[str, Any]] | None = None,
-    window_hours: int = 48,
-    horizon_days: int = DEFAULT_FORECAST_HORIZON_DAYS,
-    scenario: str = SCENARIO_NORMAL,
-    models_dir: str | Path | None = None,
-) -> dict[str, Any]:
+def load_predictor(models_dir: str | Path | None = None) -> TurbineHealthPredictor:
     """
-    Evaluate wind turbine telemetry and return health metrics, lead time, and diagnosis.
+    Load the fault classifier once so callers can reuse it across many assessments.
 
-    :param asset_id: Wind turbine asset identifier.
-    :param telemetry_records: Optional list of raw SCADA records. If None, uses simulator.
-    :param window_hours: Hours of telemetry window to evaluate.
-    :param horizon_days: Days ahead to project daily failure probabilities.
-    :param scenario: Fault profile if synthesizing telemetry.
     :param models_dir: Optional custom directory path to model artifacts.
 
-    :returns result: Structured assessment payload for agent consumption.
+    :returns predictor: Ready-to-use predictor instance.
     """
     resolved_dir = resolve_maintenance_models_dir(models_dir)
     predictor = TurbineHealthPredictor()
@@ -114,9 +103,44 @@ def assess_turbine_health(
         subsystem_path=resolved_dir / "subsystem_classifier.joblib",
         features_path=resolved_dir / "fault_features.json",
     )
+    return predictor
 
-    if telemetry_records is not None and len(telemetry_records) > 0:
+
+def assess_turbine_health(
+    asset_id: int = 0,
+    telemetry_records: list[dict[str, Any]] | None = None,
+    features_record: dict[str, Any] | None = None,
+    window_hours: int = 48,
+    horizon_days: int = DEFAULT_FORECAST_HORIZON_DAYS,
+    scenario: str = SCENARIO_NORMAL,
+    models_dir: str | Path | None = None,
+    predictor: TurbineHealthPredictor | None = None,
+) -> dict[str, Any]:
+    """
+    Evaluate wind turbine telemetry or pre-computed features and return health metrics.
+
+    :param asset_id: Wind turbine asset identifier.
+    :param telemetry_records: Optional list of raw SCADA records.
+    :param features_record: Optional pre-computed feature dictionary (e.g. from database inputs).
+    :param window_hours: Hours of telemetry window to evaluate.
+    :param horizon_days: Days ahead to project daily failure probabilities.
+    :param scenario: Fault profile if synthesizing telemetry.
+    :param models_dir: Optional custom directory path to model artifacts.
+    :param predictor: Optional pre-loaded `TurbineHealthPredictor` instance.
+
+    :returns result: Structured assessment payload for agent consumption.
+    """
+    active_predictor = predictor or load_predictor(models_dir)
+
+    if features_record is not None:
+        eval_result = active_predictor.evaluate_features(
+            features_record, asset_id=asset_id, horizon_days=horizon_days
+        )
+    elif telemetry_records is not None and len(telemetry_records) > 0:
         telemetry_df = pd.DataFrame(telemetry_records)
+        eval_result = active_predictor.evaluate_telemetry(
+            telemetry_df, asset_id=asset_id, horizon_days=horizon_days
+        )
     else:
         simulator = ScadaSimulator(seed=42 + asset_id)
         telemetry_df = simulator.generate_stream(
@@ -124,10 +148,9 @@ def assess_turbine_health(
             duration_hours=window_hours,
             scenario=scenario,
         )
-
-    eval_result = predictor.evaluate_telemetry(
-        telemetry_df, asset_id=asset_id, horizon_days=horizon_days
-    )
+        eval_result = active_predictor.evaluate_telemetry(
+            telemetry_df, asset_id=asset_id, horizon_days=horizon_days
+        )
     status = eval_result["status"]
     health = eval_result["health_score"]
     prob = eval_result["fault_probability"]
@@ -269,5 +292,6 @@ __all__ = [
     "assess_turbine_health",
     "format_health_report",
     "get_maintenance_tool_spec",
+    "load_predictor",
     "simulate_turbine_scenario",
 ]

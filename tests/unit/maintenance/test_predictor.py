@@ -116,3 +116,21 @@ def test_predictor_evaluates_hydraulic_failure() -> None:
     assert res["status"] in (HEALTH_STATUS_WARNING, HEALTH_STATUS_CRITICAL)
     assert res["suspected_subsystem"] == "Hydraulic Group"
     assert res["subsystem_risks"]["Hydraulic Group"] > 0.50
+
+
+def test_predictor_evaluates_features_input() -> None:
+    """Predictor directly scores feature input row from turbine_maintenance_input."""
+    features_record = {
+        "sensor_0_avg": 24.5,
+        "wind_speed_3_avg": 8.2,
+        "power_30_avg": 1850.0,
+        "thermal_lift_bearing_de": 58.0,
+        "bearing_temp_ratio": 1.42,
+    }
+    predictor = TurbineHealthPredictor()
+    res = predictor.evaluate_features(features_record, asset_id=7)
+
+    assert res["asset_id"] == 7
+    assert res["status"] in (HEALTH_STATUS_WARNING, HEALTH_STATUS_CRITICAL)
+    assert res["suspected_subsystem"] == "Generator Bearing"
+    assert len(res["daily_forecast"]) == 7

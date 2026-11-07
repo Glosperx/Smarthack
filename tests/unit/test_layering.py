@@ -49,6 +49,7 @@ RANKS: dict[str, int] = {
     "clients": 2,
     "services": 3,
     "api": 4,
+    "jobs": 4,
     "__main__": 5,
 }
 
@@ -338,5 +339,6 @@ def test_ranks_follow_the_top_level_name() -> None:
     assert rank_of(f"{PACKAGE}.clients") == 2
     assert rank_of(f"{PACKAGE}.services") == 3
     assert rank_of(f"{PACKAGE}.api") == 4
+    assert rank_of(f"{PACKAGE}.jobs") == 4
     assert rank_of(f"{PACKAGE}.__main__") == 5
     assert rank_of(f"{PACKAGE}.not_a_layer") is None

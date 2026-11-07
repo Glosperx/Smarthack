@@ -62,13 +62,16 @@ export function ParkListDrawer({
               onClick={() => onSelectPark(park.id)}
               className={`w-full text-left p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
                 isSelected
-                  ? 'bg-blue-600/20 border-blue-500/80 text-blue-200'
+                  ? 'bg-cyan-950/40 border-cyan-500/80 text-cyan-200 shadow-md'
                   : 'bg-slate-800/50 border-slate-700/60 hover:bg-slate-800 hover:border-slate-600 text-slate-200'
               }`}
             >
               <div>
-                <div className="font-semibold text-sm text-slate-100">{park.name}</div>
-                <div className="text-xs font-mono text-slate-400 mt-1 flex items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(6,182,212,0.8)] shrink-0" />
+                  <span className="font-semibold text-sm text-slate-100">{park.name}</span>
+                </div>
+                <div className="text-xs font-mono text-slate-400 mt-1 flex items-center gap-2 pl-4.5">
                   <span className="text-slate-500 font-medium">#{park.id}</span>
                   <span>&bull;</span>
                   <span>

@@ -8,13 +8,19 @@ UVICORN := $(if $(BIN),$(BIN)/uvicorn,uvicorn)
 PYTEST  := $(if $(BIN),$(BIN)/pytest,pytest)
 
 .DEFAULT_GOAL := help
-.PHONY: help install hooks format lint test test-fast cov docs docs-serve docker-build clean dev dev-api dev-web types build serve check test-db
+.PHONY: help install hooks format lint test test-fast cov docs docs-serve docker-build clean dev dev-api dev-web types build serve check test-db predict worker
 
 help:                       # list the targets
 	@grep -E '^[a-z-]+:.*# ' $(MAKEFILE_LIST) | sed -E 's/:[^#]*# /\t/'
 
 test-db:                   # test connectivity to Supabase using .env credentials
 	$(PYTHON) -c 'import asyncio, httpx, json; from smarthack.clients.supabase import fetch_parks; print(json.dumps(asyncio.run(fetch_parks(httpx.AsyncClient())), indent=2))'
+
+predict:                   # run one maintenance prediction cycle now
+	$(PYTHON) -m smarthack.jobs.maintenance_job $(ARGS)
+
+worker:                    # run continuous scheduled prediction loop
+	$(PYTHON) -m smarthack.jobs.maintenance_job --every 60 $(ARGS)
 
 install:                    # editable install with backend dev extras and frontend npm dependencies
 	@if [ ! -d "$(VENV)" ]; then python3 -m venv $(VENV); fi
