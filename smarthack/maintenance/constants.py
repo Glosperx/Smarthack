@@ -4,6 +4,7 @@
 Scalars, failure scenarios, sensor mappings, and thresholds for predictive maintenance.
 
 The following can be imported from this module:
+- `DEFAULT_FORECAST_HORIZON_DAYS`
 - `DEFAULT_HEALTH_THRESHOLD_CRITICAL`
 - `DEFAULT_HEALTH_THRESHOLD_WARNING`
 - `DEFAULT_HEALTH_THRESHOLD_WATCH`
@@ -38,6 +39,9 @@ The following can be imported from this module:
 - `SENSOR_TRANSFORMER_L3`
 - `SENSOR_WIND_SPEED`
 """
+
+#: Default failure forecast horizon in days (1 week).
+DEFAULT_FORECAST_HORIZON_DAYS: int = 7
 
 #: SCADA column name for ambient temperature (°C).
 SENSOR_AMBIENT_TEMP: str = "sensor_0_avg"
@@ -144,6 +148,7 @@ FAULT_SUBSYSTEMS: list[str] = [
 ]
 
 __all__ = [
+    "DEFAULT_FORECAST_HORIZON_DAYS",
     "DEFAULT_HEALTH_THRESHOLD_CRITICAL",
     "DEFAULT_HEALTH_THRESHOLD_WARNING",
     "DEFAULT_HEALTH_THRESHOLD_WATCH",

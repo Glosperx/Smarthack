@@ -8,6 +8,7 @@ The following can be imported from this module:
 - `resolve_maintenance_models_dir`
 """
 
+from datetime import datetime, timedelta
 import json
 import logging
 from pathlib import Path
@@ -19,6 +20,7 @@ import pandas as pd
 
 from smarthack.config import maintenance_models_dir
 from smarthack.maintenance.constants import (
+    DEFAULT_FORECAST_HORIZON_DAYS,
     DEFAULT_HEALTH_THRESHOLD_CRITICAL,
     DEFAULT_HEALTH_THRESHOLD_WARNING,
     DEFAULT_HEALTH_THRESHOLD_WATCH,
@@ -153,16 +155,93 @@ class TurbineHealthPredictor:
         with open(resolved_feats, "r") as f:
             self.feature_columns = json.load(f)
 
+    def compute_daily_forecast(
+        self,
+        fault_prob: float,
+        days_to_failure: float | None,
+        subsystem: str | None,
+        start_date: datetime | None = None,
+        horizon_days: int = DEFAULT_FORECAST_HORIZON_DAYS,
+    ) -> list[dict[str, Any]]:
+        """
+        Forecast failure probabilities day-by-day across an upcoming time horizon.
+
+        :param fault_prob: Overall failure probability (0.0 to 1.0).
+        :param days_to_failure: Estimated lead time in days, or None if healthy.
+        :param subsystem: Primary diagnosed subsystem, or None.
+        :param start_date: Starting datetime for the forecast (default now).
+        :param horizon_days: Forecast horizon in days (default 7).
+
+        :returns daily_forecast: Day-by-day risk breakdown list.
+        """
+        if start_date is None:
+            start_date = datetime.now()
+
+        forecast: list[dict[str, Any]] = []
+        prev_cum = 0.0
+
+        if fault_prob < DEFAULT_HEALTH_THRESHOLD_WATCH or days_to_failure is None:
+            for d in range(1, horizon_days + 1):
+                date_str = (start_date + timedelta(days=d)).strftime("%Y-%m-%d")
+                cum = round(float(min(0.30, fault_prob * (1.0 - np.exp(-0.15 * d)))), 3)
+                daily_p = round(float(max(0.005, cum - prev_cum)), 3)
+                prev_cum = cum
+                forecast.append(
+                    {
+                        "day": d,
+                        "date": date_str,
+                        "daily_fault_probability": daily_p,
+                        "cumulative_fault_probability": cum,
+                        "status": HEALTH_STATUS_NORMAL,
+                        "suspected_subsystem": None,
+                    }
+                )
+        else:
+            t_crit = max(0.8, days_to_failure)
+            beta = 2.4
+            eta = t_crit / (np.log(2.0) ** (1.0 / beta))
+
+            for d in range(1, horizon_days + 1):
+                date_str = (start_date + timedelta(days=d)).strftime("%Y-%m-%d")
+                weibull_cdf = 1.0 - np.exp(-((d / eta) ** beta))
+                cum = round(float(np.clip(weibull_cdf * fault_prob, 0.01, 0.999)), 3)
+                daily_p = round(float(np.clip(cum - prev_cum, 0.001, 1.0)), 3)
+                prev_cum = cum
+
+                if cum >= DEFAULT_HEALTH_THRESHOLD_CRITICAL:
+                    day_status = HEALTH_STATUS_CRITICAL
+                elif cum >= DEFAULT_HEALTH_THRESHOLD_WARNING:
+                    day_status = HEALTH_STATUS_WARNING
+                elif cum >= DEFAULT_HEALTH_THRESHOLD_WATCH:
+                    day_status = HEALTH_STATUS_WATCH
+                else:
+                    day_status = HEALTH_STATUS_NORMAL
+
+                forecast.append(
+                    {
+                        "day": d,
+                        "date": date_str,
+                        "daily_fault_probability": daily_p,
+                        "cumulative_fault_probability": cum,
+                        "status": day_status,
+                        "suspected_subsystem": subsystem,
+                    }
+                )
+
+        return forecast
+
     def evaluate_telemetry(
         self,
         telemetry_df: pd.DataFrame,
         asset_id: int = 0,
+        horizon_days: int = DEFAULT_FORECAST_HORIZON_DAYS,
     ) -> dict[str, Any]:
         """
         Score a multi-interval SCADA observation window for impending failure risk.
 
         :param telemetry_df: Chronologically sorted SCADA observations.
         :param asset_id: Turbine asset identifier.
+        :param horizon_days: Days ahead to project daily risk probabilities.
 
         :returns evaluation: Health assessment dictionary.
         """
@@ -178,6 +257,9 @@ class TurbineHealthPredictor:
                 "estimated_days_to_failure": None,
                 "suspected_subsystem": None,
                 "subsystem_risks": {},
+                "daily_forecast": self.compute_daily_forecast(
+                    0.0, None, None, horizon_days=horizon_days
+                ),
                 "recommended_action": _get_recommended_action(None, HEALTH_STATUS_NORMAL),
                 "anomalous_sensors": [],
                 "records_evaluated": 0,
@@ -268,13 +350,32 @@ class TurbineHealthPredictor:
 
         if combined_prob >= DEFAULT_HEALTH_THRESHOLD_WATCH:
             days_to_failure = round(float(max(1.0, (1.0 - combined_prob) * 9.0 + 1.2)), 1)
-            # Pick subsystem with maximum risk score
             if subsystem_risks:
                 suspected_subsystem = max(subsystem_risks.items(), key=lambda item: item[1])[0]
             else:
                 suspected_subsystem = "Drivetrain Mechanical Group"
 
         recommended_action = _get_recommended_action(suspected_subsystem, status)
+
+        # Determine reference date from telemetry time_stamp if available
+        last_ts = None
+        if "time_stamp" in telemetry_df.columns:
+            try:
+                raw_ts = telemetry_df["time_stamp"].iloc[-1]
+                if isinstance(raw_ts, str):
+                    last_ts = datetime.fromisoformat(raw_ts)
+                elif isinstance(raw_ts, datetime):
+                    last_ts = raw_ts
+            except Exception:
+                last_ts = None
+
+        daily_forecast = self.compute_daily_forecast(
+            fault_prob=combined_prob,
+            days_to_failure=days_to_failure,
+            subsystem=suspected_subsystem,
+            start_date=last_ts,
+            horizon_days=horizon_days,
+        )
 
         return {
             "asset_id": asset_id,
@@ -284,6 +385,7 @@ class TurbineHealthPredictor:
             "estimated_days_to_failure": days_to_failure,
             "suspected_subsystem": suspected_subsystem,
             "subsystem_risks": subsystem_risks,
+            "daily_forecast": daily_forecast,
             "recommended_action": recommended_action,
             "anomalous_sensors": anomalous_sensors,
             "records_evaluated": len(telemetry_df),

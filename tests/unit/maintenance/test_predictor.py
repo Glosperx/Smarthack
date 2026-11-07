@@ -41,6 +41,14 @@ def test_predictor_evaluates_normal_telemetry() -> None:
     assert result["estimated_days_to_failure"] is None
     assert "nominal" in result["recommended_action"].lower()
 
+    # 7-day forecast checks
+    forecast = result["daily_forecast"]
+    assert len(forecast) == 7
+    assert forecast[0]["day"] == 1
+    assert forecast[6]["day"] == 7
+    assert all(f["status"] == HEALTH_STATUS_NORMAL for f in forecast)
+    assert all(f["daily_fault_probability"] < 0.10 for f in forecast)
+
 
 def test_predictor_evaluates_bearing_failure() -> None:
     """Predictor detects bearing overheating, flags critical status, and estimates lead time."""
@@ -61,6 +69,12 @@ def test_predictor_evaluates_bearing_failure() -> None:
     assert 1.0 <= result["estimated_days_to_failure"] <= 7.0
     assert result["suspected_subsystem"] == "Generator Bearing"
     assert "bearing" in result["recommended_action"].lower()
+
+    forecast = result["daily_forecast"]
+    assert len(forecast) == 7
+    # For a critical impending bearing failure, cumulative risk should reach critical level within 2 days
+    assert any(f["status"] in (HEALTH_STATUS_WARNING, HEALTH_STATUS_CRITICAL) for f in forecast)
+    assert forecast[-1]["cumulative_fault_probability"] > 0.80
 
 
 def test_predictor_evaluates_gearbox_failure() -> None:
