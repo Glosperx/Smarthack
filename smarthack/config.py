@@ -236,36 +236,29 @@ def example_service_url() -> str:
 
 def supabase_url() -> str:
     """
-    Return the Supabase project base URL.
+    Return the base URL of the Supabase project.
 
-    :returns url: Project base URL string without trailing slash or path.
+    :returns url: The project URL without trailing slash, such as
+        `"https://<project-ref>.supabase.co"`.
+    :raises RuntimeError: When `SUPABASE_URL` is not set.
     """
     raw = (os.environ.get("SUPABASE_URL") or "").strip().rstrip("/")
-    if raw.endswith("/rest/v1"):
-        raw = raw[:-8].rstrip("/")
+    if not raw:
+        raise RuntimeError("SUPABASE_URL is not set; see .env.example")
     return raw
 
 
 def supabase_key() -> str:
     """
-    Return the Supabase API access key.
+    Return the Supabase API key used for REST requests.
 
-    :returns key: Publishable anon key or secret service-role key.
+    :returns key: The `anon` or `service_role` key from the Supabase dashboard.
+    :raises RuntimeError: When `SUPABASE_KEY` is not set.
     """
-    raw = (os.environ.get("SUPABASE_KEY") or "").strip().strip('"').strip("'")
-    for prefix in ("service role", "service_role", "anon public", "anon", "publishable"):
-        if raw.lower().startswith(prefix):
-            raw = raw[len(prefix) :].strip()
+    raw = (os.environ.get("SUPABASE_KEY") or "").strip()
+    if not raw:
+        raise RuntimeError("SUPABASE_KEY is not set; see .env.example")
     return raw
-
-
-def supabase_parks_table() -> str:
-    """
-    Return the table name where wind parks are stored.
-
-    :returns name: Configured Supabase parks table name. Defaults to `"parks"`.
-    """
-    return (os.environ.get("SUPABASE_PARKS_TABLE") or DEFAULT_SUPABASE_PARKS_TABLE).strip()
 
 
 __all__ = [

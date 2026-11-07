@@ -1,0 +1,46 @@
+# Copy to `db/flyway.conf` and fill in. `db/flyway.conf` is gitignored; this file is not.
+# Placeholders only - never put a real password in this file.
+#
+# Run (from the repository root):
+#   flyway -configFiles=db/flyway.conf info
+#   flyway -configFiles=db/flyway.conf migrate
+
+# --- Connection (Supabase) ------------------------------------------------
+# Supabase dashboard -> Connect -> pick the connection type, copy host and user.
+# Use a connection that supports migrations: DIRECT or SESSION pooler (port 5432).
+# Do NOT use the transaction pooler (port 6543): it breaks the locks Flyway takes.
+#
+# Option A - session pooler (works over IPv4, the safe default):
+flyway.url=jdbc:postgresql://aws-0-<region>.pooler.supabase.com:5432/postgres?sslmode=require
+flyway.user=postgres.<project-ref>
+#
+# Option B - direct connection (IPv6 only on the free plan):
+# flyway.url=jdbc:postgresql://db.<project-ref>.supabase.co:5432/postgres?sslmode=require
+# flyway.user=postgres
+
+# The database password (Supabase -> Project Settings -> Database) goes in the
+# environment, not in this file. Flyway reads FLYWAY_PASSWORD on its own:
+#   set FLYWAY_PASSWORD=...        (Windows cmd)
+#   $env:FLYWAY_PASSWORD="..."     (PowerShell)
+# flyway.password=changeme
+
+# --- Migrations -----------------------------------------------------------
+# Versioned SQL files, named V<number>__<description>.sql (two underscores),
+# e.g. db/migrations/V1__create_turbine_events.sql
+flyway.locations=filesystem:db/migrations
+
+# Manage only `public`. Supabase owns auth, storage, realtime and others: never list them.
+flyway.defaultSchema=public
+flyway.schemas=public
+flyway.table=flyway_schema_history
+
+# --- Safety ---------------------------------------------------------------
+# Fail when an already applied migration was edited. Fix by adding a new V file.
+flyway.validateOnMigrate=true
+
+# `flyway clean` drops everything. Keep it off, especially on a shared Supabase project.
+flyway.cleanDisabled=true
+
+# Only for adopting an existing non-empty database: baseline it at this version.
+# flyway.baselineOnMigrate=false
+# flyway.baselineVersion=1
