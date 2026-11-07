@@ -42,7 +42,8 @@ def get_maintenance_tool_spec() -> dict[str, Any]:
             "description": (
                 "Assess the physical health of a wind turbine from recent SCADA telemetry streams. "
                 "Predicts impending component breakdown, fault probability, days-to-failure lead time, "
-                "and identifies the failing subsystem (Generator Bearing, Gearbox, Hydraulic Group)."
+                "identifies the failing subsystem (Generator Bearing, Gearbox, Hydraulic Group, Transformer), "
+                "and recommends immediate maintenance actions."
             ),
             "parameters": {
                 "type": "object",
@@ -61,9 +62,15 @@ def get_maintenance_tool_spec() -> dict[str, Any]:
                         "type": "string",
                         "description": (
                             "Optional simulation scenario to evaluate: 'normal', 'bearing_overheating', "
-                            "'gearbox_wear', or 'hydraulic_leak'."
+                            "'gearbox_wear', 'hydraulic_leak', or 'transformer_overheating'."
                         ),
-                        "enum": ["normal", "bearing_overheating", "gearbox_wear", "hydraulic_leak"],
+                        "enum": [
+                            "normal",
+                            "bearing_overheating",
+                            "gearbox_wear",
+                            "hydraulic_leak",
+                            "transformer_overheating",
+                        ],
                         "default": "normal",
                     },
                 },
@@ -95,6 +102,7 @@ def assess_turbine_health(
     predictor = TurbineHealthPredictor()
     predictor.load_model(
         model_path=resolved_dir / "fault_classifier.joblib",
+        subsystem_path=resolved_dir / "subsystem_classifier.joblib",
         features_path=resolved_dir / "fault_features.json",
     )
 
@@ -114,6 +122,7 @@ def assess_turbine_health(
     prob = eval_result["fault_probability"]
     days = eval_result["estimated_days_to_failure"]
     subsystem = eval_result["suspected_subsystem"]
+    action = eval_result["recommended_action"]
 
     if status == HEALTH_STATUS_NORMAL:
         summary_text = (
@@ -124,19 +133,19 @@ def assess_turbine_health(
         summary_text = (
             f"Turbine #{asset_id} status is WATCH (Health Score: {health}/100, Risk: {prob:.1%}). "
             f"Minor thermal/variance drift detected. Projected lead time to potential fault: {days} days. "
-            f"Recommend scheduled diagnostic inspection."
+            f"Action: {action}"
         )
     elif status == HEALTH_STATUS_WARNING:
         summary_text = (
             f"WARNING: Turbine #{asset_id} shows significant degradation in {subsystem or 'drivetrain'} "
             f"(Health Score: {health}/100, Failure Probability: {prob:.1%}). Estimated lead time before breakdown: "
-            f"{days} days. Recommend scheduling maintenance team within 48 hours."
+            f"{days} days. Action: {action}"
         )
     else:  # CRITICAL
         summary_text = (
             f"CRITICAL ALERT: Turbine #{asset_id} is in critical condition (Health Score: {health}/100, "
             f"Failure Probability: {prob:.1%}). Impending breakdown in {subsystem or 'drivetrain'} within {days} days. "
-            f"Immediate dispatch and derating advised."
+            f"Action: {action}"
         )
 
     return {
@@ -147,6 +156,8 @@ def assess_turbine_health(
         "fault_probability": prob,
         "estimated_days_to_failure": days,
         "suspected_subsystem": subsystem,
+        "subsystem_risks": eval_result["subsystem_risks"],
+        "recommended_action": action,
         "anomalous_sensors": eval_result["anomalous_sensors"],
         "records_evaluated": eval_result["records_evaluated"],
         "summary_text": summary_text,
@@ -191,6 +202,7 @@ def format_health_report(payload: dict[str, Any]) -> str:
     prob = payload.get("fault_probability", 0.0)
     days = payload.get("estimated_days_to_failure")
     subsystem = payload.get("suspected_subsystem") or "None"
+    action = payload.get("recommended_action") or "Routine operation."
     anomalous = ", ".join(payload.get("anomalous_sensors", [])) or "None"
 
     days_str = f"{days} days" if days is not None else "N/A"
@@ -203,9 +215,24 @@ def format_health_report(payload: dict[str, Any]) -> str:
         f"Estimated Time to Fail: {days_str}",
         f"Suspected Subsystem   : {subsystem}",
         f"Anomalous Sensors     : {anomalous}",
-        "----------------------------------------------",
-        payload.get("summary_text", ""),
+        "--- Subsystem Risk Breakdown ---",
     ]
+
+    risks = payload.get("subsystem_risks", {})
+    if risks:
+        for sub, r in risks.items():
+            lines.append(f"  • {sub:<20}: {r:.1%}")
+    else:
+        lines.append("  • All subsystems nominal")
+
+    lines.extend(
+        [
+            "----------------------------------------------",
+            f"Recommended Action    : {action}",
+            "----------------------------------------------",
+            payload.get("summary_text", ""),
+        ]
+    )
     return "\n".join(lines)
 
 

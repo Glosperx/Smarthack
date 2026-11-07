@@ -6,9 +6,11 @@ from smarthack.maintenance.constants import (
     SCENARIO_BEARING_OVERHEATING,
     SCENARIO_GEARBOX_WEAR,
     SCENARIO_NORMAL,
+    SCENARIO_TRANSFORMER_OVERHEATING,
     SENSOR_AMBIENT_TEMP,
     SENSOR_BEARING_DE,
     SENSOR_GEARBOX_BEARING,
+    SENSOR_TRANSFORMER_L3,
     SENSOR_WIND_SPEED,
 )
 from smarthack.maintenance.simulator import ScadaSimulator, simulate_telemetry_stream
@@ -57,6 +59,18 @@ def test_simulator_gearbox_wear_scenario() -> None:
     )
 
     assert df[SENSOR_GEARBOX_BEARING].max() > 68.0
+
+
+def test_simulator_transformer_overheating_scenario() -> None:
+    """Verify transformer overheating scenario elevates phase temperature significantly."""
+    df = simulate_telemetry_stream(
+        asset_id=8,
+        duration_hours=48,
+        scenario=SCENARIO_TRANSFORMER_OVERHEATING,
+        seed=42,
+    )
+
+    assert df[SENSOR_TRANSFORMER_L3].max() > 90.0
 
 
 def test_simulate_telemetry_stream_helper() -> None:

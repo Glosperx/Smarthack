@@ -155,6 +155,8 @@ def maintenance_models_dir() -> Path:
     if not path.is_absolute():
         path = Path(__file__).resolve().parent.parent / path
     return path
+
+
 def host() -> str:
     """
     Return the host the server listens on.
