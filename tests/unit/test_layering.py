@@ -43,7 +43,8 @@ RANKS: dict[str, int] = {
     "config": 0,
     "constants": 0,
     "utils": 0,
-    "__main__": 1,
+    "wind": 1,
+    "__main__": 2,
 }
 
 #: Below this, the scan is assumed to have missed files rather than found a
@@ -228,7 +229,7 @@ def test_the_guard_reports_an_upward_import() -> None:
     made_up = [(PACKAGE_DIR / "utils" / "x.py", 7, f"{PACKAGE}.utils.x", f"{PACKAGE}.__main__")]
 
     assert find_violations(made_up) == [
-        f"{PACKAGE}/utils/x.py:7: {PACKAGE}.utils.x (rank 0) imports {PACKAGE}.__main__ (rank 1)"
+        f"{PACKAGE}/utils/x.py:7: {PACKAGE}.utils.x (rank 0) imports {PACKAGE}.__main__ (rank 2)"
     ]
 
 
@@ -326,5 +327,6 @@ def test_ranks_follow_the_top_level_name() -> None:
     """A module takes the rank of its top-level folder; the root package is rank 0."""
     assert rank_of(PACKAGE) == 0
     assert rank_of(f"{PACKAGE}.utils.logging_utils") == 0
-    assert rank_of(f"{PACKAGE}.__main__") == 1
+    assert rank_of(f"{PACKAGE}.wind") == 1
+    assert rank_of(f"{PACKAGE}.__main__") == 2
     assert rank_of(f"{PACKAGE}.not_a_layer") is None

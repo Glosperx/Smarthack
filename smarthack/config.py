@@ -16,10 +16,14 @@ the package works with no credentials present and no newcomer is blocked from
 running the tests. Nothing is stubbed out in advance.
 
 The following can be imported from this module:
-- `app_env`
-- `log_level`
 - `DEFAULT_APP_ENV`
 - `DEFAULT_LOG_LEVEL`
+- `DEFAULT_WIND_DATA_DIR`
+- `DEFAULT_WIND_MODELS_DIR`
+- `app_env`
+- `log_level`
+- `wind_data_dir`
+- `wind_models_dir`
 """
 
 import os
@@ -32,6 +36,12 @@ DEFAULT_APP_ENV = "development"
 
 #: The logging level when `LOG_LEVEL` is not set.
 DEFAULT_LOG_LEVEL = "INFO"
+
+#: The directory holding raw wind observations when `WIND_DATA_DIR` is not set.
+DEFAULT_WIND_DATA_DIR = "data/wind"
+
+#: The directory holding trained model artifacts when `WIND_MODELS_DIR` is not set.
+DEFAULT_WIND_MODELS_DIR = "models/wind"
 
 # `load_dotenv()` looks for `.env` upward from this file in a script, but upward from the working
 # directory in a notebook or a REPL: a kernel started outside the repository then found none and a
@@ -60,4 +70,39 @@ def log_level() -> str:
     return (os.environ.get("LOG_LEVEL") or DEFAULT_LOG_LEVEL).strip().upper()
 
 
-__all__ = ["app_env", "log_level", "DEFAULT_APP_ENV", "DEFAULT_LOG_LEVEL"]
+def wind_data_dir() -> Path:
+    """
+    Return the path to the directory containing wind observation datasets.
+
+    :returns path: Configured Path to wind data directory.
+    """
+    raw = os.environ.get("WIND_DATA_DIR") or DEFAULT_WIND_DATA_DIR
+    path = Path(raw)
+    if not path.is_absolute():
+        path = Path(__file__).resolve().parent.parent / path
+    return path
+
+
+def wind_models_dir() -> Path:
+    """
+    Return the path to the directory containing serialized wind model artifacts.
+
+    :returns path: Configured Path to models directory.
+    """
+    raw = os.environ.get("WIND_MODELS_DIR") or DEFAULT_WIND_MODELS_DIR
+    path = Path(raw)
+    if not path.is_absolute():
+        path = Path(__file__).resolve().parent.parent / path
+    return path
+
+
+__all__ = [
+    "DEFAULT_APP_ENV",
+    "DEFAULT_LOG_LEVEL",
+    "DEFAULT_WIND_DATA_DIR",
+    "DEFAULT_WIND_MODELS_DIR",
+    "app_env",
+    "log_level",
+    "wind_data_dir",
+    "wind_models_dir",
+]
