@@ -47,7 +47,14 @@ wind = [
     "scikit-learn==1.9.1",
     "xgboost==3.4.1",
 ]
-all  = ["smarthack[wind]"]
+# The hill wind atlas: GeoTIFF reading (Global Wind Atlas, Copernicus DEM) and PNG output.
+resource = [
+    "imagecodecs==2026.10.10",
+    "numpy==2.5.4",
+    "pillow==13.0.0",
+    "tifffile==2026.10.15",
+]
+all  = ["smarthack[wind,resource]"]
 
 [tool.setuptools.dynamic]
 version = { attr = "smarthack.__version__" }
