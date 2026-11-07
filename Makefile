@@ -1,6 +1,6 @@
 PACKAGE := smarthack
 IMAGE   ?= smarthack
-VENV    ?= .venv
+VENV    ?= $(if $(wildcard /home/stefan/sandbox/.venv/bin/python),/home/stefan/sandbox/.venv,.venv)
 BIN     := $(if $(wildcard $(VENV)/bin/python),$(VENV)/bin,)
 PYTHON  := $(if $(BIN),$(BIN)/python,python3)
 PIP     := $(if $(BIN),$(BIN)/pip,pip3)
@@ -8,7 +8,7 @@ UVICORN := $(if $(BIN),$(BIN)/uvicorn,uvicorn)
 PYTEST  := $(if $(BIN),$(BIN)/pytest,pytest)
 
 .DEFAULT_GOAL := help
-.PHONY: help install hooks format lint test test-fast cov docs docs-serve docker-build clean dev dev-api dev-web types build serve check test-db predict worker
+.PHONY: help install hooks format lint test test-fast cov docs docs-serve docker-build clean dev dev-api dev-web types build serve check test-db predict worker test-agent
 
 help:                       # list the targets
 	@grep -E '^[a-z-]+:.*# ' $(MAKEFILE_LIST) | sed -E 's/:[^#]*# /\t/'
@@ -21,6 +21,9 @@ predict:                   # run one maintenance prediction cycle now
 
 worker:                    # run continuous scheduled prediction loop
 	$(PYTHON) -m smarthack.jobs.maintenance_job --every 60 $(ARGS)
+
+test-agent:                # run autonomous LangGraph agent dispatch test with live logs
+	$(PYTHON) scripts/test_agent.py $(ARGS)
 
 install:                    # editable install with backend dev extras and frontend npm dependencies
 	@if [ ! -d "$(VENV)" ]; then python3 -m venv $(VENV); fi
