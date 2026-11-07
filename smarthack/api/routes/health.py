@@ -71,7 +71,7 @@ async def health_check_db(
     except Exception as exc:
         return {
             "status": "error",
-            "error_detail": str(exc),
+            "error_type": type(exc).__name__,
             "message": "Failed to connect to Supabase",
         }
 
