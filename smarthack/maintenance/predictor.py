@@ -409,10 +409,10 @@ class TurbineHealthPredictor:
         if self.model is None:
             self.load_model()
 
-        row_dict = {
-            col: float(features_record.get(col) if features_record.get(col) is not None else 0.0)
-            for col in self.feature_columns
-        }
+        row_dict: dict[str, float] = {}
+        for col in self.feature_columns:
+            val = features_record.get(col)
+            row_dict[col] = float(val) if val is not None else 0.0
         x_eval = pd.DataFrame([row_dict])[self.feature_columns]
 
         prob = float(self.model.predict_proba(x_eval)[0, 1])
