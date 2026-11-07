@@ -1,0 +1,23 @@
+{
+  "alert": {
+    "alert_id": "ALR-2026-11-10-0002",
+    "park": "Câmpia Șoimilor",
+    "turbines": [
+      {"turbine_id": "T02", "probability": 0.48},
+      {"turbine_id": "T05", "probability": 0.35}
+    ],
+    "window_start": "2026-11-11T22:00:00+02:00",
+    "window_end": "2026-11-13T06:00:00+02:00",
+    "hours_to_failure": 52,
+    "estimated_loss_ron": 18500,
+    "created_at": "2026-11-10T09:40:00+02:00"
+  },
+  "decision": {
+    "alert_id": "ALR-2026-11-10-0002",
+    "severity": "medie",
+    "channel": "doar_email",
+    "probabilities": {"scazuta": 0.14, "medie": 0.61, "ridicata": 0.21, "critica": 0.04},
+    "confidence": 0.61,
+    "overridden_by_rule": null
+  }
+}

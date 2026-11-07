@@ -1,0 +1,6 @@
+# Secrets: also covered by the root .gitignore, repeated here on purpose.
+.env
+.venv/
+# Local runtime output: sent-alert state, audio files, email previews.
+state/
+out/

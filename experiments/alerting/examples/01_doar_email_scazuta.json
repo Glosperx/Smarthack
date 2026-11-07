@@ -1,0 +1,20 @@
+{
+  "alert": {
+    "alert_id": "ALR-2026-11-09-0001",
+    "park": "Măgura Nord",
+    "turbines": [{"turbine_id": "T03", "probability": 0.31}],
+    "window_start": "2026-11-12T08:00:00+02:00",
+    "window_end": "2026-11-14T20:00:00+02:00",
+    "hours_to_failure": 96,
+    "estimated_loss_ron": 4200,
+    "created_at": "2026-11-09T10:15:00+02:00"
+  },
+  "decision": {
+    "alert_id": "ALR-2026-11-09-0001",
+    "severity": "scazuta",
+    "channel": "doar_email",
+    "probabilities": {"scazuta": 0.71, "medie": 0.22, "ridicata": 0.06, "critica": 0.01},
+    "confidence": 0.71,
+    "overridden_by_rule": null
+  }
+}
