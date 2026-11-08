@@ -1,0 +1,341 @@
+{
+  "name": "ML2 wind correction for Kelmarsh: weights per lead day with residual quantiles (method (c))",
+  "created": "2026-11-08",
+  "notebook": "notebooks/ml2_weather_correction.ipynb",
+  "results": "notebooks/ml2_weather_correction.md",
+  "scope": "Kelmarsh only (52.40 N, -0.94 E; 6 x Senvion MM92, hub 68.5-78.5 m). The numbers encode this park's error against its nacelle anemometers; do not apply them to another park. The method transfers; the numbers do not.",
+  "target": {
+    "name": "ws_obs",
+    "unit": "m/s",
+    "definition": "park mean of the nacelle wind speed of the turbines in operation: mean of the 10-minute rows from H - 30 min to H + 30 min, compared with the forecast valid at the full hour H (UTC)"
+  },
+  "inputs": {
+    "api": "Open-Meteo; trained on the Previous Runs API (previous-runs-api.open-meteo.com), served from the Forecast API with the same `models`. Lead day d = whole days between the run and the valid hour (0..7).",
+    "request": {
+      "latitude": 52.4013,
+      "longitude": -0.9435,
+      "wind_speed_unit": "ms",
+      "timezone": "GMT",
+      "cell_selection": "land"
+    },
+    "models": {
+      "ECMWF": {
+        "open_meteo_model": "ecmwf_ifs025",
+        "variable": "wind_speed_80m"
+      },
+      "GFS": {
+        "open_meteo_model": "gfs_global",
+        "variable": "wind_speed_80m"
+      },
+      "ICON": {
+        "open_meteo_model": "icon_global",
+        "variable": "wind_speed_80m"
+      },
+      "ICON-EU": {
+        "open_meteo_model": "icon_eu",
+        "variable": "wind_speed_80m"
+      },
+      "GEM": {
+        "open_meteo_model": "gem_global",
+        "variable": "wind_speed_80m"
+      },
+      "BOM": {
+        "open_meteo_model": "bom_access_global",
+        "variable": "wind_speed_80m"
+      },
+      "CMA": {
+        "open_meteo_model": "cma_grapes_global",
+        "variable": "wind_speed_120m"
+      }
+    },
+    "missing": "ICON has no day 7 and ICON-EU no day 5-7; a missing model is replaced by ens_mean, the mean of the models available for that hour"
+  },
+  "formula": {
+    "point": "ws_corr = intercept_d + sum_m weight_dm * ws_m",
+    "quantiles": "q_j = ws_corr + residual_quantile_dj, alpha_j = 0.1, 0.2, ..., 0.9; clip at 0",
+    "power": "feed each of the 9 quantile series through the ML2 wind-to-power model (serving recipe of feature_contract_15min.json) and average the 9 powers (expected power); P10 / P90 power from q10 / q90"
+  },
+  "per_lead_day": {
+    "0": {
+      "intercept": 0.617,
+      "weights": {
+        "ECMWF": 0.201,
+        "GFS": 0.07,
+        "ICON": 0.0,
+        "ICON-EU": 0.147,
+        "GEM": 0.107,
+        "BOM": 0.213,
+        "CMA": 0.0
+      },
+      "residual_quantiles": [
+        -0.959,
+        -0.614,
+        -0.393,
+        -0.18,
+        0.01,
+        0.181,
+        0.372,
+        0.603,
+        0.989
+      ]
+    },
+    "1": {
+      "intercept": 0.662,
+      "weights": {
+        "ECMWF": 0.271,
+        "GFS": 0.084,
+        "ICON": 0.0,
+        "ICON-EU": 0.098,
+        "GEM": 0.147,
+        "BOM": 0.108,
+        "CMA": 0.014
+      },
+      "residual_quantiles": [
+        -1.152,
+        -0.721,
+        -0.441,
+        -0.212,
+        0.008,
+        0.242,
+        0.478,
+        0.745,
+        1.119
+      ]
+    },
+    "2": {
+      "intercept": 0.797,
+      "weights": {
+        "ECMWF": 0.266,
+        "GFS": 0.16,
+        "ICON": 0.02,
+        "ICON-EU": 0.1,
+        "GEM": 0.084,
+        "BOM": 0.075,
+        "CMA": 0.006
+      },
+      "residual_quantiles": [
+        -1.298,
+        -0.832,
+        -0.513,
+        -0.248,
+        0.003,
+        0.262,
+        0.539,
+        0.817,
+        1.316
+      ]
+    },
+    "3": {
+      "intercept": 0.822,
+      "weights": {
+        "ECMWF": 0.278,
+        "GFS": 0.15,
+        "ICON": 0.0,
+        "ICON-EU": 0.074,
+        "GEM": 0.115,
+        "BOM": 0.062,
+        "CMA": 0.029
+      },
+      "residual_quantiles": [
+        -1.606,
+        -1.001,
+        -0.599,
+        -0.26,
+        0.039,
+        0.341,
+        0.652,
+        1.025,
+        1.566
+      ]
+    },
+    "4": {
+      "intercept": 1.092,
+      "weights": {
+        "ECMWF": 0.152,
+        "GFS": 0.129,
+        "ICON": 0.0,
+        "ICON-EU": 0.148,
+        "GEM": 0.134,
+        "BOM": 0.064,
+        "CMA": 0.039
+      },
+      "residual_quantiles": [
+        -1.924,
+        -1.192,
+        -0.749,
+        -0.341,
+        0.026,
+        0.388,
+        0.754,
+        1.22,
+        1.904
+      ]
+    },
+    "5": {
+      "intercept": 1.275,
+      "weights": {
+        "ECMWF": 0.141,
+        "GFS": 0.15,
+        "ICON": 0.083,
+        "GEM": 0.108,
+        "BOM": 0.034,
+        "CMA": 0.111
+      },
+      "residual_quantiles": [
+        -2.118,
+        -1.389,
+        -0.872,
+        -0.437,
+        -0.035,
+        0.388,
+        0.818,
+        1.384,
+        2.158
+      ]
+    },
+    "6": {
+      "intercept": 1.565,
+      "weights": {
+        "ECMWF": 0.115,
+        "GFS": 0.157,
+        "ICON": 0.102,
+        "GEM": 0.113,
+        "BOM": 0.075,
+        "CMA": 0.03
+      },
+      "residual_quantiles": [
+        -2.452,
+        -1.536,
+        -0.928,
+        -0.447,
+        -0.012,
+        0.459,
+        0.957,
+        1.518,
+        2.397
+      ]
+    },
+    "7": {
+      "intercept": 2.234,
+      "weights": {
+        "ECMWF": 0.162,
+        "GFS": 0.128,
+        "GEM": 0.102,
+        "BOM": 0.085,
+        "CMA": 0.023
+      },
+      "residual_quantiles": [
+        -2.561,
+        -1.704,
+        -1.04,
+        -0.549,
+        -0.065,
+        0.416,
+        0.947,
+        1.605,
+        2.591
+      ]
+    }
+  },
+  "training": {
+    "train": "2024-03-13 to 2024-08-31",
+    "test": "2024-09-01 to 2024-12-31"
+  },
+  "test": {
+    "wind_rmse_m_s": {
+      "raw ECMWF 80 m": {
+        "0": 1.79,
+        "1": 1.88,
+        "2": 2.0,
+        "3": 2.25,
+        "4": 2.68,
+        "5": 2.84,
+        "6": 3.0,
+        "7": 2.99
+      },
+      "best_match 100 m (app today)": {
+        "0": 2.28,
+        "1": 2.62,
+        "2": 2.16,
+        "3": 2.4,
+        "4": 2.8,
+        "5": 2.98,
+        "6": 3.13,
+        "7": 3.1
+      },
+      "this model": {
+        "0": 0.85,
+        "1": 0.99,
+        "2": 1.16,
+        "3": 1.4,
+        "4": 1.75,
+        "5": 1.93,
+        "6": 2.06,
+        "7": 2.27
+      }
+    },
+    "wind_p10_p90_coverage": {
+      "0": 0.774,
+      "1": 0.763,
+      "2": 0.76,
+      "3": 0.781,
+      "4": 0.789,
+      "5": 0.786,
+      "6": 0.784,
+      "7": 0.779
+    },
+    "power_r2_15min": {
+      "app today": {
+        "0": 0.272,
+        "1": 0.092,
+        "2": 0.329,
+        "3": 0.189,
+        "4": -0.02,
+        "5": -0.188,
+        "6": -0.225,
+        "7": -0.16,
+        "week": 0.089
+      },
+      "this model, expected power": {
+        "0": 0.829,
+        "1": 0.799,
+        "2": 0.76,
+        "3": 0.685,
+        "4": 0.599,
+        "5": 0.493,
+        "6": 0.453,
+        "7": 0.333,
+        "week": 0.592
+      }
+    },
+    "power_wape_daily_energy": {
+      "app today": {
+        "0": 0.616,
+        "1": 0.673,
+        "2": 0.529,
+        "3": 0.559,
+        "4": 0.617,
+        "5": 0.647,
+        "6": 0.629,
+        "7": 0.606,
+        "week": 0.579
+      },
+      "this model, expected power": {
+        "0": 0.162,
+        "1": 0.183,
+        "2": 0.204,
+        "3": 0.249,
+        "4": 0.308,
+        "5": 0.361,
+        "6": 0.409,
+        "7": 0.482,
+        "week": 0.321
+      }
+    }
+  },
+  "limits": [
+    "10 months of archived forecasts (2024-03 to 2024-12); season cannot be learned and is not an input",
+    "fitted on spring-summer, tested on autumn-winter: the corrected daily energy is 5-15% low on test (weekly -10%); refit monthly",
+    "the Open-Meteo lead-day archive starts in 2024, so the history cannot be extended backwards"
+  ]
+}

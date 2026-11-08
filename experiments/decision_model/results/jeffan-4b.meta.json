@@ -1,0 +1,9 @@
+{
+  "model": "jeffan-4b",
+  "device": "mps",
+  "load_s": 7.92,
+  "peak_rss_gb": 0.7,
+  "mps_peak_gb": 8.87,
+  "decisions": 960,
+  "wall_s": 793.0
+}

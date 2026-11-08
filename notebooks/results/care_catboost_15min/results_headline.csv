@@ -1,0 +1,49 @@
+target,farm,model,ROC-AUC pooled [95% CI],ROC-AUC within turbine [95% CI],event recall [95% CI],false alarms / turbine-month,PR-AUC,prevalence,days scored,events
+main: inside or entering within 7 d,A,season only,"0.645 [0.473, 0.883]","0.673 [0.518, 0.876]","0.91 [0.70, 1.00]",3.21,0.104,0.047,4322,11
+main: inside or entering within 7 d,A,CatBoost daily (baseline),"0.658 [0.604, 0.756]","0.695 [0.639, 0.767]","0.73 [0.60, 0.90]",0.91,0.127,0.047,4322,11
+main: inside or entering within 7 d,A,LSTM-attention (all channels),"0.596 [0.509, 0.771]","0.616 [0.517, 0.765]","0.64 [0.38, 0.82]",0.75,0.087,0.047,4322,11
+main: inside or entering within 7 d,A,LSTM q672 centred,"0.422 [0.358, 0.539]","0.454 [0.369, 0.550]","0.27 [0.00, 0.55]",0.53,0.04,0.047,4322,11
+main: inside or entering within 7 d,A,LSTM q672 residual,"0.572 [0.481, 0.750]","0.601 [0.501, 0.770]","0.55 [0.30, 0.80]",0.54,0.087,0.047,4322,11
+main: inside or entering within 7 d,A,CatBoost 15 min,"0.680 [0.541, 0.895]","0.715 [0.559, 0.898]","0.91 [0.70, 1.00]",1.46,0.169,0.047,4322,11
+main: inside or entering within 7 d,A,CatBoost 15 min shortlist,"0.594 [0.551, 0.687]","0.645 [0.584, 0.728]","0.82 [0.64, 1.00]",1.06,0.106,0.047,4322,11
+main: inside or entering within 7 d,A,Kumo Tabular (shortlist),"0.574 [0.524, 0.686]","0.630 [0.538, 0.778]","0.55 [0.38, 0.71]",0.64,0.075,0.047,4322,11
+strict: onset within 7 d,A,season only,"0.679 [0.595, 0.868]","0.730 [0.632, 0.860]","0.91 [0.70, 1.00]",3.21,0.062,0.018,4196,11
+strict: onset within 7 d,A,CatBoost daily (baseline),"0.717 [0.585, 0.814]","0.693 [0.575, 0.804]","0.73 [0.60, 0.90]",0.91,0.087,0.018,4196,11
+strict: onset within 7 d,A,LSTM-attention (all channels),"0.629 [0.475, 0.786]","0.635 [0.505, 0.787]","0.64 [0.38, 0.82]",0.75,0.04,0.018,4196,11
+strict: onset within 7 d,A,LSTM q672 centred,"0.458 [0.398, 0.554]","0.499 [0.452, 0.555]","0.27 [0.00, 0.55]",0.53,0.017,0.018,4196,11
+strict: onset within 7 d,A,LSTM q672 residual,"0.617 [0.450, 0.796]","0.628 [0.502, 0.775]","0.55 [0.30, 0.80]",0.54,0.042,0.018,4196,11
+strict: onset within 7 d,A,CatBoost 15 min,"0.727 [0.606, 0.874]","0.770 [0.636, 0.888]","0.91 [0.70, 1.00]",1.46,0.103,0.018,4196,11
+strict: onset within 7 d,A,CatBoost 15 min shortlist,"0.661 [0.557, 0.750]","0.689 [0.567, 0.782]","0.82 [0.64, 1.00]",1.06,0.058,0.018,4196,11
+strict: onset within 7 d,A,Kumo Tabular (shortlist),"0.655 [0.643, 0.718]","0.717 [0.674, 0.775]","0.55 [0.38, 0.71]",0.64,0.041,0.018,4196,11
+main: inside or entering within 7 d,B,season only,"0.287 [0.136, 0.387]","0.385 [0.210, 0.500]","0.50 [0.12, 1.00]",2.26,0.065,0.089,3209,6
+main: inside or entering within 7 d,B,CatBoost daily (baseline),"0.403 [0.307, 0.500]","0.550 [0.518, 0.599]","0.33 [0.00, 0.75]",1.23,0.073,0.089,3209,6
+main: inside or entering within 7 d,B,LSTM-attention (all channels),"0.467 [0.343, 0.604]","0.450 [0.290, 0.596]","0.50 [0.00, 1.00]",0.37,0.086,0.089,3209,6
+main: inside or entering within 7 d,B,LSTM q672 centred,"0.484 [0.377, 0.628]","0.449 [0.336, 0.592]","0.67 [0.20, 1.00]",1.49,0.088,0.089,3209,6
+main: inside or entering within 7 d,B,LSTM q672 residual,"0.561 [0.436, 0.734]","0.554 [0.383, 0.733]","0.67 [0.25, 1.00]",0.19,0.108,0.089,3209,6
+main: inside or entering within 7 d,B,CatBoost 15 min,"0.478 [0.401, 0.593]","0.559 [0.413, 0.718]","1.00 [1.00, 1.00]",1.91,0.083,0.089,3208,6
+main: inside or entering within 7 d,B,CatBoost 15 min shortlist,"0.321 [0.215, 0.422]","0.507 [0.489, 0.526]","0.50 [0.12, 0.88]",1.11,0.065,0.089,3208,6
+main: inside or entering within 7 d,B,Kumo Tabular (shortlist),"0.455 [0.312, 0.583]","0.575 [0.487, 0.662]","0.50 [0.12, 1.00]",0.69,0.079,0.089,3208,6
+strict: onset within 7 d,B,season only,"0.333 [0.158, 0.434]","0.381 [0.234, 0.500]","0.50 [0.12, 1.00]",2.26,0.01,0.014,2967,6
+strict: onset within 7 d,B,CatBoost daily (baseline),"0.466 [0.333, 0.561]","0.562 [0.520, 0.613]","0.33 [0.00, 0.75]",1.23,0.013,0.014,2967,6
+strict: onset within 7 d,B,LSTM-attention (all channels),"0.426 [0.290, 0.596]","0.436 [0.252, 0.624]","0.50 [0.00, 1.00]",0.37,0.013,0.014,2967,6
+strict: onset within 7 d,B,LSTM q672 centred,"0.467 [0.286, 0.663]","0.436 [0.200, 0.665]","0.67 [0.20, 1.00]",1.49,0.015,0.014,2967,6
+strict: onset within 7 d,B,LSTM q672 residual,"0.529 [0.380, 0.718]","0.517 [0.325, 0.693]","0.67 [0.25, 1.00]",0.19,0.015,0.014,2967,6
+strict: onset within 7 d,B,CatBoost 15 min,"0.417 [0.275, 0.543]","0.460 [0.257, 0.666]","1.00 [1.00, 1.00]",1.91,0.012,0.014,2966,6
+strict: onset within 7 d,B,CatBoost 15 min shortlist,"0.381 [0.229, 0.470]","0.480 [0.457, 0.501]","0.50 [0.12, 0.88]",1.11,0.011,0.014,2966,6
+strict: onset within 7 d,B,Kumo Tabular (shortlist),"0.429 [0.260, 0.583]","0.477 [0.338, 0.626]","0.50 [0.12, 1.00]",0.69,0.012,0.014,2966,6
+main: inside or entering within 7 d,C,season only,"0.447 [0.381, 0.520]","0.496 [0.437, 0.553]","0.96 [0.88, 1.00]",3.2,0.046,0.051,12289,27
+main: inside or entering within 7 d,C,CatBoost daily (baseline),"0.714 [0.584, 0.813]","0.728 [0.604, 0.820]","0.85 [0.71, 0.97]",1.06,0.119,0.051,12289,27
+main: inside or entering within 7 d,C,LSTM-attention (all channels),"0.596 [0.474, 0.715]","0.591 [0.486, 0.706]","0.41 [0.22, 0.61]",0.69,0.102,0.051,12289,27
+main: inside or entering within 7 d,C,LSTM q672 centred,"0.538 [0.456, 0.612]","0.575 [0.457, 0.690]","0.30 [0.08, 0.54]",0.69,0.055,0.051,12289,27
+main: inside or entering within 7 d,C,LSTM q672 residual,"0.478 [0.395, 0.569]","0.519 [0.416, 0.620]","0.26 [0.09, 0.46]",0.68,0.049,0.051,12289,27
+main: inside or entering within 7 d,C,CatBoost 15 min,"0.636 [0.512, 0.737]","0.648 [0.524, 0.754]","0.56 [0.35, 0.77]",1.07,0.084,0.051,12289,27
+main: inside or entering within 7 d,C,CatBoost 15 min shortlist,"0.626 [0.484, 0.747]","0.642 [0.499, 0.763]","0.67 [0.48, 0.85]",1.0,0.106,0.051,12289,27
+main: inside or entering within 7 d,C,Kumo Tabular (shortlist),"0.571 [0.479, 0.679]","0.604 [0.498, 0.714]","0.33 [0.13, 0.55]",0.48,0.073,0.051,12289,27
+strict: onset within 7 d,C,season only,"0.504 [0.445, 0.561]","0.514 [0.466, 0.565]","0.96 [0.87, 1.00]",3.2,0.015,0.015,11847,26
+strict: onset within 7 d,C,CatBoost daily (baseline),"0.711 [0.621, 0.787]","0.728 [0.633, 0.804]","0.85 [0.70, 0.96]",1.06,0.038,0.015,11847,26
+strict: onset within 7 d,C,LSTM-attention (all channels),"0.502 [0.392, 0.606]","0.489 [0.390, 0.586]","0.38 [0.17, 0.59]",0.69,0.015,0.015,11847,26
+strict: onset within 7 d,C,LSTM q672 centred,"0.530 [0.426, 0.632]","0.530 [0.411, 0.658]","0.27 [0.07, 0.50]",0.69,0.017,0.015,11847,26
+strict: onset within 7 d,C,LSTM q672 residual,"0.447 [0.350, 0.558]","0.468 [0.371, 0.575]","0.27 [0.10, 0.48]",0.68,0.014,0.015,11847,26
+strict: onset within 7 d,C,CatBoost 15 min,"0.545 [0.431, 0.639]","0.562 [0.456, 0.653]","0.54 [0.33, 0.75]",1.07,0.018,0.015,11847,26
+strict: onset within 7 d,C,CatBoost 15 min shortlist,"0.548 [0.422, 0.656]","0.598 [0.463, 0.703]","0.65 [0.48, 0.84]",1.0,0.021,0.015,11847,26
+strict: onset within 7 d,C,Kumo Tabular (shortlist),"0.560 [0.450, 0.672]","0.599 [0.495, 0.706]","0.35 [0.14, 0.56]",0.48,0.03,0.015,11847,26

@@ -1,0 +1,47 @@
+{
+  "model_dir": "GLiDE-0.4B",
+  "device": "cpu",
+  "torch": "2.14.0",
+  "load_s": 19.53,
+  "peak_rss_gb_before_load": 0.21,
+  "mps_driver_gb_after_load": null,
+  "decisions": [
+    {
+      "question": "call_ml2",
+      "answer": {
+        "type": "choice",
+        "choice": "nu",
+        "confidence": 0.5823528577222526,
+        "probabilities": {
+          "da": 0.2088235711388737,
+          "nu": 0.7911764288611264
+        }
+      },
+      "input_tokens": 226,
+      "first_call_ms": 1308.3,
+      "median_ms": 1371.4,
+      "p95_ms": 1381.2,
+      "max_ms": 1383.0
+    },
+    {
+      "question": "channel",
+      "answer": {
+        "type": "choice",
+        "choice": "email_si_apel",
+        "confidence": 0.8705921409775563,
+        "probabilities": {
+          "doar_email": 0.053141322132182596,
+          "email_si_apel": 0.9237334631097389,
+          "nimic": 0.023125214758078598
+        }
+      },
+      "input_tokens": 191,
+      "first_call_ms": 1115.9,
+      "median_ms": 1114.5,
+      "p95_ms": 1128.2,
+      "max_ms": 1128.6
+    }
+  ],
+  "peak_rss_gb": 2.97,
+  "mps_driver_gb_peak": null
+}

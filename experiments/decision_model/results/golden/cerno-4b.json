@@ -1,0 +1,53 @@
+{
+ "model": "cerno-4b",
+ "checks": [
+  {
+   "request": "support_triage",
+   "question": "kind",
+   "same_choice": true,
+   "max_abs_diff": 0.0014
+  },
+  {
+   "request": "support_triage",
+   "question": "urgency",
+   "same_choice": true,
+   "max_abs_diff": 0.0126
+  },
+  {
+   "request": "support_triage",
+   "question": "tone",
+   "same_choice": true,
+   "max_abs_diff": 0.001
+  },
+  {
+   "request": "support_triage",
+   "question": "needs_human",
+   "same_choice": true,
+   "max_abs_diff": 0.0
+  },
+  {
+   "request": "agent_guardrail",
+   "question": "destructive",
+   "same_choice": true,
+   "max_abs_diff": 0.0031
+  },
+  {
+   "request": "agent_guardrail",
+   "question": "matches_request",
+   "same_choice": true,
+   "max_abs_diff": 0.0
+  },
+  {
+   "request": "agent_guardrail",
+   "question": "external_effect",
+   "same_choice": true,
+   "max_abs_diff": 0.0
+  },
+  {
+   "request": "agent_guardrail",
+   "question": "risk",
+   "same_choice": true,
+   "max_abs_diff": 0.0
+  }
+ ]
+}

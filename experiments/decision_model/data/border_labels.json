@@ -1,0 +1,274 @@
+{
+ "ch-g-01": {
+  "label": "doar_email",
+  "rationale": "Probabilitatea 0.69 este sub pragul de apel și termenul e de 4–5 zile: email ajunge."
+ },
+ "ch-g-02": {
+  "label": "email_si_apel",
+  "rationale": "Probabilitatea de defect în 7 zile este cel puțin 0.70: risc mare, apel."
+ },
+ "ch-g-03": {
+  "label": "email_si_apel",
+  "rationale": "Probabilitatea de defect în 7 zile este cel puțin 0.70: risc mare, apel."
+ },
+ "ch-g-04": {
+  "label": "doar_email",
+  "rationale": "Probabilitatea 0.69 este sub pragul de apel și termenul e de 4–5 zile: email ajunge."
+ },
+ "ch-g-05": {
+  "label": "email_si_apel",
+  "rationale": "Probabilitatea de defect în 7 zile este cel puțin 0.70: risc mare, apel."
+ },
+ "ch-g-06": {
+  "label": "nimic",
+  "rationale": "Status NORMAL, fără defect prezis, probabilitate 0.29: sub pragul de email."
+ },
+ "ch-g-07": {
+  "label": "doar_email",
+  "rationale": "Probabilitatea atinge pragul de 0.30: merită un email, nu un apel."
+ },
+ "ch-g-08": {
+  "label": "doar_email",
+  "rationale": "Probabilitatea atinge pragul de 0.30: merită un email, nu un apel."
+ },
+ "ch-g-09": {
+  "label": "email_si_apel",
+  "rationale": "Defect în cel mult 2 zile cu probabilitate 0.5: termen scurt și plauzibil, apel."
+ },
+ "ch-g-10": {
+  "label": "doar_email",
+  "rationale": "2.01 zile e peste termenul de apel, iar probabilitatea 0.5 cere doar email."
+ },
+ "ch-g-11": {
+  "label": "email_si_apel",
+  "rationale": "Defect în cel mult 2 zile cu probabilitate 0.5: termen scurt și plauzibil, apel."
+ },
+ "ch-g-12": {
+  "label": "email_si_apel",
+  "rationale": "WATCH cu defect în 2 zile: termenul scurt e inclus în pragul de apel."
+ },
+ "ch-g-13": {
+  "label": "doar_email",
+  "rationale": "WATCH cu 2.1 zile și probabilitate 0.25: peste termenul de apel, email."
+ },
+ "ch-g-14": {
+  "label": "email_si_apel",
+  "rationale": "WATCH cu defect în mai puțin de 2 zile: evaluarea de stare confirmă o problemă, iar termenul e scurt; apel."
+ },
+ "ch-g-15": {
+  "label": "email_si_apel",
+  "rationale": "WATCH cu defect în mai puțin de 2 zile: evaluarea de stare confirmă o problemă, iar termenul e scurt; apel."
+ },
+ "ch-g-16": {
+  "label": "doar_email",
+  "rationale": "WATCH la 3 zile cu probabilitatea 0.69: sub ambele praguri de apel, email."
+ },
+ "ch-g-17": {
+  "label": "doar_email",
+  "rationale": "ML1 dă un termen scurt, dar probabilitatea de defect e foarte mică (≤ 0.10) și statusul e NORMAL: termenul e condiționat de un defect improbabil. Un apel trezește echipa de gardă pentru o alarmă aproape sigur falsă; emailul păstrează informația. Pragul meu: p ≤ 0.10 cu status NORMAL."
+ },
+ "ch-g-18": {
+  "label": "doar_email",
+  "rationale": "ML1 dă un termen scurt, dar probabilitatea de defect e foarte mică (≤ 0.10) și statusul e NORMAL: termenul e condiționat de un defect improbabil. Un apel trezește echipa de gardă pentru o alarmă aproape sigur falsă; emailul păstrează informația. Pragul meu: p ≤ 0.10 cu status NORMAL."
+ },
+ "ch-g-19": {
+  "label": "doar_email",
+  "rationale": "ML1 dă un termen scurt, dar probabilitatea de defect e foarte mică (≤ 0.10) și statusul e NORMAL: termenul e condiționat de un defect improbabil. Un apel trezește echipa de gardă pentru o alarmă aproape sigur falsă; emailul păstrează informația. Pragul meu: p ≤ 0.10 cu status NORMAL."
+ },
+ "ch-g-20": {
+  "label": "doar_email",
+  "rationale": "ML1 dă un termen scurt, dar probabilitatea de defect e foarte mică (≤ 0.10) și statusul e NORMAL: termenul e condiționat de un defect improbabil. Un apel trezește echipa de gardă pentru o alarmă aproape sigur falsă; emailul păstrează informația. Pragul meu: p ≤ 0.10 cu status NORMAL."
+ },
+ "ch-g-21": {
+  "label": "email_si_apel",
+  "rationale": "Probabilitatea 0.12 este peste pragul meu de 0.10, iar termenul e de 1.2 zile: apel, ca regula."
+ },
+ "ch-g-22": {
+  "label": "email_si_apel",
+  "rationale": "Probabilitate mică, dar statusul WATCH confirmă o problemă independent de ML1, iar termenul e de o zi: apel."
+ },
+ "ch-g-23": {
+  "label": "email_si_apel",
+  "rationale": "Regula dură: o turbină CRITICAL primește întotdeauna și apel, indiferent de termen sau probabilitate."
+ },
+ "ch-g-24": {
+  "label": "email_si_apel",
+  "rationale": "Regula dură: o turbină CRITICAL primește întotdeauna și apel, indiferent de termen sau probabilitate."
+ },
+ "ch-g-25": {
+  "label": "email_si_apel",
+  "rationale": "Regula dură: o turbină CRITICAL primește întotdeauna și apel, indiferent de termen sau probabilitate."
+ },
+ "ch-g-26": {
+  "label": "email_si_apel",
+  "rationale": "Termen zero sau negativ: turbina e deja în defect sau trebuia să fie; apel."
+ },
+ "ch-g-27": {
+  "label": "email_si_apel",
+  "rationale": "Termen zero sau negativ: turbina e deja în defect sau trebuia să fie; apel."
+ },
+ "ch-g-28": {
+  "label": "doar_email",
+  "rationale": "Status necunoscut, dar probabilitatea 0.45 depășește pragul de email."
+ },
+ "ch-g-29": {
+  "label": "nimic",
+  "rationale": "Status necunoscut sau OK, fără defect prezis și probabilitate mică: nicio alertă."
+ },
+ "ch-g-30": {
+  "label": "nimic",
+  "rationale": "Status necunoscut sau OK, fără defect prezis și probabilitate mică: nicio alertă."
+ },
+ "ch-g-31": {
+  "label": "email_si_apel",
+  "rationale": "Probabilitatea de defect în 7 zile este 0.75, chiar dacă regresia nu dă o zi: ratarea unui defect costă mai mult decât un apel."
+ },
+ "ch-g-32": {
+  "label": "doar_email",
+  "rationale": "Statusul WARNING cere cel puțin email, chiar cu probabilitate mică de la ML1."
+ },
+ "ch-g-33": {
+  "label": "email_si_apel",
+  "rationale": "Fum în nacelă înseamnă risc de incendiu: problemă de siguranță, apel imediat, indiferent ce spune ML1. Regula nu citește textul."
+ },
+ "ch-g-34": {
+  "label": "doar_email",
+  "rationale": "O scurgere de ulei vizibilă și în creștere merită cel puțin un email, deși probabilitatea ML1 e sub prag. Regula nu citește textul."
+ },
+ "ml2-g-01": {
+  "label": "da",
+  "rationale": "Zilele de defect (zile întregi) diferă cu exact o zi; fereastra este «cel mult o zi», deci cele două turbine concurează pentru echipă și ML2 trebuie să spună ordinea."
+ },
+ "ml2-g-02": {
+  "label": "da",
+  "rationale": "Zilele de defect (zile întregi) diferă cu exact o zi; fereastra este «cel mult o zi», deci cele două turbine concurează pentru echipă și ML2 trebuie să spună ordinea."
+ },
+ "ml2-g-03": {
+  "label": "da",
+  "rationale": "Zilele de defect (zile întregi) diferă cu exact o zi; fereastra este «cel mult o zi», deci cele două turbine concurează pentru echipă și ML2 trebuie să spună ordinea."
+ },
+ "ml2-g-04": {
+  "label": "da",
+  "rationale": "Zilele de defect (zile întregi) diferă cu exact o zi; fereastra este «cel mult o zi», deci cele două turbine concurează pentru echipă și ML2 trebuie să spună ordinea."
+ },
+ "ml2-g-05": {
+  "label": "nu",
+  "rationale": "Două zile întregi distanță: echipa, cu o reparație pe zi, le poate repara pe amândouă înainte de defect; nu e conflict."
+ },
+ "ml2-g-06": {
+  "label": "nu",
+  "rationale": "Două zile întregi distanță: echipa, cu o reparație pe zi, le poate repara pe amândouă înainte de defect; nu e conflict."
+ },
+ "ml2-g-07": {
+  "label": "nu",
+  "rationale": "Două zile întregi distanță: echipa, cu o reparație pe zi, le poate repara pe amândouă înainte de defect; nu e conflict."
+ },
+ "ml2-g-08": {
+  "label": "nu",
+  "rationale": "Două zile întregi distanță: echipa, cu o reparație pe zi, le poate repara pe amândouă înainte de defect; nu e conflict."
+ },
+ "ml2-g-09": {
+  "label": "da",
+  "rationale": "1.95 și 2.05 înseamnă zilele 1 și 2: aproape simultan, conflict clar."
+ },
+ "ml2-g-10": {
+  "label": "da",
+  "rationale": "1.0 și 2.99 cad în zilele întregi 1 și 2. Agentul lucrează pe zile întregi, iar zile adiacente înseamnă conflict după definiția ferestrei."
+ },
+ "ml2-g-11": {
+  "label": "nu",
+  "rationale": "0.99 și 2.0 cad în zilele 0 și 2: două zile întregi, deci în afara ferestrei, deși diferența reală este 1.01 zile. Consecvent cu lucrul pe zile întregi."
+ },
+ "ml2-g-12": {
+  "label": "da",
+  "rationale": "2.9 și 3.05 înseamnă zilele 2 și 3: zile adiacente, conflict."
+ },
+ "ml2-g-13": {
+  "label": "nu",
+  "rationale": "Turbina apropiată este în alt parc, cu altă echipă; în parcul propriu nu există două defecte în aceeași fereastră."
+ },
+ "ml2-g-14": {
+  "label": "nu",
+  "rationale": "Turbina apropiată este în alt parc, cu altă echipă; în parcul propriu nu există două defecte în aceeași fereastră."
+ },
+ "ml2-g-15": {
+  "label": "nu",
+  "rationale": "Turbina apropiată este în alt parc, cu altă echipă; în parcul propriu nu există două defecte în aceeași fereastră."
+ },
+ "ml2-g-16": {
+  "label": "nu",
+  "rationale": "Turbina apropiată este în alt parc, cu altă echipă; în parcul propriu nu există două defecte în aceeași fereastră."
+ },
+ "ml2-g-17": {
+  "label": "da",
+  "rationale": "Două turbine ale parcului propriu cad în aceeași zi; turbina din alt parc nu schimbă nimic."
+ },
+ "ml2-g-18": {
+  "label": "nu",
+  "rationale": "Nicio turbină a parcului propriu nu are nevoie de reparație; cele două sunt în alt parc."
+ },
+ "ml2-g-19": {
+  "label": "nu",
+  "rationale": "Doar turbinele cu status CRITICAL sau WARNING au nevoie de reparație (trierea agentului); cealaltă nu concurează pentru echipă."
+ },
+ "ml2-g-20": {
+  "label": "nu",
+  "rationale": "Doar turbinele cu status CRITICAL sau WARNING au nevoie de reparație (trierea agentului); cealaltă nu concurează pentru echipă."
+ },
+ "ml2-g-21": {
+  "label": "da",
+  "rationale": "Statusul scris cu litere mici rămâne WARNING; cele două turbine cad în aceeași zi."
+ },
+ "ml2-g-22": {
+  "label": "nu",
+  "rationale": "Doar turbinele cu status CRITICAL sau WARNING au nevoie de reparație (trierea agentului); cealaltă nu concurează pentru echipă."
+ },
+ "ml2-g-23": {
+  "label": "nu",
+  "rationale": "Valoarea 8 înseamnă «niciun defect prezis în orizontul de 7 zile»: turbina nu are o zi de defect, deci nu poate face un conflict de termen. Regula de azi o tratează ca ziua 8 și cheamă ML2 fără motiv."
+ },
+ "ml2-g-24": {
+  "label": "nu",
+  "rationale": "Singurul defect prezis este în ziua 2; celelalte două au valoarea 8 (niciun defect prezis), deci nu concurează. Valoarea 8 înseamnă «niciun defect prezis în orizontul de 7 zile»: turbina nu are o zi de defect, deci nu poate face un conflict de termen. Regula de azi o tratează ca ziua 8 și cheamă ML2 fără motiv."
+ },
+ "ml2-g-25": {
+  "label": "nu",
+  "rationale": "7.6 înseamnă ziua 7, dar 8.0 înseamnă «niciun defect prezis»: există un singur termen real. Valoarea 8 înseamnă «niciun defect prezis în orizontul de 7 zile»: turbina nu are o zi de defect, deci nu poate face un conflict de termen. Regula de azi o tratează ca ziua 8 și cheamă ML2 fără motiv."
+ },
+ "ml2-g-26": {
+  "label": "nu",
+  "rationale": "Valoarea 8 înseamnă «niciun defect prezis în orizontul de 7 zile»: turbina nu are o zi de defect, deci nu poate face un conflict de termen. Regula de azi o tratează ca ziua 8 și cheamă ML2 fără motiv."
+ },
+ "ml2-g-27": {
+  "label": "da",
+  "rationale": "Statusul WARNING/CRITICAL spune deja că turbinele au nevoie de reparație; probabilitatea mică de la ML1 nu le scoate din triere. Concurează pentru echipă, deci ML2 e util (și ieftin)."
+ },
+ "ml2-g-28": {
+  "label": "da",
+  "rationale": "Statusul WARNING/CRITICAL spune deja că turbinele au nevoie de reparație; probabilitatea mică de la ML1 nu le scoate din triere. Concurează pentru echipă, deci ML2 e util (și ieftin)."
+ },
+ "ml2-g-29": {
+  "label": "da",
+  "rationale": "Statusul WARNING/CRITICAL spune deja că turbinele au nevoie de reparație; probabilitatea mică de la ML1 nu le scoate din triere. Concurează pentru echipă, deci ML2 e util (și ieftin)."
+ },
+ "ml2-g-30": {
+  "label": "da",
+  "rationale": "Una e deja defectă (termen negativ, ziua 0), cealaltă cade azi: ambele sunt urgente pentru aceeași echipă."
+ },
+ "ml2-g-31": {
+  "label": "nu",
+  "rationale": "Zilele 0 și 3: trei zile distanță, fără conflict."
+ },
+ "ml2-g-32": {
+  "label": "da",
+  "rationale": "Din cinci turbine, cele cu zilele 2 și 3 sunt adiacente: conflict."
+ },
+ "ml2-g-33": {
+  "label": "nu",
+  "rationale": "Zilele 0, 2, 4 și 6: orice două sunt la cel puțin două zile, echipa le poate lua pe rând."
+ },
+ "ml2-g-34": {
+  "label": "nu",
+  "rationale": "Turbinele proprii care au nevoie de reparație cad în zilele 1 și 4; cele NORMAL/WATCH și cele din alt parc nu contează."
+ }
+}

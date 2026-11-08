@@ -1,0 +1,10 @@
+{
+ "model": "jeffan-4b",
+ "checks": [
+  {
+   "request": "model card",
+   "same_choice": true,
+   "max_abs_diff": 0.0022
+  }
+ ]
+}
