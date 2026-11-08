@@ -2,7 +2,55 @@
 
 TODO: what this application does, in one or two sentences.
 
-<iframe src="https://mermaid.live/embed?theme=default&look=classic&mode=light#pako:eNqNVcGO00gQ_ZVWn0CbEZrsYaVoBTLEsNl1ZqLEcABzKNudpEXHbbXbjDTDnPgKxI0P4CfgwGfxqm2HwZFYojm0q7peVb161XMjC1sqOZNbY6-KPTkvknXmskrg17T5zlG9F_MojV9lck5eZfL14Obf5kk0j-BKlVEH5Z1Wnenv3D14SMK3LteVMtaN4pZxGl8ibuXsrrLXX98LRCsbwi5rVZ0t-fNOkKpKPp6UlkT_9aWRMPRGiXubP8UfIqFDXpJo9KE15O-Psj-NoxRBGxRdeHJKbBWhVHXWOh1KQAXeteIAbsxvFLFMgLbkywrncavJOXuT85monSp18e0jWCrVFrlVl83ZnHJttAfB4tsHLa41kOovnyoQY6i_fII7DbhTxrVl2-GqxusD-a_v-z5cPwMA1Ur8FZB_o6PoWXzBFEU7MAE2q90ztk8EI9bkilExq_WCxznvuhKEimrN3Xz5XAlUVD_qO9XWaa-vmfSyrbmqY-1jyCS6YIUYqvRWFxzhFFIT7nZTskIVew2QSUdY0Yq34MyLxlA-Qvs3fnHTz0gYW5ABqfgr9LXuh4A8gfuCqs5LRjkQmcnb_2UrideBLY5AoaPc8TJasELiA2kz8kWrmF1Rjbo89LO1lS5Emm5CUYtqa3NdiwcivYI-frEQYevE2dnDIO5wgOQGb1i33jg9NTLVR2ty3tkw0R-26YmNz8fgcADFgxNHNr3LJL0FJWHemXzXMXF6qWBNFHyB6fiV_yeA8BFSx0_-YX5ZDbwtYkeu5Mkd2WLc4eZd2oZu549f3cOD0NaUUzNsZb-sYR0xFXRw_wg4fxziotUqTM9AoGH_rlQeop9S46PVAk8RP6rQ-VrRcYVPBHRx-Xwkdd4xvEaisnqkmHW84bvWqwoZIVVljYZ2sd5TAYCQPuzBBAtjtNoCIBS7WaQhdqM9Q0PopS5P3_R0HV3wtXWL_e1fQu-oamrrfPew70BTP5OxIIMYOdHAz2AMsHeNciJ3TpdyhgRqIg_KYT_wKbGofo9_J5mcZRJvH7UGzE0yaax9E4yFoabh7LcAqal6ae1hwHG23e3lbEumwVdbc4dzTSC6v3L7HQCPPlo" width="100%" height="480" style="border:0" loading="lazy" title="Mermaid diagram" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+```mermaid
+flowchart LR
+    subgraph DATE["Date"]
+        SCADA["Telemetrie SCADA<br/>a turbinelor"]
+        METEO["Prognoză meteo<br/>Open-Meteo"]
+    end
+
+    subgraph LAKE["Data lake (S3 + Lambda simulat)"]
+        FEAT["Selectare feature-uri<br/>pentru model"]
+    end
+
+    subgraph ML["Modele ML"]
+        ML1["ML1: predicție defecte<br/>probabilitate și zile până la defect"]
+        ML2["ML2: producție estimată<br/>per turbină pe 7 zile"]
+    end
+
+    subgraph AGENT["Agent LangGraph, per parc"]
+        PRIO["Defecte apropiate în timp?<br/>prioritizare după producție"]
+        PLAN["Planificare reparații<br/>o echipă, zile cu vânt slab"]
+        JEV{"Model local de decizie<br/>plan și canal de alertă"}
+    end
+
+    subgraph ALERT["Alertare"]
+        EMAIL["Email"]
+        APEL["Apel telefonic TTS<br/>Infobip / Twilio"]
+    end
+
+    SCADA --> FEAT --> ML1
+    METEO --> ML2
+    METEO --> PLAN
+    ML1 --> PRIO
+    ML2 --> PRIO
+    PRIO --> PLAN --> JEV
+    JEV -->|"avertizare"| EMAIL
+    JEV -->|"critic"| APEL
+    JEV -->|"critic"| EMAIL
+    EMAIL --> ECH["Echipa de gardă"]
+    APEL --> ECH
+
+    ML1 --> DB[("Supabase<br/>predicții zilnice")]
+    DB --> APP["Aplicație web<br/>FastAPI + hartă React"]
+
+    subgraph NOU["Planificare parcuri noi"]
+        RES["Potențial eolian pe 2 ani<br/>vânt, relief"] --> SITES["Situri candidate"]
+        TRANS["Rute pentru transport<br/>agabaritic"]
+    end
+    SITES --> APP
+    TRANS --> APP
+```
 
 ## Quick start
 
