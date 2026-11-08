@@ -176,6 +176,7 @@ def dispatch_voice_alert(
     park_id: str,
     message: str,
     lead_time_hours: float | None = None,
+    fault_probability: float | None = None,
 ) -> dict[str, Any]:
     """
     Dispatch an urgent text-to-speech voice call to the park's maintenance crew.
@@ -186,6 +187,7 @@ def dispatch_voice_alert(
     :param park_id: Wind park identifier.
     :param message: Emergency spoken transcript.
     :param lead_time_hours: Estimated hours to catastrophic failure.
+    :param fault_probability: The model's failure probability for the turbine.
 
     :returns record: Confirmation record of the voice call.
     """
@@ -197,6 +199,7 @@ def dispatch_voice_alert(
         park_id=park_id,
         message=message,
         lead_time_hours=lead_time_hours,
+        fault_probability=fault_probability,
     )
 
 

@@ -60,6 +60,27 @@ def get_heatmap() -> FileResponse:
     return FileResponse(path, media_type="image/png", headers={"Cache-Control": "no-cache"})
 
 
+@router.get(
+    "/heatmap-plain.png",
+    response_class=FileResponse,
+    responses={200: {"content": {"image/png": {}}, "description": "Plain heatmap overlay"}},
+)
+def get_plain_heatmap() -> FileResponse:
+    """
+    Return the forecast wind heatmap of plain terrain (below the hill band) as a PNG.
+
+    Same placement and wind scale as `/heatmap.png`.
+
+    :returns image: The PNG overlay.
+    :raises HTTPException: 503 when the plain layer has not been built.
+    """
+    try:
+        path = resource_service.plain_heatmap_path()
+    except AtlasNotBuiltError as exc:
+        raise _not_built(exc) from exc
+    return FileResponse(path, media_type="image/png", headers={"Cache-Control": "no-cache"})
+
+
 @router.get("/sites", response_model=list[ResourceSite])
 def get_sites() -> list[ResourceSite]:
     """
@@ -70,6 +91,20 @@ def get_sites() -> list[ResourceSite]:
     """
     try:
         return resource_service.list_sites()
+    except AtlasNotBuiltError as exc:
+        raise _not_built(exc) from exc
+
+
+@router.get("/sites/plain", response_model=list[ResourceSite])
+def get_plain_sites() -> list[ResourceSite]:
+    """
+    Return the proposed plain wind park sites, windiest first.
+
+    :returns sites: Candidate sites below the hill band, with forecast wind and terrain.
+    :raises HTTPException: 503 when the plain layer has not been built.
+    """
+    try:
+        return resource_service.list_plain_sites()
     except AtlasNotBuiltError as exc:
         raise _not_built(exc) from exc
 

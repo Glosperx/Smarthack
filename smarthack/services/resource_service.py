@@ -19,9 +19,12 @@ compressed grid for point queries.
 The following can be imported from this module:
 - `AtlasNotBuiltError`
 - `build_atlas`
+- `build_plain_layer`
 - `heatmap_path`
+- `list_plain_sites`
 - `list_sites`
 - `load_summary`
+- `plain_heatmap_path`
 - `query_point`
 """
 
@@ -55,6 +58,8 @@ _SUMMARY_FILE = "summary.json"
 _SITES_FILE = "sites.json"
 _HEATMAP_FILE = "heatmap.png"
 _GRID_FILE = "atlas_grid.npz"
+_PLAIN_HEATMAP_FILE = "heatmap_plain.png"
+_PLAIN_SITES_FILE = "sites_plain.json"
 
 #: Seconds between two Nominatim requests (its usage policy allows one per second).
 _GEOCODE_PAUSE_S = 1.1
@@ -119,13 +124,14 @@ def _site_explanation(
     elevation: float,
     slope: float,
     change: float,
+    terrain: str = "hill",
 ) -> str:
     """One sentence on why a site or point stands out."""
     where = name or "This area"
     return (
         f"{where}: forecast mean wind {p50:.1f} m/s at 100 m for {years[0]}-{years[1]} "
         f"(80% band {p10:.1f}-{p90:.1f}), windier than {percentile:.0f}% of Romania's "
-        f"hill terrain; {elevation:.0f} m elevation, {slope:.0f} deg mean slope, "
+        f"{terrain} terrain; {elevation:.0f} m elevation, {slope:.0f} deg mean slope, "
         f"{change * 100:+.1f}% vs the {C.GWA_REFERENCE_FIRST_YEAR}-"
         f"{C.GWA_REFERENCE_LAST_YEAR} average."
     )
@@ -170,6 +176,198 @@ def _dem_layers(mask: Any, grid: Any, cache_dir: Path) -> tuple[Any, Any]:
         elevation = np.where(elev_n > 0, elev_sum / elev_n, np.nan)
         slope = np.where(slope_n > 0, slope_sum / slope_n, np.nan)
     return elevation, slope
+
+
+def _plain_layer(
+    p50: Any, elevation: Any, slope: Any, country: Any, grid: Any, legend: ResourceLegend
+) -> tuple[bytes, dict[str, float]]:
+    """
+    Render the plain heatmap and measure the plain terrain.
+
+    Plain is every land cell below the hill band (the sea is left out). It is drawn on the hill layer's wind scale,
+    so a shade means the same wind speed in both layers.
+
+    :param p50: Forecast mean wind per cell.
+    :param elevation: Mean elevation per cell.
+    :param slope: Mean slope per cell.
+    :param country: Cells inside Romania.
+    :param grid: The analysis grid.
+    :param legend: The hill legend, whose wind range the plain layer reuses.
+
+    :returns result: The PNG and the plain statistics (`area`, `buildable_area`, `wind_mean`).
+    """
+    import numpy as np
+
+    from smarthack.resource.render import render_overlay_png
+
+    plain = country & (elevation >= C.PLAIN_ELEVATION_MIN_M) & (elevation < C.ELEVATION_MIN_M)
+    buildable = plain & (slope <= C.BUILDABLE_MAX_SLOPE_DEG)
+    png = render_overlay_png(
+        np.where(plain, p50, np.nan), grid, C.PLAIN_RAMP, legend.vmin, legend.vmax
+    )
+    _, lats = grid.centers()
+    area = _cell_area_km2(lats)[:, None]
+    stats = {
+        "area": round(float((area * plain).sum()), 0),
+        "buildable_area": round(float((area * buildable).sum()), 0),
+        "wind_mean": round(float(np.mean(p50[plain])), 2) if plain.any() else 0.0,
+    }
+    return png, stats
+
+
+def _plain_sites(
+    p50: Any,
+    elevation: Any,
+    slope: Any,
+    reference: Any,
+    grid: Any,
+    band: tuple[float, float],
+    years: tuple[int, int],
+    name_sites: bool,
+) -> list[ResourceSite]:
+    """
+    Propose the windiest park-sized windows of the plain, like the hill sites.
+
+    :param p50: Forecast mean wind per cell.
+    :param elevation: Mean elevation per cell.
+    :param slope: Mean slope per cell.
+    :param reference: Reference-period mean wind per cell.
+    :param grid: The analysis grid.
+    :param band: P10 and P90 as relative deviations from P50.
+    :param years: First and last forecast year.
+    :param name_sites: Look up locality names.
+
+    :returns sites: The best `PLAIN_SITE_COUNT` sites, windiest first.
+    """
+    import numpy as np
+
+    from smarthack.resource.grid import box_mean
+    from smarthack.resource.sites import select_sites
+
+    plain = np.isfinite(p50) & (elevation >= C.PLAIN_ELEVATION_MIN_M)
+    plain &= elevation < C.ELEVATION_MIN_M
+    if not plain.any():
+        return []
+    buildable = plain & (slope <= C.BUILDABLE_MAX_SLOPE_DEG)
+    quantiles = np.quantile(p50[plain], np.linspace(0, 1, 101))
+    candidates = select_sites(
+        np.where(buildable, p50, np.nan),
+        grid,
+        C.SITE_WINDOW_CELLS,
+        C.SITE_MIN_VALID_FRACTION,
+        C.SITE_MIN_SEPARATION_KM,
+        # The wind grid reaches past the border, so with names on, twice as many candidates
+        # are looked up and the ones Nominatim places in another country are dropped.
+        C.PLAIN_SITE_COUNT * (2 if name_sites else 1),
+    )
+    elev_w, _ = box_mean(np.where(buildable, elevation, np.nan), C.SITE_WINDOW_CELLS)
+    slope_w, _ = box_mean(np.where(buildable, slope, np.nan), C.SITE_WINDOW_CELLS)
+    ref_w, _ = box_mean(np.where(buildable, reference, np.nan), C.SITE_WINDOW_CELLS)
+    sites: list[ResourceSite] = []
+    with httpx.Client(timeout=30.0) as http:
+        for cand in candidates:
+            if len(sites) == C.PLAIN_SITE_COUNT:
+                break
+            r, c = cand.row, cand.col
+            name = None
+            if name_sites:
+                name, country_code = resource_sources.reverse_geocode_place(
+                    cand.latitude, cand.longitude, http
+                )
+                time.sleep(_GEOCODE_PAUSE_S)
+                if country_code not in (None, "ro"):
+                    continue
+            w50 = cand.window_wind
+            pct = _percentile(w50, quantiles)
+            change = w50 / float(ref_w[r, c]) - 1.0
+            p10, p90 = w50 * (1 + band[0]), w50 * (1 + band[1])
+            sites.append(
+                ResourceSite(
+                    rank=len(sites) + 1,
+                    name=name,
+                    latitude=round(cand.latitude, 5),
+                    longitude=round(cand.longitude, 5),
+                    wind_p50=round(w50, 2),
+                    wind_p10=round(p10, 2),
+                    wind_p90=round(p90, 2),
+                    reference_wind=round(float(ref_w[r, c]), 2),
+                    change_pct=round(change, 4),
+                    elevation_m=round(float(elev_w[r, c]), 0),
+                    slope_deg=round(float(slope_w[r, c]), 1),
+                    buildable_fraction=round(cand.valid_fraction, 2),
+                    percentile=round(pct, 1),
+                    explanation=_site_explanation(
+                        name,
+                        w50,
+                        p10,
+                        p90,
+                        years,
+                        pct,
+                        float(elev_w[r, c]),
+                        float(slope_w[r, c]),
+                        change,
+                        terrain="plain",
+                    ),
+                )
+            )
+    return sites
+
+
+def _write_plain_sites(out: Path, sites: list[ResourceSite]) -> None:
+    """Write the plain sites next to the hill ones."""
+    text = json.dumps([s.model_dump() for s in sites], indent=2, ensure_ascii=False)
+    (out / _PLAIN_SITES_FILE).write_text(text, encoding="utf-8")
+
+
+def build_plain_layer(atlas_dir: Path | None = None, name_sites: bool = True) -> ResourceSummary:
+    """
+    Add the plain heatmap and sites to an atlas built without them, from its stored grid.
+
+    Needs no download: it reads the grid file `build_atlas` wrote and updates the summary.
+
+    :param atlas_dir: Atlas directory, `RESOURCE_ATLAS_DIR` by default.
+    :param name_sites: Look up locality names for the plain sites.
+
+    :returns summary: The updated summary.
+    :raises AtlasNotBuiltError: If the atlas has not been built.
+    """
+    import numpy as np
+
+    out = atlas_dir or config.resource_atlas_dir()
+    summary = load_summary(out)
+    with np.load(_atlas_file(_GRID_FILE, out)) as data:
+        p50 = data["p50"].astype(np.float32)
+        elevation = data["elevation"].astype(np.float32)
+        slope = data["slope"].astype(np.float32)
+        reference = data["reference"].astype(np.float32)
+    _write_plain_sites(
+        out,
+        _plain_sites(
+            p50,
+            elevation,
+            slope,
+            reference,
+            _grid(),
+            (summary.band_low_pct, summary.band_high_pct),
+            (summary.target_years[0], summary.target_years[1]),
+            name_sites,
+        ),
+    )
+    png, stats = _plain_layer(p50, elevation, slope, np.isfinite(p50), _grid(), summary.legend)
+    (out / _PLAIN_HEATMAP_FILE).write_bytes(png)
+    updated = summary.model_copy(
+        update={
+            "plain_legend": ResourceLegend(
+                vmin=summary.legend.vmin, vmax=summary.legend.vmax, colors=list(C.PLAIN_RAMP)
+            ),
+            "plain_area_km2": stats["area"],
+            "plain_buildable_area_km2": stats["buildable_area"],
+            "plain_wind_p50_mean": stats["wind_mean"],
+        }
+    )
+    (out / _SUMMARY_FILE).write_text(updated.model_dump_json(indent=2), encoding="utf-8")
+    _cache.clear()
+    return updated
 
 
 def build_atlas(
@@ -240,6 +438,9 @@ def build_atlas(
     vmax = math.ceil(float(np.quantile(hill_wind, 0.995)) * 2) / 2
     png = render_overlay_png(np.where(hill, p50, np.nan), grid, C.HEATMAP_RAMP, vmin, vmax)
     (out / _HEATMAP_FILE).write_bytes(png)
+    legend = ResourceLegend(vmin=vmin, vmax=vmax, colors=list(C.HEATMAP_RAMP))
+    plain_png, plain = _plain_layer(p50, elevation, slope, country, grid, legend)
+    (out / _PLAIN_HEATMAP_FILE).write_bytes(plain_png)
 
     eligible = np.where(buildable, p50, np.nan)
     candidates = select_sites(
@@ -316,7 +517,11 @@ def build_atlas(
         ),
         elevation_band_m=[C.ELEVATION_MIN_M, C.ELEVATION_MAX_M],
         max_slope_deg=C.BUILDABLE_MAX_SLOPE_DEG,
-        legend=ResourceLegend(vmin=vmin, vmax=vmax, colors=list(C.HEATMAP_RAMP)),
+        legend=legend,
+        plain_legend=ResourceLegend(vmin=vmin, vmax=vmax, colors=list(C.PLAIN_RAMP)),
+        plain_area_km2=plain["area"],
+        plain_buildable_area_km2=plain["buildable_area"],
+        plain_wind_p50_mean=plain["wind_mean"],
         selected_estimator=backtest.selected,
         backtest=[
             ResourceBacktestRow(
@@ -343,6 +548,19 @@ def build_atlas(
     (out / _SUMMARY_FILE).write_text(summary.model_dump_json(indent=2), encoding="utf-8")
     sites_json = json.dumps([s.model_dump() for s in sites], indent=2, ensure_ascii=False)
     (out / _SITES_FILE).write_text(sites_json, encoding="utf-8")
+    _write_plain_sites(
+        out,
+        _plain_sites(
+            p50,
+            elevation,
+            slope,
+            np.where(country, gwa, np.nan),
+            grid,
+            (backtest.band_low, backtest.band_high),
+            fc.target_years,
+            name_sites,
+        ),
+    )
     _cache.clear()
     logger.info("Atlas written to %s: %d sites", out, len(sites))
     return summary
@@ -412,6 +630,23 @@ def list_sites(atlas_dir: Path | None = None) -> list[ResourceSite]:
     return sites
 
 
+def list_plain_sites(atlas_dir: Path | None = None) -> list[ResourceSite]:
+    """
+    Read the proposed plain sites, windiest first.
+
+    :param atlas_dir: Atlas directory, `RESOURCE_ATLAS_DIR` by default.
+
+    :returns sites: Candidate plain sites in rank order.
+    :raises AtlasNotBuiltError: If the plain layer has not been built.
+    """
+    path = _atlas_file(_PLAIN_SITES_FILE, atlas_dir)
+    sites: list[ResourceSite] = _cached(
+        path,
+        lambda p: [ResourceSite.model_validate(s) for s in json.loads(p.read_text("utf-8"))],
+    )
+    return sites
+
+
 def heatmap_path(atlas_dir: Path | None = None) -> Path:
     """
     Locate the heatmap image.
@@ -422,6 +657,18 @@ def heatmap_path(atlas_dir: Path | None = None) -> Path:
     :raises AtlasNotBuiltError: If the atlas has not been built.
     """
     return _atlas_file(_HEATMAP_FILE, atlas_dir)
+
+
+def plain_heatmap_path(atlas_dir: Path | None = None) -> Path:
+    """
+    Locate the plain heatmap image.
+
+    :param atlas_dir: Atlas directory, `RESOURCE_ATLAS_DIR` by default.
+
+    :returns path: The PNG overlay.
+    :raises AtlasNotBuiltError: If the plain layer has not been built.
+    """
+    return _atlas_file(_PLAIN_HEATMAP_FILE, atlas_dir)
 
 
 def _load_grid(path: Path) -> _LoadedGrid:
@@ -469,14 +716,27 @@ def query_point(lat: float, lon: float, atlas_dir: Path | None = None) -> Resour
     slope = float(data.slope[cell])
     reference = float(data.reference[cell])
     in_band = C.ELEVATION_MIN_M <= elevation <= C.ELEVATION_MAX_M
-    buildable = in_band and slope <= C.BUILDABLE_MAX_SLOPE_DEG
+    in_plain = C.PLAIN_ELEVATION_MIN_M <= elevation < C.ELEVATION_MIN_M
+    buildable = (in_band or in_plain) and slope <= C.BUILDABLE_MAX_SLOPE_DEG
     p10 = p50 * (1 + summary.band_low_pct)
     p90 = p50 * (1 + summary.band_high_pct)
     change = p50 / reference - 1.0
     pct = _percentile(p50, data.hill_quantiles)
     years = (summary.target_years[0], summary.target_years[1])
 
-    if not in_band:
+    if in_plain:
+        explanation = (
+            f"Plain below {C.ELEVATION_MIN_M:.0f} m: forecast mean wind {p50:.1f} m/s at 100 m "
+            f"for {years[0]}-{years[1]} (80% band {p10:.1f}-{p90:.1f}), {slope:.0f} deg slope, "
+            f"{change * 100:+.1f}% vs the {C.GWA_REFERENCE_FIRST_YEAR}-"
+            f"{C.GWA_REFERENCE_LAST_YEAR} average. "
+            + (
+                "Gentle enough to build on."
+                if buildable
+                else f"Slope is above the {C.BUILDABLE_MAX_SLOPE_DEG:.0f} deg buildable limit."
+            )
+        )
+    elif not in_band:
         explanation = (
             f"Elevation {elevation:.0f} m is outside the {C.ELEVATION_MIN_M:.0f}-"
             f"{C.ELEVATION_MAX_M:.0f} m hill band. Forecast mean wind here: {p50:.1f} m/s."
@@ -494,6 +754,7 @@ def query_point(lat: float, lon: float, atlas_dir: Path | None = None) -> Resour
         longitude=lon,
         inside_country=True,
         in_band=in_band,
+        in_plain=in_plain,
         buildable=buildable,
         elevation_m=round(elevation, 0),
         slope_deg=round(slope, 1),
@@ -510,8 +771,11 @@ def query_point(lat: float, lon: float, atlas_dir: Path | None = None) -> Resour
 __all__ = [
     "AtlasNotBuiltError",
     "build_atlas",
+    "build_plain_layer",
     "heatmap_path",
+    "list_plain_sites",
     "list_sites",
     "load_summary",
+    "plain_heatmap_path",
     "query_point",
 ]

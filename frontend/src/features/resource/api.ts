@@ -9,6 +9,9 @@ export type ResourcePoint = components['schemas']['ResourcePoint'];
 /** URL of the heatmap overlay image served by the backend. */
 export const HEATMAP_URL = '/api/resource/heatmap.png';
 
+/** URL of the plain (below the hill band) heatmap overlay, same placement as the hill one. */
+export const PLAIN_HEATMAP_URL = '/api/resource/heatmap-plain.png';
+
 /**
  * Query hook for the wind atlas summary (bounds, legend, backtest, sources).
  */
@@ -30,6 +33,19 @@ export function useResourceSites(enabled: boolean) {
     queryFn: () => apiFetch<ResourceSite[]>('/api/resource/sites'),
     enabled,
     staleTime: Infinity,
+  });
+}
+
+/**
+ * Query hook for the proposed plain wind park sites, windiest first.
+ */
+export function usePlainSites(enabled: boolean) {
+  return useQuery<ResourceSite[]>({
+    queryKey: ['resource', 'sites', 'plain'],
+    queryFn: () => apiFetch<ResourceSite[]>('/api/resource/sites/plain'),
+    enabled,
+    staleTime: Infinity,
+    retry: false,
   });
 }
 

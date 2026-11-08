@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from alerting.escalation import escalate, retry_delay_minutes
+from alerting.escalation import escalate, retries_per_person, retry_delay_minutes
 from alerting.oncall import OnCallPerson
 from alerting.simulation import SimulatedProvider, parse_outcomes
 from alerting.state import MAX_CALLS_PER_ALERT, StateStore
@@ -87,6 +87,13 @@ def test_single_person_is_tried_twice_then_exhausted(store: StateStore) -> None:
     assert stopped == "exhausted" and sleeps == [120.0]
 
 
+def test_zero_retries_means_one_call_per_person(store: StateStore) -> None:
+    env = ENV | {"CALL_RETRIES_PER_PERSON": "0"}
+    calls, stopped, sleeps, _ = _run("no-answer,no-answer", store, [FIRST, SECOND], env)
+    assert calls == [("garda-1", 1, "no-answer"), ("garda-2", 1, "no-answer")]
+    assert stopped == "exhausted" and sleeps == []
+
+
 def test_person_outside_the_allowlist_is_skipped_without_retry(store: StateStore) -> None:
     env = ENV | {"ALLOWED_PHONES": "+40700000002"}
     calls, stopped, sleeps, provider = _run("completed:human", store, env=env)
@@ -118,3 +125,11 @@ def test_retry_delay_setting() -> None:
 def test_unknown_simulated_status_is_refused() -> None:
     with pytest.raises(ValueError, match="ringing"):
         parse_outcomes("ringing")
+
+
+def test_retries_per_person_default_and_validation() -> None:
+    """One retry unless configured; 0 means one call only; a negative number is refused."""
+    assert retries_per_person({}) == 1
+    assert retries_per_person({"CALL_RETRIES_PER_PERSON": "0"}) == 0
+    with pytest.raises(ValueError):
+        retries_per_person({"CALL_RETRIES_PER_PERSON": "-1"})

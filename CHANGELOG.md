@@ -22,6 +22,26 @@ and [Semantic Versioning](https://semver.org/).
   for the park, whatever their format; an SDK that is installed but broken switches tracing off
   instead of stopping the sweep. `langfuse` and `opentelemetry` are mypy-optional like the other
   extras.
+- Real phone calls from the dispatch agent (`docs/lake.md`): with `VOICE_CALLS_ENABLED=true` a
+  CRITICAL alert is handed to the alerting module (`experiments/alerting`), which emails and
+  phones on-call with its allowlist, `DRY_RUN` and once-per-alert gates. Off by default. New
+  `calls` extra (`twilio`, `jinja2`, `requests`).
+- Maintenance pipeline on the local data lake (`docs/lake.md`): three chained Lambda-shaped
+  handlers. `raw` keeps only the features the maintenance model reads (selected, or derived
+  from raw SCADA sensors, following the model's `fault_features.json`) and writes them to
+  `features`; `features` scores every turbine with the model into `predictions`; `predictions`
+  runs the LangGraph dispatch agent for every park with a turbine to repair and writes its
+  plan to `dispatch`. `make lake-sample` puts simulated SCADA into `raw` to run it end to end.
+- Local data lake (`docs/lake.md`): S3 buckets simulated as folders under `LAKE_DIR`
+  (`data/lake/`), with atomic uploads (`make lake-put`) and a watcher (`make lake-watch`, also
+  started by `make up`) that hands each new CSV file in `raw/` to a Lambda-shaped handler.
+  The handler logs the file and its first rows; unreadable files go to `failed/`. New `lake`
+  extra (`watchdog`) and `LAKE_DIR`.
+- Oversize transport network (`docs/transport.md`): every major road of Romania coloured for a
+  2.4-3 MW turbine convoy (60 m, 4.8 m high, 4.5 m wide, 120 t) from OpenStreetMap limits and
+  curve geometry, with reachability from the ports of Constanța, Galați and Brăila.
+  `make transport` builds `models/transport/`; served by `/api/transport/*` and shown by the
+  **Oversize transport** panel on the map.
 - Hill wind site finder (`docs/wind_resource.md`): forecast mean wind at 100 m for the next two
   full years on Romania's 200-800 m hills, from NASA POWER (backtested method choice and P10-P90
   band), Global Wind Atlas terrain detail and Copernicus DEM. `make resource` builds

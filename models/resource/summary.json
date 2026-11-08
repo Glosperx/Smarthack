@@ -100,6 +100,23 @@
   "hill_area_km2": 100912.0,
   "buildable_area_km2": 65542.0,
   "hill_wind_p50_mean": 4.49,
+  "plain_legend": {
+    "vmin": 2.5,
+    "vmax": 7.5,
+    "colors": [
+      "#d4f0e2",
+      "#a6e0c3",
+      "#74cda2",
+      "#3fb581",
+      "#1f9566",
+      "#136f4b",
+      "#0a4a32"
+    ],
+    "unit": "m/s"
+  },
+  "plain_area_km2": 98875.0,
+  "plain_buildable_area_km2": 98117.0,
+  "plain_wind_p50_mean": 5.56,
   "sources": [
     {
       "name": "NASA POWER (MERRA-2) monthly wind speed at 50 m, 1981-present",

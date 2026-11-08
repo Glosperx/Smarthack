@@ -25,6 +25,7 @@ The following can be imported from this module:
 - `DEFAULT_HOST`
 - `DEFAULT_HTTP_TIMEOUT`
 - `DEFAULT_LANGFUSE_BASE_URL`
+- `DEFAULT_LAKE_DIR`
 - `DEFAULT_LOG_LEVEL`
 - `DEFAULT_MAINTENANCE_DATA_DIR`
 - `DEFAULT_MAINTENANCE_INTERVAL_MINUTES`
@@ -33,10 +34,13 @@ The following can be imported from this module:
 - `DEFAULT_RESOURCE_ATLAS_DIR`
 - `DEFAULT_RESOURCE_CACHE_DIR`
 - `DEFAULT_TIMEZONE`
+- `DEFAULT_TRANSPORT_CACHE_DIR`
+- `DEFAULT_TRANSPORT_NETWORK_DIR`
 - `DEFAULT_WIND_DATA_DIR`
 - `DEFAULT_WIND_MODELS_DIR`
 - `DEFAULT_OPEN_METEO_URL`
 - `agent_data_source`
+- `alerting_dir`
 - `app_env`
 - `data_dir`
 - `decision_model_enabled`
@@ -51,6 +55,7 @@ The following can be imported from this module:
 - `langfuse_enabled`
 - `langfuse_public_key`
 - `langfuse_secret_key`
+- `lake_dir`
 - `log_level`
 - `maintenance_data_dir`
 - `maintenance_demo_scenarios`
@@ -64,6 +69,9 @@ The following can be imported from this module:
 - `supabase_service_key`
 - `supabase_url`
 - `timezone`
+- `voice_calls_enabled`
+- `transport_cache_dir`
+- `transport_network_dir`
 - `wind_data_dir`
 - `wind_forecast_interval_minutes`
 - `wind_models_dir`
@@ -101,11 +109,20 @@ DEFAULT_MAINTENANCE_DATA_DIR = "data/maintenance"
 #: The directory holding maintenance model artifacts when `MAINTENANCE_MODELS_DIR` is not set.
 DEFAULT_MAINTENANCE_MODELS_DIR = "models/maintenance"
 
+#: The root of the local data lake, one sub-folder per bucket, when `LAKE_DIR` is not set.
+DEFAULT_LAKE_DIR = "data/lake"
+
 #: Where the hill wind atlas build caches its downloads when `RESOURCE_CACHE_DIR` is not set.
 DEFAULT_RESOURCE_CACHE_DIR = ".data/resource"
 
 #: Where the built hill wind atlas is written and served from when `RESOURCE_ATLAS_DIR` is not set.
 DEFAULT_RESOURCE_ATLAS_DIR = "models/resource"
+
+#: Where `make transport` caches the OpenStreetMap extract when `TRANSPORT_CACHE_DIR` is not set.
+DEFAULT_TRANSPORT_CACHE_DIR = ".data/transport"
+
+#: Where the built transport network is written when `TRANSPORT_NETWORK_DIR` is not set.
+DEFAULT_TRANSPORT_NETWORK_DIR = "models/transport"
 
 #: The default IANA timezone when `SMARTHACK_TIMEZONE` is not set.
 DEFAULT_TIMEZONE = "UTC"
@@ -224,6 +241,30 @@ def resource_atlas_dir() -> Path:
     return path
 
 
+def transport_cache_dir() -> Path:
+    """
+    Return the directory where the transport network build caches the OSM extract.
+
+    :returns path: Configured Path, relative paths resolved against the repository root.
+    """
+    path = Path(os.environ.get("TRANSPORT_CACHE_DIR") or DEFAULT_TRANSPORT_CACHE_DIR)
+    if not path.is_absolute():
+        path = Path(__file__).resolve().parent.parent / path
+    return path
+
+
+def transport_network_dir() -> Path:
+    """
+    Return the directory holding the built oversize transport network.
+
+    :returns path: Configured Path, relative paths resolved against the repository root.
+    """
+    path = Path(os.environ.get("TRANSPORT_NETWORK_DIR") or DEFAULT_TRANSPORT_NETWORK_DIR)
+    if not path.is_absolute():
+        path = Path(__file__).resolve().parent.parent / path
+    return path
+
+
 def maintenance_data_dir() -> Path:
     """
     Return the path to the directory containing maintenance observation datasets.
@@ -248,6 +289,47 @@ def maintenance_models_dir() -> Path:
     if not path.is_absolute():
         path = Path(__file__).resolve().parent.parent / path
     return path
+
+
+def lake_dir() -> Path:
+    """
+    Return the root of the local data lake, the folder that simulates the S3 buckets.
+
+    Each bucket is a sub-folder of it, such as `raw/`, and an object key is a path inside
+    that sub-folder. A relative value is taken from the repository root, so the watcher
+    and the uploader agree whatever directory they are started from.
+
+    :returns path: Configured Path to the lake root. Defaults to `data/lake`.
+    """
+    path = Path((os.environ.get("LAKE_DIR") or "").strip() or DEFAULT_LAKE_DIR)
+    if not path.is_absolute():
+        path = Path(__file__).resolve().parent.parent / path
+    return path
+
+
+def alerting_dir() -> Path:
+    """
+    Return the folder of the alerting module, the one that really phones and emails on-call.
+
+    It is a standalone project with its own `.env`, `oncall.json` and allowlist, kept in
+    `experiments/alerting`; the voice client imports it from there when calls are enabled.
+
+    :returns path: `experiments/alerting` under the repository root.
+    """
+    return Path(__file__).resolve().parent.parent / "experiments" / "alerting"
+
+
+def voice_calls_enabled() -> bool:
+    """
+    Tell whether a CRITICAL alert really phones on-call through the alerting module.
+
+    Off by default: the voice client then only records and logs the call, and nobody is
+    phoned. The alerting module has its own gates on top (`DRY_RUN`, `ALLOWED_PHONES`).
+
+    :returns flag: True when `VOICE_CALLS_ENABLED` is `1`, `true`, `yes` or `on`.
+    """
+    value = (os.environ.get("VOICE_CALLS_ENABLED") or "").strip().lower()
+    return value in ("1", "true", "yes", "on")
 
 
 def host() -> str:
@@ -528,6 +610,7 @@ __all__ = [
     "DEFAULT_HOST",
     "DEFAULT_HTTP_TIMEOUT",
     "DEFAULT_LANGFUSE_BASE_URL",
+    "DEFAULT_LAKE_DIR",
     "DEFAULT_LOG_LEVEL",
     "DEFAULT_MAINTENANCE_DATA_DIR",
     "DEFAULT_MAINTENANCE_INTERVAL_MINUTES",
@@ -536,10 +619,13 @@ __all__ = [
     "DEFAULT_RESOURCE_ATLAS_DIR",
     "DEFAULT_RESOURCE_CACHE_DIR",
     "DEFAULT_TIMEZONE",
+    "DEFAULT_TRANSPORT_CACHE_DIR",
+    "DEFAULT_TRANSPORT_NETWORK_DIR",
     "DEFAULT_WIND_DATA_DIR",
     "DEFAULT_WIND_MODELS_DIR",
     "DEFAULT_OPEN_METEO_URL",
     "agent_data_source",
+    "alerting_dir",
     "app_env",
     "data_dir",
     "decision_model_enabled",
@@ -554,6 +640,7 @@ __all__ = [
     "langfuse_enabled",
     "langfuse_public_key",
     "langfuse_secret_key",
+    "lake_dir",
     "log_level",
     "maintenance_data_dir",
     "maintenance_demo_scenarios",
@@ -567,6 +654,9 @@ __all__ = [
     "supabase_service_key",
     "supabase_url",
     "timezone",
+    "voice_calls_enabled",
+    "transport_cache_dir",
+    "transport_network_dir",
     "wind_data_dir",
     "wind_forecast_interval_minutes",
     "wind_models_dir",

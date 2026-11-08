@@ -20,6 +20,8 @@ pnpm-debug.log*
 *.tsbuildinfo
 
 .data
+# The local data lake: its buckets hold telemetry files, never versioned.
+data/lake/
 # Python
 __pycache__/
 *.py[cod]

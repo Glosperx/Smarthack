@@ -5,10 +5,12 @@ import { ParkMap } from './ParkMap';
 import { MenuButton } from './MenuButton';
 import { ParkListDrawer } from './ParkListDrawer';
 import { ParkDetailsDrawer } from './ParkDetailsDrawer';
-import { MaintenanceCountdown } from './MaintenanceCountdown';
-import { useResourceSites, useResourceSummary } from '../resource/api';
+import { usePlainSites, useResourceSites, useResourceSummary } from '../resource/api';
 import { WindResourceLayer } from '../resource/WindResourceLayer';
 import { WindResourcePanel } from '../resource/WindResourcePanel';
+import { VERDICT, useTransportNetwork, useTransportSummary } from '../transport/api';
+import { TransportLayer } from '../transport/TransportLayer';
+import { TransportPanel } from '../transport/TransportPanel';
 
 /**
  * Top-level Wind Park Map screen.
@@ -18,16 +20,30 @@ export function MapPage() {
   const { open, selectedId, toggleList, selectPark, close } = useDrawerFlow();
   const [resourceOn, setResourceOn] = useState(false);
   const [focusedSite, setFocusedSite] = useState<number | null>(null);
+  const [plainOn, setPlainOn] = useState(true);
+  const [focusedPlain, setFocusedPlain] = useState<number | null>(null);
+  const plainSites = usePlainSites(resourceOn);
   const resourceSummary = useResourceSummary(resourceOn);
   const resourceSites = useResourceSites(resourceOn);
+  const [transportOn, setTransportOn] = useState(false);
+  const [verdictsShown, setVerdictsShown] = useState<Set<number>>(
+    () => new Set([VERDICT.viable, VERDICT.check, VERDICT.blocked, VERDICT.isolated])
+  );
+  const [showCounty, setShowCounty] = useState(true);
+  const transportSummary = useTransportSummary(transportOn);
+  const transportNetwork = useTransportNetwork(transportOn);
+  const toggleVerdict = (code: number) =>
+    setVerdictsShown((prev) => {
+      const next = new Set(prev);
+      if (next.has(code)) next.delete(code);
+      else next.add(code);
+      return next;
+    });
 
   const selectedPark = parks.find((p) => p.id === selectedId) || null;
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-slate-950 font-sans">
-      {/* Top Left Maintenance Prediction Countdown */}
-      <MaintenanceCountdown />
-
       {/* Top Right Hamburger Menu Button */}
       <MenuButton onClick={toggleList} disabled={isLoading} />
 
@@ -40,7 +56,31 @@ export function MapPage() {
         isLoading={resourceSummary.isLoading || resourceSites.isLoading}
         error={resourceSummary.error ?? resourceSites.error}
         focusedRank={focusedSite}
-        onFocusSite={setFocusedSite}
+        onFocusSite={(rank) => {
+          setFocusedSite(rank);
+          setFocusedPlain(null);
+        }}
+        plainOn={plainOn}
+        onTogglePlain={() => setPlainOn((v) => !v)}
+        plainSites={plainSites.data ?? []}
+        focusedPlain={focusedPlain}
+        onFocusPlain={(rank) => {
+          setFocusedPlain(rank);
+          setFocusedSite(null);
+        }}
+      />
+
+      {/* Bottom Right Oversize Transport Network */}
+      <TransportPanel
+        enabled={transportOn}
+        onToggle={() => setTransportOn((v) => !v)}
+        summary={transportSummary.data}
+        isLoading={transportSummary.isLoading || transportNetwork.isLoading}
+        error={transportSummary.error ?? transportNetwork.error}
+        visible={verdictsShown}
+        onToggleVerdict={toggleVerdict}
+        showCounty={showCounty}
+        onToggleCounty={() => setShowCounty((v) => !v)}
       />
 
       {/* Main Map View */}
@@ -56,6 +96,17 @@ export function MapPage() {
               summary={resourceSummary.data}
               sites={resourceSites.data ?? []}
               focusedRank={focusedSite}
+              showPlain={plainOn && resourceSummary.data.plain_legend != null}
+              plainSites={plainOn ? (plainSites.data ?? []) : []}
+              focusedPlain={focusedPlain}
+            />
+          )}
+          {transportOn && transportSummary.data && transportNetwork.data && (
+            <TransportLayer
+              network={transportNetwork.data}
+              summary={transportSummary.data}
+              visible={verdictsShown}
+              showCounty={showCounty}
             />
           )}
         </ParkMap>

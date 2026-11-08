@@ -5,13 +5,13 @@ Downloads NASA POWER, the Global Wind Atlas and Copernicus DEM tiles on the firs
 (about 300 MB, cached in RESOURCE_CACHE_DIR), then writes the atlas to
 RESOURCE_ATLAS_DIR. A rebuild from the cache takes about a minute.
 
-Usage: python scripts/build_wind_resource.py [--no-names]
+Usage: python scripts/build_wind_resource.py [--no-names] [--plain-only]
 """
 
 import argparse
 import logging
 
-from smarthack.services.resource_service import build_atlas
+from smarthack.services.resource_service import build_atlas, build_plain_layer
 from smarthack.utils.logging_utils import configure_logging
 
 
@@ -22,9 +22,23 @@ def main() -> None:
         "--no-names", action="store_true", help="skip the Nominatim locality lookup for sites"
     )
     parser.add_argument("--last-year", type=int, default=None, help="last complete data year")
+    parser.add_argument(
+        "--plain-only",
+        action="store_true",
+        help="add the plain heatmap to the existing atlas from its stored grid, no downloads",
+    )
     args = parser.parse_args()
     configure_logging()
     logging.getLogger("httpx").setLevel(logging.WARNING)
+
+    if args.plain_only:
+        done = build_plain_layer(name_sites=not args.no_names)
+        print(
+            f"Plain terrain       {done.plain_area_km2:,.0f} km2, "
+            f"buildable {done.plain_buildable_area_km2:,.0f} km2, "
+            f"mean wind {done.plain_wind_p50_mean} m/s (hills {done.hill_wind_p50_mean} m/s)"
+        )
+        return
 
     summary = build_atlas(last_year=args.last_year, name_sites=not args.no_names)
     print(f"Forecast years      {summary.target_years[0]}-{summary.target_years[1]}")

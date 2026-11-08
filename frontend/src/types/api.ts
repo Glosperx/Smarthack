@@ -292,6 +292,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/resource/heatmap-plain.png": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Plain Heatmap
+         * @description Return the forecast wind heatmap of plain terrain (below the hill band) as a PNG.
+         *
+         *     Same placement and wind scale as `/heatmap.png`.
+         *
+         *     :returns image: The PNG overlay.
+         *     :raises HTTPException: 503 when the plain layer has not been built.
+         */
+        get: operations["get_plain_heatmap_api_resource_heatmap_plain_png_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/resource/sites": {
         parameters: {
             query?: never;
@@ -307,6 +332,29 @@ export interface paths {
          *     :raises HTTPException: 503 when the atlas has not been built.
          */
         get: operations["get_sites_api_resource_sites_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/resource/sites/plain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Plain Sites
+         * @description Return the proposed plain wind park sites, windiest first.
+         *
+         *     :returns sites: Candidate sites below the hill band, with forecast wind and terrain.
+         *     :raises HTTPException: 503 when the plain layer has not been built.
+         */
+        get: operations["get_plain_sites_api_resource_sites_plain_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -333,6 +381,55 @@ export interface paths {
          *     :raises HTTPException: 503 when the atlas has not been built.
          */
         get: operations["get_point_api_resource_point_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/transport/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Summary
+         * @description Return the vehicle, ports, kilometres per verdict and reason, caveats and sources.
+         *
+         *     :returns summary: The network summary.
+         *     :raises HTTPException: 503 when the network has not been built.
+         */
+        get: operations["get_summary_api_transport_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/transport/network": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Network
+         * @description Return every judged road as compact JSON (layout in `transport_service`).
+         *
+         *     The file is stored gzipped and sent with `Content-Encoding: gzip`, which the browser
+         *     undoes on its own.
+         *
+         *     :returns file: The network.
+         *     :raises HTTPException: 503 when the network has not been built.
+         */
+        get: operations["get_network_api_transport_network_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -726,8 +823,14 @@ export interface components {
              */
             in_band: boolean;
             /**
+             * In Plain
+             * @description True when the elevation is below the hill band.
+             * @default false
+             */
+            in_plain: boolean;
+            /**
              * Buildable
-             * @description True when in the band and gentle enough to build on.
+             * @description True when in the hill band or the plain and gentle enough to build on.
              */
             buildable: boolean;
             /**
@@ -967,6 +1070,23 @@ export interface components {
              * @description Mean forecast wind over all hill terrain.
              */
             hill_wind_p50_mean: number;
+            /** @description Colour scale of the plain heatmap (same wind scale as the hill one). */
+            plain_legend?: components["schemas"]["ResourceLegend"] | null;
+            /**
+             * Plain Area Km2
+             * @description Area of plain terrain, below the hill band.
+             */
+            plain_area_km2?: number | null;
+            /**
+             * Plain Buildable Area Km2
+             * @description Plain area that is also gentle enough.
+             */
+            plain_buildable_area_km2?: number | null;
+            /**
+             * Plain Wind P50 Mean
+             * @description Mean forecast wind over all plain terrain.
+             */
+            plain_wind_p50_mean?: number | null;
             /**
              * Sources
              * @description Datasets used, with licences.
@@ -1001,6 +1121,185 @@ export interface components {
              * @description Optional override for active available crews in that park.
              */
             active_crew_count?: number | null;
+        };
+        /**
+         * TransportPort
+         * @description An entry point of turbine components.
+         */
+        TransportPort: {
+            /**
+             * Name
+             * @description Port name.
+             */
+            name: string;
+            /**
+             * Latitude
+             * @description Latitude, WGS84.
+             */
+            latitude: number;
+            /**
+             * Longitude
+             * @description Longitude, WGS84.
+             */
+            longitude: number;
+        };
+        /**
+         * TransportReasonStat
+         * @description Kilometres of road raising one reason.
+         */
+        TransportReasonStat: {
+            /**
+             * Bit
+             * @description Reason bit used in the network file.
+             */
+            bit: number;
+            /**
+             * Label
+             * @description What the reason means.
+             */
+            label: string;
+            /**
+             * Blocking
+             * @description Whether the reason blocks the road on its own.
+             */
+            blocking: boolean;
+            /**
+             * Km
+             * @description Road length raising this reason, km.
+             */
+            km: number;
+        };
+        /**
+         * TransportSource
+         * @description A dataset the network is built from.
+         */
+        TransportSource: {
+            /**
+             * Name
+             * @description Dataset name.
+             */
+            name: string;
+            /**
+             * Url
+             * @description Where it comes from.
+             */
+            url: string;
+            /**
+             * License
+             * @description Licence and attribution.
+             */
+            license: string;
+        };
+        /**
+         * TransportSummary
+         * @description What the built network is, and how its kilometres split.
+         */
+        TransportSummary: {
+            /**
+             * Generated At
+             * Format: date-time
+             * @description When the network was built, UTC.
+             */
+            generated_at: string;
+            /**
+             * Osm Extract Date
+             * @description Date of the OSM extract used.
+             */
+            osm_extract_date: string | null;
+            /** @description The reference vehicle. */
+            vehicle: components["schemas"]["TransportVehicle"];
+            /**
+             * Ports
+             * @description Entry ports the reachability starts from.
+             */
+            ports: components["schemas"]["TransportPort"][];
+            /**
+             * Classes
+             * @description OSM road classes, index = class code.
+             */
+            classes: string[];
+            /**
+             * Verdicts
+             * @description Kilometres per verdict.
+             */
+            verdicts: components["schemas"]["TransportVerdictStat"][];
+            /**
+             * Reasons
+             * @description Kilometres per reason.
+             */
+            reasons: components["schemas"]["TransportReasonStat"][];
+            /**
+             * Road Count
+             * @description Number of drawn road pieces.
+             */
+            road_count: number;
+            /**
+             * Total Km
+             * @description Total length of the kept roads, km.
+             */
+            total_km: number;
+            /**
+             * Caveats
+             * @description What the network cannot tell.
+             */
+            caveats: string[];
+            /**
+             * Sources
+             * @description Datasets used.
+             */
+            sources: components["schemas"]["TransportSource"][];
+        };
+        /**
+         * TransportVehicle
+         * @description The reference oversize load every road is judged for.
+         */
+        TransportVehicle: {
+            /**
+             * Description
+             * @description What the profile represents.
+             */
+            description: string;
+            /**
+             * Length M
+             * @description Vehicle length with the blade, metres.
+             */
+            length_m: number;
+            /**
+             * Height M
+             * @description Loaded height, metres.
+             */
+            height_m: number;
+            /**
+             * Width M
+             * @description Loaded width, metres.
+             */
+            width_m: number;
+            /**
+             * Gross T
+             * @description Gross weight of the heaviest transport, tonnes.
+             */
+            gross_t: number;
+        };
+        /**
+         * TransportVerdictStat
+         * @description Kilometres of road under one verdict.
+         */
+        TransportVerdictStat: {
+            /**
+             * Code
+             * @description Verdict code used in the network file.
+             */
+            code: number;
+            /**
+             * Label
+             * @description What the verdict means.
+             */
+            label: string;
+            /**
+             * Km
+             * @description Road length under this verdict, km.
+             */
+            km: number;
         };
         /**
          * TurbinePrediction
@@ -1379,7 +1678,47 @@ export interface operations {
             };
         };
     };
+    get_plain_heatmap_api_resource_heatmap_plain_png_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Plain heatmap overlay */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": unknown;
+                };
+            };
+        };
+    };
     get_sites_api_resource_sites_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourceSite"][];
+                };
+            };
+        };
+    };
+    get_plain_sites_api_resource_sites_plain_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1429,6 +1768,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_summary_api_transport_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransportSummary"];
+                };
+            };
+        };
+    };
+    get_network_api_transport_network_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Road network */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
         };

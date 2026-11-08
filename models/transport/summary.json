@@ -1,0 +1,153 @@
+{
+  "generated_at": "2026-11-07T22:48:15.641040Z",
+  "osm_extract_date": "2026-11-06T21:21:21Z",
+  "vehicle": {
+    "description": "Worst case of a 2.4-3 MW onshore turbine: 45-55 m blade, ~4.3 m bottom tower section, 70-90 t nacelle",
+    "length_m": 60.0,
+    "height_m": 4.8,
+    "width_m": 4.5,
+    "gross_t": 120.0
+  },
+  "ports": [
+    {
+      "name": "Port Constanța",
+      "latitude": 44.165,
+      "longitude": 28.645
+    },
+    {
+      "name": "Port Galați",
+      "latitude": 45.433,
+      "longitude": 28.048
+    },
+    {
+      "name": "Port Brăila",
+      "latitude": 45.272,
+      "longitude": 27.98
+    }
+  ],
+  "classes": [
+    "motorway",
+    "trunk",
+    "primary",
+    "secondary",
+    "tertiary"
+  ],
+  "verdicts": [
+    {
+      "code": 0,
+      "label": "Viable: nothing known against it, reachable from a port",
+      "km": 47761.4
+    },
+    {
+      "code": 1,
+      "label": "To check: a bridge, curve, narrow or county road on this stretch",
+      "km": 24638.0
+    },
+    {
+      "code": 2,
+      "label": "Blocked: a signed limit or ban stops the vehicle",
+      "km": 3063.1
+    },
+    {
+      "code": 3,
+      "label": "Isolated: no port reaches it without a blocked road",
+      "km": 2152.5
+    }
+  ],
+  "reasons": [
+    {
+      "bit": 1,
+      "label": "Signed height limit below 4.8 m",
+      "blocking": true,
+      "km": 77.6
+    },
+    {
+      "bit": 2,
+      "label": "Signed width limit below 4.5 m",
+      "blocking": true,
+      "km": 49.4
+    },
+    {
+      "bit": 4,
+      "label": "Signed weight limit below 20 t (weak bridge or road)",
+      "blocking": true,
+      "km": 1468.2
+    },
+    {
+      "bit": 8,
+      "label": "Closed to heavy goods vehicles",
+      "blocking": true,
+      "km": 1544.4
+    },
+    {
+      "bit": 16,
+      "label": "Signed weight limit below 40 t",
+      "blocking": false,
+      "km": 77.5
+    },
+    {
+      "bit": 32,
+      "label": "Bridge with no known load capacity",
+      "blocking": false,
+      "km": 293.7
+    },
+    {
+      "bit": 64,
+      "label": "Tunnel with no known clearance",
+      "blocking": false,
+      "km": 14.1
+    },
+    {
+      "bit": 128,
+      "label": "Tight curve (radius under 40 m)",
+      "blocking": false,
+      "km": 4177.4
+    },
+    {
+      "bit": 256,
+      "label": "Roundabout",
+      "blocking": false,
+      "km": 199.4
+    },
+    {
+      "bit": 512,
+      "label": "County or local road (likely under 7 m wide)",
+      "blocking": false,
+      "km": 24691.3
+    },
+    {
+      "bit": 1024,
+      "label": "Narrow, single-lane or unpaved",
+      "blocking": false,
+      "km": 6510.1
+    },
+    {
+      "bit": 2048,
+      "label": "Signed length limit",
+      "blocking": false,
+      "km": 0.0
+    },
+    {
+      "bit": 4096,
+      "label": "Access only for destination traffic",
+      "blocking": false,
+      "km": 19.1
+    }
+  ],
+  "road_count": 135431,
+  "total_km": 77615.0,
+  "caveats": [
+    "A pre-screening, not a permit: every oversize convoy still needs a special transport authorisation (AST) from CNAIR, which sets the actual route.",
+    "OpenStreetMap rarely tags bridge capacity in Romania. A road with nothing against it may still have a weak bridge; bridges on secondary and county roads are flagged.",
+    "Curves are measured along each road; turns at junctions between two roads are not.",
+    "Temporary closures, roadworks and seasonal heavy-traffic bans are not included.",
+    "Roads smaller than county roads (the last kilometres to a site) are out of scope."
+  ],
+  "sources": [
+    {
+      "name": "OpenStreetMap road network of Romania (Geofabrik extract)",
+      "url": "https://download.geofabrik.de/europe/romania.html",
+      "license": "© OpenStreetMap contributors, ODbL 1.0"
+    }
+  ]
+}

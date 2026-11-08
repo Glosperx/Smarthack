@@ -7,7 +7,8 @@ always produce the same calls.
 For each person in `oncall.json`, in order:
 1. call; if a person answers (`CallResult.answered`), stop;
 2. otherwise (no answer, busy, a machine, unknown, failed) wait `ESCALATION_RETRY_MINUTES`
-   (default 5) and call the same person once more;
+   (default 5) and call the same person once more, unless `CALL_RETRIES_PER_PERSON` is
+   `0`, which makes every person get one call only;
 3. still nothing: move on to the next person straight away.
 
 It also stops early when a call is not placed at all:
@@ -26,6 +27,7 @@ The following can be imported from this module:
 - `Attempt`
 - `EscalationOutcome`
 - `escalate`
+- `retries_per_person`
 - `retry_delay_minutes`
 """
 
@@ -39,11 +41,11 @@ from alerting.caller import CallProvider, CallResult, place_call, wait_for_call
 from alerting.oncall import OnCallPerson
 from alerting.state import StateStore
 
-__all__ = ["Attempt", "EscalationOutcome", "escalate", "retry_delay_minutes"]
+__all__ = ["Attempt", "EscalationOutcome", "escalate", "retries_per_person", "retry_delay_minutes"]
 
 logger = logging.getLogger(__name__)
 
-_RETRIES_PER_PERSON = 1
+_DEFAULT_RETRIES_PER_PERSON = 1
 
 
 @dataclass(frozen=True)
@@ -76,6 +78,23 @@ class EscalationOutcome:
         :returns: True when the escalation stopped because a person answered.
         """
         return self.stopped == "answered"
+
+
+def retries_per_person(env: Mapping[str, str] | None = None) -> int:
+    """
+    How many more times the same person is called after a call nobody answered.
+
+    :param env: Variables to read. Defaults to None, meaning the environment and `.env`.
+
+    :returns: `CALL_RETRIES_PER_PERSON`, or 1 when unset; 0 means one call per person.
+    :raises ValueError: When the value is negative or not a whole number.
+    """
+    env = config.environment() if env is None else env
+    raw = env.get("CALL_RETRIES_PER_PERSON", "").strip()
+    retries = int(raw) if raw else _DEFAULT_RETRIES_PER_PERSON
+    if retries < 0:
+        raise ValueError("CALL_RETRIES_PER_PERSON must not be negative")
+    return retries
 
 
 def retry_delay_minutes(env: Mapping[str, str] | None = None) -> float:
@@ -122,9 +141,10 @@ def escalate(
     env = config.environment() if env is None else env
     store = StateStore() if store is None else store
     delay_seconds = retry_delay_minutes(env) * 60
+    retries = retries_per_person(env)
     attempts: list[Attempt] = []
     for person in people:
-        for try_number in range(1, _RETRIES_PER_PERSON + 2):
+        for try_number in range(1, retries + 2):
             if try_number > 1:
                 logger.info("%s did not answer; calling again in %.0f s", person.id, delay_seconds)
                 sleep(delay_seconds)

@@ -61,6 +61,22 @@ monitoring = [
     "langfuse==4.18.0",
 ]
 all  = ["smarthack[wind,resource,monitoring]"]
+# The oversize transport network: OpenStreetMap .pbf reading.
+transport = [
+    "numpy==2.5.4",
+    "osmium==4.3.2",
+]
+# The local data lake watcher: folder events (FSEvents, ReadDirectoryChangesW, inotify).
+lake = [
+    "watchdog==6.0.0",
+]
+# Real phone calls and emails to on-call: the alerting module in experiments/alerting.
+calls = [
+    "jinja2==3.1.6",
+    "requests==2.34.2",
+    "twilio==9.13.0",
+]
+all  = ["smarthack[wind,resource,transport,lake,calls]"]
 
 [tool.setuptools.dynamic]
 version = { attr = "smarthack.__version__" }
@@ -110,6 +126,9 @@ module = [
     "lightgbm.*",
     "numpy.*",
     "opentelemetry.*",
+    "alerting.*",
+    "osmium",
+    "osmium.*",
     "pandas.*",
     "requests.*",
     "sklearn.*",
