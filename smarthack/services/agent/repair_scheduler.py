@@ -22,6 +22,7 @@ The following can be imported from this module:
 - `MAX_HORIZON_DAYS`
 - `RepairRequest`
 - `RepairSlot`
+- `fill_wind`
 - `schedule_repairs`
 """
 
@@ -68,7 +69,7 @@ MAX_HORIZON_DAYS = 16
 _Score = tuple[int, float, float, int]
 
 
-def _fill_wind(daily_wind: Sequence[float | None], horizon: int) -> list[float]:
+def fill_wind(daily_wind: Sequence[float | None], horizon: int) -> list[float]:
     """
     Turn the forecast into one number per day, filling the days it does not cover.
 
@@ -106,7 +107,7 @@ def schedule_repairs(
     if any(r.weight < 0 for r in requests):
         raise ValueError("weights must not be negative")
 
-    wind = _fill_wind(daily_wind, horizon_days)
+    wind = fill_wind(daily_wind, horizon_days)
     known_days = {d for d in range(min(len(daily_wind), horizon_days)) if daily_wind[d] is not None}
 
     ordered = sorted(requests, key=lambda r: (-r.weight, r.failure_day, r.turbine_id))
@@ -147,4 +148,4 @@ def schedule_repairs(
     }
 
 
-__all__ = ["MAX_HORIZON_DAYS", "RepairRequest", "RepairSlot", "schedule_repairs"]
+__all__ = ["MAX_HORIZON_DAYS", "RepairRequest", "RepairSlot", "fill_wind", "schedule_repairs"]

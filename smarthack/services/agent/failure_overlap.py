@@ -5,12 +5,22 @@ Tells which turbines of a park are predicted to fail close together in time. Whe
 do, the agent has to choose which to repair first, and that is the one moment the wind power
 model is worth calling.
 
+ML1 gives a lead time of up to about 10 days, or none for a turbine it expects to last. A lead
+time of `NO_FAILURE_DAYS` or more, or a missing one, is no failure day at all: such a turbine
+cannot overlap with another and is not counted as failing on some made-up day.
+
 The following can be imported from this module:
 - `failure_day`
+- `item_failure_day`
+- `lead_time_days`
 - `overlapping_failures`
 """
 
 from collections.abc import Mapping
+import math
+from typing import Any
+
+from smarthack.constants import NO_FAILURE_DAYS
 
 
 def failure_day(days_to_failure: float) -> int:
@@ -22,6 +32,35 @@ def failure_day(days_to_failure: float) -> int:
     :returns day: 0 for today, 1 for tomorrow, and so on; never negative.
     """
     return max(int(days_to_failure), 0)
+
+
+def lead_time_days(item: Mapping[str, Any]) -> float:
+    """
+    Read a triage item's lead time, with the "no failure predicted" value for a missing one.
+
+    :param item: A triage item; `days_to_failure` may be absent, None or not a number.
+
+    :returns days: The lead time in days, or `NO_FAILURE_DAYS` when there is none.
+    """
+    raw = item.get("days_to_failure")
+    try:
+        days = float(raw) if raw is not None else math.nan
+    except (TypeError, ValueError):
+        days = math.nan
+    return days if math.isfinite(days) else float(NO_FAILURE_DAYS)
+
+
+def item_failure_day(item: Mapping[str, Any]) -> int | None:
+    """
+    Turn a triage item into the day it is due to fail, if ML1 predicts a failure at all.
+
+    :param item: A triage item with `days_to_failure`, which may be absent or None.
+
+    :returns day: The failure day as `failure_day` gives it, or None when the lead time is
+        missing or at least `NO_FAILURE_DAYS`.
+    """
+    days = lead_time_days(item)
+    return None if days >= NO_FAILURE_DAYS else failure_day(days)
 
 
 def overlapping_failures(failure_days: Mapping[int, int], window_days: int) -> set[int]:
@@ -45,4 +84,4 @@ def overlapping_failures(failure_days: Mapping[int, int], window_days: int) -> s
     return overlapping
 
 
-__all__ = ["failure_day", "overlapping_failures"]
+__all__ = ["failure_day", "item_failure_day", "lead_time_days", "overlapping_failures"]

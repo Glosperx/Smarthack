@@ -23,11 +23,16 @@ from pydantic import BaseModel, Field
 
 
 class AlertChannel(str, Enum):
-    """Notification channels selected by the autonomous alerting agent."""
+    """
+    Notification channels selected by the autonomous alerting agent.
 
-    VOICE_CALL = "VOICE_CALL"
-    EMAIL = "EMAIL"
-    NONE = "NONE"
+    The values are the option keys the decision model answers with. `VOICE_CALL` sends the call
+    and the email: a call alone leaves the crew nothing written to act from.
+    """
+
+    VOICE_CALL = "email_si_apel"
+    EMAIL = "doar_email"
+    NONE = "nimic"
 
 
 class CrewStatus(str, Enum):
@@ -120,7 +125,12 @@ class DispatchDecision(BaseModel):
     park_id: str = Field(description="Wind park identifier.")
     health_status: str = Field(description="Health status evaluated by maintenance model.")
     priority_rank: int = Field(description="Dispatch priority rank within the park (1 = highest).")
-    alert_channel: AlertChannel = Field(description="Channel selected: VOICE_CALL, EMAIL, or NONE.")
+    alert_channel: AlertChannel = Field(
+        description=(
+            "Channel selected: email_si_apel (call and email), doar_email (email only), "
+            "or nimic (no alert)."
+        )
+    )
     assigned_crew_id: str | None = Field(
         default=None, description="Crew assigned to this turbine, or None if deferred."
     )

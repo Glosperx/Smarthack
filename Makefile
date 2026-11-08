@@ -8,7 +8,7 @@ UVICORN := $(if $(BIN),$(BIN)/uvicorn,uvicorn)
 PYTEST  := $(if $(BIN),$(BIN)/pytest,pytest)
 
 .DEFAULT_GOAL := help
-.PHONY: help install hooks format lint test test-fast cov docs docs-serve docker-build clean dev dev-servers dev-api dev-web types build serve check test-db predict worker forecast forecast-worker lake-watch lake-put lake-sample resource transport up
+.PHONY: help decision-server install hooks format lint test test-fast cov docs docs-serve docker-build clean dev dev-servers dev-api dev-web types build serve check test-db predict worker forecast forecast-worker lake-watch lake-put lake-sample resource transport up
 
 help:                       # list the targets
 	@grep -E '^[a-z-]+:.*# ' $(MAKEFILE_LIST) | sed -E 's/:[^#]*# /\t/'
@@ -28,6 +28,8 @@ forecast:                  # refresh the 7-day park wind forecast once now
 forecast-worker:           # keep refreshing the park wind forecast twice a day
 	$(PYTHON) -m smarthack.jobs.wind_forecast_job --every $(ARGS)
 
+decision-server:           # serve the local decision model (Jeffan, MPS) on 127.0.0.1:8765; needs ~9 GB of memory
+	cd experiments/decision_model && uv run python -I -m decision_model.server
 lake-watch:                # run the lake handlers on every new file in data/lake/; ARGS=--polling in Docker
 	$(PYTHON) -m smarthack.jobs.lake_job watch $(ARGS)
 
