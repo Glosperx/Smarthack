@@ -9,7 +9,7 @@ Usage (from anywhere):
 
 Steps, in order:
     1. `.env` exists (copied from `.env.example` when missing).
-    2. Python dependencies are importable; `pip install -e ".[wind]"` runs when they are not.
+    2. Python dependencies are importable; `pip install -e ".[wind,lake]"` runs when they are not.
     3. `frontend/node_modules` exists; `npm install` runs when it does not.
     4. Flyway applies pending migrations (needs `db/flyway.conf` and FLYWAY_PASSWORD in the
        environment or in `.env`). Skipped with a note when Flyway is not configured.
@@ -18,6 +18,7 @@ Steps, in order:
          web        Vite on :5173, proxying /api to the API
          maintenance  turbine health predictions (runs at start, then on its schedule)
          forecast   7-day park wind forecast, replaced twice a day (runs at start too)
+         lake       local data lake watcher: logs every new file dropped in data/lake/raw/
 
 Ctrl+C stops everything. If the API or the web server dies, the rest is stopped too.
 Only the standard library is used, so this runs before anything is installed.
@@ -43,10 +44,20 @@ COLORS = {
     "web": "35",
     "maintenance": "33",
     "forecast": "32",
+    "lake": "34",
 }
 
 #: Modules the backend cannot start without; a missing one triggers the pip install.
-REQUIRED_MODULES = ("fastapi", "uvicorn", "httpx", "dotenv", "joblib", "catboost", "pandas")
+REQUIRED_MODULES = (
+    "fastapi",
+    "uvicorn",
+    "httpx",
+    "dotenv",
+    "joblib",
+    "catboost",
+    "pandas",
+    "watchdog",
+)
 
 IS_WINDOWS = os.name == "nt"
 _print_lock = threading.Lock()
@@ -137,15 +148,15 @@ def ensure_env_file() -> None:
 
 def ensure_python_deps(python: str) -> None:
     """
-    Install the backend with its `wind` extra when a required module cannot be found.
+    Install the backend with its `wind` and `lake` extras when a required module is missing.
 
     :param python: Interpreter whose environment is checked and installed into.
     """
     probe = "import importlib.util as u,sys;sys.exit(any(u.find_spec(m) is None for m in %r))"
     missing = subprocess.run([python, "-c", probe % (REQUIRED_MODULES,)]).returncode != 0
     if missing:
-        log("setup", "installing Python dependencies (pip install -e .[wind]) ...")
-        code = run_step("setup", [python, "-m", "pip", "install", "-e", ".[wind]"])
+        log("setup", "installing Python dependencies (pip install -e .[wind,lake]) ...")
+        code = run_step("setup", [python, "-m", "pip", "install", "-e", ".[wind,lake]"])
         if code != 0:
             sys.exit("pip install failed; fix the error above and rerun")
     else:
@@ -314,6 +325,7 @@ def main() -> int:
         job = [python, "-m"]
         procs.append(Managed("maintenance", job + ["smarthack.jobs.maintenance_job", "--every"], ROOT, env))
         procs.append(Managed("forecast", job + ["smarthack.jobs.wind_forecast_job", "--every"], ROOT, env))
+        procs.append(Managed("lake", job + ["smarthack.jobs.lake_job", "watch"], ROOT, env))
 
     web_url = f"http://localhost:{args.port}" if args.prod else "http://localhost:5173"
     log("setup", f"app: {web_url}   api docs: http://localhost:{args.port}/api/docs   (Ctrl+C stops all)")

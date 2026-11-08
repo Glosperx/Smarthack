@@ -22,6 +22,8 @@ nav:
   - Architecture: architecture.md
   - Wind Forecasting: wind_walkthrough.md
   - Hill Wind Site Finder: wind_resource.md
+  - Oversize Transport: transport.md
+  - Local Data Lake: lake.md
   - Testing: testing.md
   - Contributing: contributing.md
   - Serving: serving.md

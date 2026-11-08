@@ -8,7 +8,7 @@ UVICORN := $(if $(BIN),$(BIN)/uvicorn,uvicorn)
 PYTEST  := $(if $(BIN),$(BIN)/pytest,pytest)
 
 .DEFAULT_GOAL := help
-.PHONY: help install hooks format lint test test-fast cov docs docs-serve docker-build clean dev dev-servers dev-api dev-web types build serve check test-db predict worker forecast forecast-worker resource up
+.PHONY: help install hooks format lint test test-fast cov docs docs-serve docker-build clean dev dev-servers dev-api dev-web types build serve check test-db predict worker forecast forecast-worker lake-watch lake-put resource transport up
 
 help:                       # list the targets
 	@grep -E '^[a-z-]+:.*# ' $(MAKEFILE_LIST) | sed -E 's/:[^#]*# /\t/'
@@ -28,6 +28,12 @@ forecast:                  # refresh the 7-day park wind forecast once now
 forecast-worker:           # keep refreshing the park wind forecast twice a day
 	$(PYTHON) -m smarthack.jobs.wind_forecast_job --every $(ARGS)
 
+lake-watch:                # run the lake handlers on every new file in data/lake/; ARGS=--polling in Docker
+	$(PYTHON) -m smarthack.jobs.lake_job watch $(ARGS)
+
+lake-put:                  # upload FILE=path/to/file.csv into the raw bucket atomically
+	$(PYTHON) -m smarthack.jobs.lake_job put "$(FILE)" $(ARGS)
+
 test-agent:                # run autonomous LangGraph agent dispatch test with live logs
 	$(PYTHON) scripts/test_agent.py $(ARGS)
 
@@ -36,6 +42,9 @@ resource:                  # build the hill wind atlas (heatmap, sites, backtest
 
 up:                        # ONE command: setup checks, migrations, then API + web + all background jobs
 	$(PYTHON) scripts/run_all.py $(ARGS)
+
+transport:                 # build the oversize transport road network (first run downloads ~330 MB of OSM)
+	$(PYTHON) scripts/build_transport.py $(ARGS)
 
 install:                    # editable install with backend dev extras and frontend npm dependencies
 	@if [ ! -d "$(VENV)" ]; then python3 -m venv $(VENV); fi

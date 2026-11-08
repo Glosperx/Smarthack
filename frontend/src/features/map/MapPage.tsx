@@ -9,6 +9,9 @@ import { MaintenanceCountdown } from './MaintenanceCountdown';
 import { useResourceSites, useResourceSummary } from '../resource/api';
 import { WindResourceLayer } from '../resource/WindResourceLayer';
 import { WindResourcePanel } from '../resource/WindResourcePanel';
+import { VERDICT, useTransportNetwork, useTransportSummary } from '../transport/api';
+import { TransportLayer } from '../transport/TransportLayer';
+import { TransportPanel } from '../transport/TransportPanel';
 
 /**
  * Top-level Wind Park Map screen.
@@ -20,6 +23,20 @@ export function MapPage() {
   const [focusedSite, setFocusedSite] = useState<number | null>(null);
   const resourceSummary = useResourceSummary(resourceOn);
   const resourceSites = useResourceSites(resourceOn);
+  const [transportOn, setTransportOn] = useState(false);
+  const [verdictsShown, setVerdictsShown] = useState<Set<number>>(
+    () => new Set([VERDICT.viable, VERDICT.check, VERDICT.blocked, VERDICT.isolated])
+  );
+  const [showCounty, setShowCounty] = useState(true);
+  const transportSummary = useTransportSummary(transportOn);
+  const transportNetwork = useTransportNetwork(transportOn);
+  const toggleVerdict = (code: number) =>
+    setVerdictsShown((prev) => {
+      const next = new Set(prev);
+      if (next.has(code)) next.delete(code);
+      else next.add(code);
+      return next;
+    });
 
   const selectedPark = parks.find((p) => p.id === selectedId) || null;
 
@@ -43,6 +60,19 @@ export function MapPage() {
         onFocusSite={setFocusedSite}
       />
 
+      {/* Bottom Right Oversize Transport Network */}
+      <TransportPanel
+        enabled={transportOn}
+        onToggle={() => setTransportOn((v) => !v)}
+        summary={transportSummary.data}
+        isLoading={transportSummary.isLoading || transportNetwork.isLoading}
+        error={transportSummary.error ?? transportNetwork.error}
+        visible={verdictsShown}
+        onToggleVerdict={toggleVerdict}
+        showCounty={showCounty}
+        onToggleCounty={() => setShowCounty((v) => !v)}
+      />
+
       {/* Main Map View */}
       <main className="w-full h-full">
         <ParkMap
@@ -56,6 +86,14 @@ export function MapPage() {
               summary={resourceSummary.data}
               sites={resourceSites.data ?? []}
               focusedRank={focusedSite}
+            />
+          )}
+          {transportOn && transportSummary.data && transportNetwork.data && (
+            <TransportLayer
+              network={transportNetwork.data}
+              summary={transportSummary.data}
+              visible={verdictsShown}
+              showCounty={showCounty}
             />
           )}
         </ParkMap>

@@ -7,6 +7,16 @@ and [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Local data lake (`docs/lake.md`): S3 buckets simulated as folders under `LAKE_DIR`
+  (`data/lake/`), with atomic uploads (`make lake-put`) and a watcher (`make lake-watch`, also
+  started by `make up`) that hands each new CSV file in `raw/` to a Lambda-shaped handler.
+  The handler logs the file and its first rows; unreadable files go to `failed/`. New `lake`
+  extra (`watchdog`) and `LAKE_DIR`.
+- Oversize transport network (`docs/transport.md`): every major road of Romania coloured for a
+  2.4-3 MW turbine convoy (60 m, 4.8 m high, 4.5 m wide, 120 t) from OpenStreetMap limits and
+  curve geometry, with reachability from the ports of Constanța, Galați and Brăila.
+  `make transport` builds `models/transport/`; served by `/api/transport/*` and shown by the
+  **Oversize transport** panel on the map.
 - Hill wind site finder (`docs/wind_resource.md`): forecast mean wind at 100 m for the next two
   full years on Romania's 200-800 m hills, from NASA POWER (backtested method choice and P10-P90
   band), Global Wind Atlas terrain detail and Copernicus DEM. `make resource` builds

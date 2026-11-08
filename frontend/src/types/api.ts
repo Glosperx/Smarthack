@@ -76,6 +76,122 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dispatch/daily-sweep": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run Daily Sweep
+         * @description Trigger the daily predictive maintenance sweep and autonomous crew dispatching.
+         *
+         *     :param park_id: Optional wind park identifier to restrict the sweep.
+         *
+         *     :returns report: Comprehensive fleet sweep report with decisions and notification counts.
+         */
+        post: operations["run_daily_sweep_api_dispatch_daily_sweep_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dispatch/crews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Crews
+         * @description Retrieve maintenance crews with optional wind park filtering.
+         *
+         *     :param park_id: Optional wind park identifier.
+         *
+         *     :returns crews: List of matching MaintenanceCrew records.
+         */
+        get: operations["list_crews_api_dispatch_crews_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dispatch/simulate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Simulate Scenario
+         * @description Run an interactive simulation with injected turbine fault scenarios and crew capacities.
+         *
+         *     :param payload: Simulation parameters including park_id, injected scenarios, and crew counts.
+         *
+         *     :returns result: ParkSweepResult detailing decisions and whether power model was invoked.
+         */
+        post: operations["simulate_scenario_api_dispatch_simulate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dispatch/notifications/voice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Voice Notifications
+         * @description Retrieve the audit log of all emergency text-to-speech voice calls dispatched.
+         *
+         *     :returns calls: List of completed voice call records.
+         */
+        get: operations["get_voice_notifications_api_dispatch_notifications_voice_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dispatch/notifications/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Email Notifications
+         * @description Retrieve the audit log of all maintenance work order tickets dispatched via email.
+         *
+         *     :returns tickets: List of delivered email ticket records.
+         */
+        get: operations["get_email_notifications_api_dispatch_notifications_email_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/parks": {
         parameters: {
             query?: never;
@@ -128,10 +244,226 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/resource/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Summary
+         * @description Return the atlas method, backtest scores, legend, bounds and data sources.
+         *
+         *     :returns summary: The atlas summary.
+         *     :raises HTTPException: 503 when the atlas has not been built.
+         */
+        get: operations["get_summary_api_resource_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/resource/heatmap.png": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Heatmap
+         * @description Return the forecast wind heatmap of hill terrain as a transparent PNG.
+         *
+         *     Rows are spaced in Web Mercator; place it with the bounds from `/summary`.
+         *
+         *     :returns image: The PNG overlay.
+         *     :raises HTTPException: 503 when the atlas has not been built.
+         */
+        get: operations["get_heatmap_api_resource_heatmap_png_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/resource/sites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Sites
+         * @description Return the proposed wind park sites, best first.
+         *
+         *     :returns sites: Candidate sites with forecast wind and terrain.
+         *     :raises HTTPException: 503 when the atlas has not been built.
+         */
+        get: operations["get_sites_api_resource_sites_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/resource/point": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Point
+         * @description Return forecast wind and terrain for the cell containing a point.
+         *
+         *     :param lat: Latitude.
+         *     :param lon: Longitude.
+         *
+         *     :returns point: Values for the cell and a plain-language reading.
+         *     :raises HTTPException: 503 when the atlas has not been built.
+         */
+        get: operations["get_point_api_resource_point_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/transport/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Summary
+         * @description Return the vehicle, ports, kilometres per verdict and reason, caveats and sources.
+         *
+         *     :returns summary: The network summary.
+         *     :raises HTTPException: 503 when the network has not been built.
+         */
+        get: operations["get_summary_api_transport_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/transport/network": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Network
+         * @description Return every judged road as compact JSON (layout in `transport_service`).
+         *
+         *     The file is stored gzipped and sent with `Content-Encoding: gzip`, which the browser
+         *     undoes on its own.
+         *
+         *     :returns file: The network.
+         *     :raises HTTPException: 503 when the network has not been built.
+         */
+        get: operations["get_network_api_transport_network_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AlertChannel
+         * @description Notification channels selected by the autonomous alerting agent.
+         * @enum {string}
+         */
+        AlertChannel: "VOICE_CALL" | "EMAIL" | "NONE";
+        /**
+         * CrewStatus
+         * @description Operational status of a wind park maintenance crew.
+         * @enum {string}
+         */
+        CrewStatus: "AVAILABLE" | "DISPATCHED" | "OFF_SHIFT";
+        /**
+         * DispatchDecision
+         * @description Autonomous dispatch and alerting decision determined for a single turbine.
+         *
+         *     Specifies the assigned crew, notification modality, priority ranking, and rationale.
+         */
+        DispatchDecision: {
+            /**
+             * Turbine Id
+             * @description Turbine asset identifier.
+             */
+            turbine_id: number;
+            /**
+             * Park Id
+             * @description Wind park identifier.
+             */
+            park_id: string;
+            /**
+             * Health Status
+             * @description Health status evaluated by maintenance model.
+             */
+            health_status: string;
+            /**
+             * Priority Rank
+             * @description Dispatch priority rank within the park (1 = highest).
+             */
+            priority_rank: number;
+            /** @description Channel selected: VOICE_CALL, EMAIL, or NONE. */
+            alert_channel: components["schemas"]["AlertChannel"];
+            /**
+             * Assigned Crew Id
+             * @description Crew assigned to this turbine, or None if deferred.
+             */
+            assigned_crew_id?: string | null;
+            /**
+             * Assigned Crew Name
+             * @description Name of the assigned crew lead.
+             */
+            assigned_crew_name?: string | null;
+            /**
+             * Notification Sent
+             * @description Whether the notification was successfully triggered.
+             * @default false
+             */
+            notification_sent: boolean;
+            /**
+             * Notification Message
+             * @description The exact alert text sent to the crew.
+             * @default
+             */
+            notification_message: string;
+            /**
+             * Decision Reason
+             * @description Explanatory rationale for the scheduling and alerting decision.
+             * @default
+             */
+            decision_reason: string;
+        };
         /**
          * ExampleResult
          * @description Result model for the example query endpoint.
@@ -150,10 +482,91 @@ export interface components {
              */
             items?: string[];
         };
+        /**
+         * FleetSweepReport
+         * @description Global report across all wind parks for the autonomous daily sweep.
+         */
+        FleetSweepReport: {
+            /**
+             * Timestamp
+             * @description ISO timestamp of the sweep execution.
+             */
+            timestamp: string;
+            /**
+             * Total Turbines Scanned
+             * @description Total turbines assessed across all parks.
+             */
+            total_turbines_scanned: number;
+            /**
+             * Total Faults Detected
+             * @description Total turbines requiring intervention.
+             */
+            total_faults_detected: number;
+            /**
+             * Critical Alerts Count
+             * @description Total emergency TTS voice calls triggered.
+             */
+            critical_alerts_count: number;
+            /**
+             * Warning Alerts Count
+             * @description Total warning email tickets dispatched.
+             */
+            warning_alerts_count: number;
+            /**
+             * Park Results
+             * @description Detailed results indexed by park identifier.
+             */
+            park_results?: {
+                [key: string]: components["schemas"]["ParkSweepResult"];
+            };
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /**
+         * MaintenanceCrew
+         * @description Field maintenance crew dedicated to a specific wind park.
+         *
+         *     Maintains crew contact information, availability status, and component specialties.
+         */
+        MaintenanceCrew: {
+            /**
+             * Crew Id
+             * @description Unique crew identifier.
+             */
+            crew_id: string;
+            /**
+             * Crew Name
+             * @description Designation or name of the crew lead.
+             */
+            crew_name: string;
+            /**
+             * Park Id
+             * @description Wind park identifier this crew is dedicated to.
+             */
+            park_id: string;
+            /**
+             * Contact Phone
+             * @description Direct phone number for text-to-speech voice calls.
+             */
+            contact_phone: string;
+            /**
+             * Contact Email
+             * @description Email address for work order tickets.
+             */
+            contact_email: string;
+            /**
+             * @description Current availability.
+             * @default AVAILABLE
+             */
+            status: components["schemas"]["CrewStatus"];
+            /**
+             * Specialties
+             * @description Technical skills (e.g. Mechanical, Electrical, Hydraulic).
+             */
+            specialties?: string[];
         };
         /**
          * Park
@@ -182,6 +595,47 @@ export interface components {
             longitude: number;
         };
         /**
+         * ParkSweepResult
+         * @description Operational summary of the daily sweep and triage for a single wind park.
+         */
+        ParkSweepResult: {
+            /**
+             * Park Id
+             * @description Wind park identifier.
+             */
+            park_id: string;
+            /**
+             * Turbines Scanned
+             * @description Total turbines evaluated in this park.
+             */
+            turbines_scanned: number;
+            /**
+             * Turbines Needing Repair
+             * @description Number of turbines with detected issues.
+             */
+            turbines_needing_repair: number;
+            /**
+             * Crews Available
+             * @description Number of active crews available in this park.
+             */
+            crews_available: number;
+            /**
+             * Conflict Detected
+             * @description True if repair candidates exceeded available crews in this park.
+             */
+            conflict_detected: boolean;
+            /**
+             * Power Model Invoked
+             * @description True if the wind power model was called to resolve competing candidates.
+             */
+            power_model_invoked: boolean;
+            /**
+             * Decisions
+             * @description List of dispatch and alerting decisions for this park.
+             */
+            decisions?: components["schemas"]["DispatchDecision"][];
+        };
+        /**
          * ParkTurbines
          * @description Collection of turbines and today's diagnostics for a specific wind park.
          */
@@ -202,69 +656,6 @@ export interface components {
              * @description Turbines registered under this park.
              */
             turbines?: components["schemas"]["TurbineToday"][];
-        };
-        /**
-         * TurbinePrediction
-         * @description Single diagnostic maintenance prediction record for a wind turbine.
-         */
-        TurbinePrediction: {
-            /**
-             * Entry Id
-             * @description Unique prediction database sequence identifier.
-             */
-            entry_id: number;
-            /**
-             * Predicted Date
-             * Format: date
-             * @description Target forecast date of the prediction.
-             */
-            predicted_date: string;
-            /**
-             * Daily Fault Probability
-             * @description Probability of failure within 24 hours.
-             */
-            daily_fault_probability: number;
-            /**
-             * Cumulative Fault Probability
-             * @description Multi-day aggregated probability of failure.
-             */
-            cumulative_fault_probability: number;
-            /**
-             * Status
-             * @description Operational health status code or label.
-             */
-            status: string;
-            /**
-             * Suspected Subsystem
-             * @description Primary turbine subsystem at risk.
-             */
-            suspected_subsystem: string;
-        };
-        /**
-         * TurbineToday
-         * @description Turbine operational status with today's maintenance prediction if available.
-         */
-        TurbineToday: {
-            /**
-             * Id
-             * @description Unique numeric turbine identifier.
-             */
-            id: number;
-            /** @description Diagnostic prediction for today, or None if unavailable. */
-            prediction?: components["schemas"]["TurbinePrediction"] | null;
-        };
-        /** ValidationError */
-        ValidationError: {
-            /** Location */
-            loc: (string | number)[];
-            /** Message */
-            msg: string;
-            /** Error Type */
-            type: string;
-            /** Input */
-            input?: unknown;
-            /** Context */
-            ctx?: Record<string, never>;
         };
         /**
          * ResourceBacktestRow
@@ -346,9 +737,9 @@ export interface components {
             /**
              * Unit
              * @description Unit of the legend values.
-             * @default "m/s"
+             * @default m/s
              */
-            unit?: string;
+            unit: string;
         };
         /**
          * ResourcePoint
@@ -548,10 +939,7 @@ export interface components {
              * @description Period of the fine-scale reference atlas.
              */
             reference_years: number[];
-            /**
-             * bounds
-             * @description Extent of the heatmap image.
-             */
+            /** @description Extent of the heatmap image. */
             bounds: components["schemas"]["ResourceBounds"];
             /**
              * Elevation Band M
@@ -563,10 +951,7 @@ export interface components {
              * @description Steepest mean slope a proposed site may have.
              */
             max_slope_deg: number;
-            /**
-             * legend
-             * @description Colour scale of the heatmap.
-             */
+            /** @description Colour scale of the heatmap. */
             legend: components["schemas"]["ResourceLegend"];
             /**
              * Selected Estimator
@@ -633,6 +1018,272 @@ export interface components {
              * @description When the atlas was built (ISO 8601, UTC).
              */
             generated_at: string;
+        };
+        /**
+         * SimulateDispatchRequest
+         * @description Request model for triggering a simulated dispatch scenario.
+         */
+        SimulateDispatchRequest: {
+            /**
+             * Park Id
+             * @description Wind park identifier.
+             * @default wind_farm_a
+             */
+            park_id: string;
+            /**
+             * Scenarios
+             * @description Mapping of turbine asset IDs to simulated failure scenario names.
+             */
+            scenarios?: {
+                [key: string]: string;
+            };
+            /**
+             * Active Crew Count
+             * @description Optional override for active available crews in that park.
+             */
+            active_crew_count?: number | null;
+        };
+        /**
+         * TransportPort
+         * @description An entry point of turbine components.
+         */
+        TransportPort: {
+            /**
+             * Name
+             * @description Port name.
+             */
+            name: string;
+            /**
+             * Latitude
+             * @description Latitude, WGS84.
+             */
+            latitude: number;
+            /**
+             * Longitude
+             * @description Longitude, WGS84.
+             */
+            longitude: number;
+        };
+        /**
+         * TransportReasonStat
+         * @description Kilometres of road raising one reason.
+         */
+        TransportReasonStat: {
+            /**
+             * Bit
+             * @description Reason bit used in the network file.
+             */
+            bit: number;
+            /**
+             * Label
+             * @description What the reason means.
+             */
+            label: string;
+            /**
+             * Blocking
+             * @description Whether the reason blocks the road on its own.
+             */
+            blocking: boolean;
+            /**
+             * Km
+             * @description Road length raising this reason, km.
+             */
+            km: number;
+        };
+        /**
+         * TransportSource
+         * @description A dataset the network is built from.
+         */
+        TransportSource: {
+            /**
+             * Name
+             * @description Dataset name.
+             */
+            name: string;
+            /**
+             * Url
+             * @description Where it comes from.
+             */
+            url: string;
+            /**
+             * License
+             * @description Licence and attribution.
+             */
+            license: string;
+        };
+        /**
+         * TransportSummary
+         * @description What the built network is, and how its kilometres split.
+         */
+        TransportSummary: {
+            /**
+             * Generated At
+             * Format: date-time
+             * @description When the network was built, UTC.
+             */
+            generated_at: string;
+            /**
+             * Osm Extract Date
+             * @description Date of the OSM extract used.
+             */
+            osm_extract_date: string | null;
+            /** @description The reference vehicle. */
+            vehicle: components["schemas"]["TransportVehicle"];
+            /**
+             * Ports
+             * @description Entry ports the reachability starts from.
+             */
+            ports: components["schemas"]["TransportPort"][];
+            /**
+             * Classes
+             * @description OSM road classes, index = class code.
+             */
+            classes: string[];
+            /**
+             * Verdicts
+             * @description Kilometres per verdict.
+             */
+            verdicts: components["schemas"]["TransportVerdictStat"][];
+            /**
+             * Reasons
+             * @description Kilometres per reason.
+             */
+            reasons: components["schemas"]["TransportReasonStat"][];
+            /**
+             * Road Count
+             * @description Number of drawn road pieces.
+             */
+            road_count: number;
+            /**
+             * Total Km
+             * @description Total length of the kept roads, km.
+             */
+            total_km: number;
+            /**
+             * Caveats
+             * @description What the network cannot tell.
+             */
+            caveats: string[];
+            /**
+             * Sources
+             * @description Datasets used.
+             */
+            sources: components["schemas"]["TransportSource"][];
+        };
+        /**
+         * TransportVehicle
+         * @description The reference oversize load every road is judged for.
+         */
+        TransportVehicle: {
+            /**
+             * Description
+             * @description What the profile represents.
+             */
+            description: string;
+            /**
+             * Length M
+             * @description Vehicle length with the blade, metres.
+             */
+            length_m: number;
+            /**
+             * Height M
+             * @description Loaded height, metres.
+             */
+            height_m: number;
+            /**
+             * Width M
+             * @description Loaded width, metres.
+             */
+            width_m: number;
+            /**
+             * Gross T
+             * @description Gross weight of the heaviest transport, tonnes.
+             */
+            gross_t: number;
+        };
+        /**
+         * TransportVerdictStat
+         * @description Kilometres of road under one verdict.
+         */
+        TransportVerdictStat: {
+            /**
+             * Code
+             * @description Verdict code used in the network file.
+             */
+            code: number;
+            /**
+             * Label
+             * @description What the verdict means.
+             */
+            label: string;
+            /**
+             * Km
+             * @description Road length under this verdict, km.
+             */
+            km: number;
+        };
+        /**
+         * TurbinePrediction
+         * @description Single diagnostic maintenance prediction record for a wind turbine.
+         */
+        TurbinePrediction: {
+            /**
+             * Entry Id
+             * @description Unique prediction database sequence identifier.
+             */
+            entry_id: number;
+            /**
+             * Predicted Date
+             * Format: date
+             * @description Target forecast date of the prediction.
+             */
+            predicted_date: string;
+            /**
+             * Daily Fault Probability
+             * @description Probability of failure within 24 hours.
+             */
+            daily_fault_probability: number;
+            /**
+             * Cumulative Fault Probability
+             * @description Multi-day aggregated probability of failure.
+             */
+            cumulative_fault_probability: number;
+            /**
+             * Status
+             * @description Operational health status code or label.
+             */
+            status: string;
+            /**
+             * Suspected Subsystem
+             * @description Primary turbine subsystem at risk.
+             */
+            suspected_subsystem: string;
+        };
+        /**
+         * TurbineToday
+         * @description Turbine operational status with today's maintenance prediction if available.
+         */
+        TurbineToday: {
+            /**
+             * Id
+             * @description Unique numeric turbine identifier.
+             */
+            id: number;
+            /** @description Diagnostic prediction for today, or None if unavailable. */
+            prediction?: components["schemas"]["TurbinePrediction"] | null;
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
         };
     };
     responses: never;
@@ -718,6 +1369,145 @@ export interface operations {
             };
         };
     };
+    run_daily_sweep_api_dispatch_daily_sweep_post: {
+        parameters: {
+            query?: {
+                park_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FleetSweepReport"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_crews_api_dispatch_crews_get: {
+        parameters: {
+            query?: {
+                park_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaintenanceCrew"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    simulate_scenario_api_dispatch_simulate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SimulateDispatchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParkSweepResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_voice_notifications_api_dispatch_notifications_voice_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+        };
+    };
+    get_email_notifications_api_dispatch_notifications_email_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+        };
+    };
     get_parks_api_parks_get: {
         parameters: {
             query?: never;
@@ -765,6 +1555,140 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_summary_api_resource_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourceSummary"];
+                };
+            };
+        };
+    };
+    get_heatmap_api_resource_heatmap_png_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Heatmap overlay */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": unknown;
+                };
+            };
+        };
+    };
+    get_sites_api_resource_sites_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourceSite"][];
+                };
+            };
+        };
+    };
+    get_point_api_resource_point_get: {
+        parameters: {
+            query: {
+                /** @description Latitude */
+                lat: number;
+                /** @description Longitude */
+                lon: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourcePoint"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_summary_api_transport_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransportSummary"];
+                };
+            };
+        };
+    };
+    get_network_api_transport_network_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Road network */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
         };

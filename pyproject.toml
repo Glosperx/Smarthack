@@ -54,7 +54,16 @@ resource = [
     "pillow==13.0.0",
     "tifffile==2026.10.15",
 ]
-all  = ["smarthack[wind,resource]"]
+# The oversize transport network: OpenStreetMap .pbf reading.
+transport = [
+    "numpy==2.5.4",
+    "osmium==4.3.2",
+]
+# The local data lake watcher: folder events (FSEvents, ReadDirectoryChangesW, inotify).
+lake = [
+    "watchdog==6.0.0",
+]
+all  = ["smarthack[wind,resource,transport,lake]"]
 
 [tool.setuptools.dynamic]
 version = { attr = "smarthack.__version__" }
@@ -102,6 +111,8 @@ module = [
     "langgraph.*",
     "lightgbm.*",
     "numpy.*",
+    "osmium",
+    "osmium.*",
     "pandas.*",
     "requests.*",
     "sklearn.*",
