@@ -5,7 +5,6 @@ import { ParkMap } from './ParkMap';
 import { MenuButton } from './MenuButton';
 import { ParkListDrawer } from './ParkListDrawer';
 import { ParkDetailsDrawer } from './ParkDetailsDrawer';
-import { MaintenanceCountdown } from './MaintenanceCountdown';
 import { usePlainSites, useResourceSites, useResourceSummary } from '../resource/api';
 import { WindResourceLayer } from '../resource/WindResourceLayer';
 import { WindResourcePanel } from '../resource/WindResourcePanel';
@@ -45,9 +44,6 @@ export function MapPage() {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-slate-950 font-sans">
-      {/* Top Left Maintenance Prediction Countdown */}
-      <MaintenanceCountdown />
-
       {/* Top Right Hamburger Menu Button */}
       <MenuButton onClick={toggleList} disabled={isLoading} />
 
