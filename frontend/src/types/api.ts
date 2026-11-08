@@ -341,6 +341,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/transport/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Summary
+         * @description Return the vehicle, ports, kilometres per verdict and reason, caveats and sources.
+         *
+         *     :returns summary: The network summary.
+         *     :raises HTTPException: 503 when the network has not been built.
+         */
+        get: operations["get_summary_api_transport_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/transport/network": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Network
+         * @description Return every judged road as compact JSON (layout in `transport_service`).
+         *
+         *     The file is stored gzipped and sent with `Content-Encoding: gzip`, which the browser
+         *     undoes on its own.
+         *
+         *     :returns file: The network.
+         *     :raises HTTPException: 503 when the network has not been built.
+         */
+        get: operations["get_network_api_transport_network_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -577,6 +626,7 @@ export interface components {
             crews_available: number;
             /**
              * Conflict Detected
+             * @description True if repair candidates exceeded available crews in this park.
              * @description True if two or more turbines of this park are predicted to fail in the same interval.
              */
             conflict_detected: boolean;
@@ -1045,6 +1095,257 @@ export interface components {
              * Id
              * @description Unique numeric turbine identifier.
              */
+            generated_at: string;
+        };
+        /**
+         * SimulateDispatchRequest
+         * @description Request model for triggering a simulated dispatch scenario.
+         */
+        SimulateDispatchRequest: {
+            /**
+             * Park Id
+             * @description Wind park identifier.
+             * @default wind_farm_a
+             */
+            park_id: string;
+            /**
+             * Scenarios
+             * @description Mapping of turbine asset IDs to simulated failure scenario names.
+             */
+            scenarios?: {
+                [key: string]: string;
+            };
+            /**
+             * Active Crew Count
+             * @description Optional override for active available crews in that park.
+             */
+            active_crew_count?: number | null;
+        };
+        /**
+         * TransportPort
+         * @description An entry point of turbine components.
+         */
+        TransportPort: {
+            /**
+             * Name
+             * @description Port name.
+             */
+            name: string;
+            /**
+             * Latitude
+             * @description Latitude, WGS84.
+             */
+            latitude: number;
+            /**
+             * Longitude
+             * @description Longitude, WGS84.
+             */
+            longitude: number;
+        };
+        /**
+         * TransportReasonStat
+         * @description Kilometres of road raising one reason.
+         */
+        TransportReasonStat: {
+            /**
+             * Bit
+             * @description Reason bit used in the network file.
+             */
+            bit: number;
+            /**
+             * Label
+             * @description What the reason means.
+             */
+            label: string;
+            /**
+             * Blocking
+             * @description Whether the reason blocks the road on its own.
+             */
+            blocking: boolean;
+            /**
+             * Km
+             * @description Road length raising this reason, km.
+             */
+            km: number;
+        };
+        /**
+         * TransportSource
+         * @description A dataset the network is built from.
+         */
+        TransportSource: {
+            /**
+             * Name
+             * @description Dataset name.
+             */
+            name: string;
+            /**
+             * Url
+             * @description Where it comes from.
+             */
+            url: string;
+            /**
+             * License
+             * @description Licence and attribution.
+             */
+            license: string;
+        };
+        /**
+         * TransportSummary
+         * @description What the built network is, and how its kilometres split.
+         */
+        TransportSummary: {
+            /**
+             * Generated At
+             * Format: date-time
+             * @description When the network was built, UTC.
+             */
+            generated_at: string;
+            /**
+             * Osm Extract Date
+             * @description Date of the OSM extract used.
+             */
+            osm_extract_date: string | null;
+            /** @description The reference vehicle. */
+            vehicle: components["schemas"]["TransportVehicle"];
+            /**
+             * Ports
+             * @description Entry ports the reachability starts from.
+             */
+            ports: components["schemas"]["TransportPort"][];
+            /**
+             * Classes
+             * @description OSM road classes, index = class code.
+             */
+            classes: string[];
+            /**
+             * Verdicts
+             * @description Kilometres per verdict.
+             */
+            verdicts: components["schemas"]["TransportVerdictStat"][];
+            /**
+             * Reasons
+             * @description Kilometres per reason.
+             */
+            reasons: components["schemas"]["TransportReasonStat"][];
+            /**
+             * Road Count
+             * @description Number of drawn road pieces.
+             */
+            road_count: number;
+            /**
+             * Total Km
+             * @description Total length of the kept roads, km.
+             */
+            total_km: number;
+            /**
+             * Caveats
+             * @description What the network cannot tell.
+             */
+            caveats: string[];
+            /**
+             * Sources
+             * @description Datasets used.
+             */
+            sources: components["schemas"]["TransportSource"][];
+        };
+        /**
+         * TransportVehicle
+         * @description The reference oversize load every road is judged for.
+         */
+        TransportVehicle: {
+            /**
+             * Description
+             * @description What the profile represents.
+             */
+            description: string;
+            /**
+             * Length M
+             * @description Vehicle length with the blade, metres.
+             */
+            length_m: number;
+            /**
+             * Height M
+             * @description Loaded height, metres.
+             */
+            height_m: number;
+            /**
+             * Width M
+             * @description Loaded width, metres.
+             */
+            width_m: number;
+            /**
+             * Gross T
+             * @description Gross weight of the heaviest transport, tonnes.
+             */
+            gross_t: number;
+        };
+        /**
+         * TransportVerdictStat
+         * @description Kilometres of road under one verdict.
+         */
+        TransportVerdictStat: {
+            /**
+             * Code
+             * @description Verdict code used in the network file.
+             */
+            code: number;
+            /**
+             * Label
+             * @description What the verdict means.
+             */
+            label: string;
+            /**
+             * Km
+             * @description Road length under this verdict, km.
+             */
+            km: number;
+        };
+        /**
+         * TurbinePrediction
+         * @description Single diagnostic maintenance prediction record for a wind turbine.
+         */
+        TurbinePrediction: {
+            /**
+             * Entry Id
+             * @description Unique prediction database sequence identifier.
+             */
+            entry_id: number;
+            /**
+             * Predicted Date
+             * Format: date
+             * @description Target forecast date of the prediction.
+             */
+            predicted_date: string;
+            /**
+             * Daily Fault Probability
+             * @description Probability of failure within 24 hours.
+             */
+            daily_fault_probability: number;
+            /**
+             * Cumulative Fault Probability
+             * @description Multi-day aggregated probability of failure.
+             */
+            cumulative_fault_probability: number;
+            /**
+             * Status
+             * @description Operational health status code or label.
+             */
+            status: string;
+            /**
+             * Suspected Subsystem
+             * @description Primary turbine subsystem at risk.
+             */
+            suspected_subsystem: string;
+        };
+        /**
+         * TurbineToday
+         * @description Turbine operational status with today's maintenance prediction if available.
+         */
+        TurbineToday: {
+            /**
+             * Id
+             * @description Unique numeric turbine identifier.
+             */
             id: number;
             /** @description Diagnostic prediction for today, or None if unavailable. */
             prediction?: components["schemas"]["TurbinePrediction"] | null;
@@ -1426,6 +1727,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_summary_api_transport_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransportSummary"];
+                };
+            };
+        };
+    };
+    get_network_api_transport_network_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Road network */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
         };
