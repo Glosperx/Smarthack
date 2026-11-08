@@ -63,7 +63,13 @@ transport = [
 lake = [
     "watchdog==6.0.0",
 ]
-all  = ["smarthack[wind,resource,transport,lake]"]
+# Real phone calls and emails to on-call: the alerting module in experiments/alerting.
+calls = [
+    "jinja2==3.1.6",
+    "requests==2.34.2",
+    "twilio==9.13.0",
+]
+all  = ["smarthack[wind,resource,transport,lake,calls]"]
 
 [tool.setuptools.dynamic]
 version = { attr = "smarthack.__version__" }
@@ -111,6 +117,7 @@ module = [
     "langgraph.*",
     "lightgbm.*",
     "numpy.*",
+    "alerting.*",
     "osmium",
     "osmium.*",
     "pandas.*",

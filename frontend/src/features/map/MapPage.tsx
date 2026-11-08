@@ -6,7 +6,7 @@ import { MenuButton } from './MenuButton';
 import { ParkListDrawer } from './ParkListDrawer';
 import { ParkDetailsDrawer } from './ParkDetailsDrawer';
 import { MaintenanceCountdown } from './MaintenanceCountdown';
-import { useResourceSites, useResourceSummary } from '../resource/api';
+import { usePlainSites, useResourceSites, useResourceSummary } from '../resource/api';
 import { WindResourceLayer } from '../resource/WindResourceLayer';
 import { WindResourcePanel } from '../resource/WindResourcePanel';
 import { VERDICT, useTransportNetwork, useTransportSummary } from '../transport/api';
@@ -21,6 +21,9 @@ export function MapPage() {
   const { open, selectedId, toggleList, selectPark, close } = useDrawerFlow();
   const [resourceOn, setResourceOn] = useState(false);
   const [focusedSite, setFocusedSite] = useState<number | null>(null);
+  const [plainOn, setPlainOn] = useState(true);
+  const [focusedPlain, setFocusedPlain] = useState<number | null>(null);
+  const plainSites = usePlainSites(resourceOn);
   const resourceSummary = useResourceSummary(resourceOn);
   const resourceSites = useResourceSites(resourceOn);
   const [transportOn, setTransportOn] = useState(false);
@@ -57,7 +60,18 @@ export function MapPage() {
         isLoading={resourceSummary.isLoading || resourceSites.isLoading}
         error={resourceSummary.error ?? resourceSites.error}
         focusedRank={focusedSite}
-        onFocusSite={setFocusedSite}
+        onFocusSite={(rank) => {
+          setFocusedSite(rank);
+          setFocusedPlain(null);
+        }}
+        plainOn={plainOn}
+        onTogglePlain={() => setPlainOn((v) => !v)}
+        plainSites={plainSites.data ?? []}
+        focusedPlain={focusedPlain}
+        onFocusPlain={(rank) => {
+          setFocusedPlain(rank);
+          setFocusedSite(null);
+        }}
       />
 
       {/* Bottom Right Oversize Transport Network */}
@@ -86,6 +100,9 @@ export function MapPage() {
               summary={resourceSummary.data}
               sites={resourceSites.data ?? []}
               focusedRank={focusedSite}
+              showPlain={plainOn && resourceSummary.data.plain_legend != null}
+              plainSites={plainOn ? (plainSites.data ?? []) : []}
+              focusedPlain={focusedPlain}
             />
           )}
           {transportOn && transportSummary.data && transportNetwork.data && (

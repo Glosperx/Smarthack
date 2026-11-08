@@ -22,6 +22,9 @@ The following can be imported from this module:
 - `NASA_POWER_FIRST_YEAR`
 - `NASA_POWER_PARAMETER`
 - `NASA_POWER_REGIONAL_URL`
+- `PLAIN_ELEVATION_MIN_M`
+- `PLAIN_RAMP`
+- `PLAIN_SITE_COUNT`
 - `SITE_COUNT`
 - `SITE_MIN_SEPARATION_KM`
 - `SITE_MIN_VALID_FRACTION`
@@ -80,6 +83,9 @@ SITE_MIN_VALID_FRACTION: float = 0.6
 SITE_MIN_SEPARATION_KM: float = 20.0
 SITE_COUNT: int = 15
 
+#: How many sites are proposed on the plain.
+PLAIN_SITE_COUNT: int = 10
+
 #: Sequential single-hue ramp (light = less wind, dark = more wind).
 HEATMAP_RAMP: tuple[str, ...] = (
     "#cde2fb",
@@ -91,7 +97,26 @@ HEATMAP_RAMP: tuple[str, ...] = (
     "#0d366b",
 )
 
+#: Lowest elevation counted as land in the plain layer: the DEM is 0 over the Black Sea,
+#: where the wind atlas still has offshore values.
+PLAIN_ELEVATION_MIN_M: float = 2.0
+
+#: Sequential single-hue ramp of the plain layer (below `ELEVATION_MIN_M`). It is drawn on
+#: the same wind scale as the hill ramp, so equal shades mean equal wind in both layers.
+PLAIN_RAMP: tuple[str, ...] = (
+    "#d4f0e2",
+    "#a6e0c3",
+    "#74cda2",
+    "#3fb581",
+    "#1f9566",
+    "#136f4b",
+    "#0a4a32",
+)
+
 __all__ = [
+    "PLAIN_ELEVATION_MIN_M",
+    "PLAIN_RAMP",
+    "PLAIN_SITE_COUNT",
     "BUILDABLE_MAX_SLOPE_DEG",
     "COPERNICUS_DEM_URL",
     "ELEVATION_MAX_M",

@@ -37,6 +37,7 @@ The following can be imported from this module:
 - `DEFAULT_WIND_MODELS_DIR`
 - `DEFAULT_OPEN_METEO_URL`
 - `agent_data_source`
+- `alerting_dir`
 - `app_env`
 - `data_dir`
 - `example_service_url`
@@ -58,6 +59,7 @@ The following can be imported from this module:
 - `supabase_service_key`
 - `supabase_url`
 - `timezone`
+- `voice_calls_enabled`
 - `transport_cache_dir`
 - `transport_network_dir`
 - `wind_data_dir`
@@ -285,6 +287,31 @@ def lake_dir() -> Path:
     return path
 
 
+def alerting_dir() -> Path:
+    """
+    Return the folder of the alerting module, the one that really phones and emails on-call.
+
+    It is a standalone project with its own `.env`, `oncall.json` and allowlist, kept in
+    `experiments/alerting`; the voice client imports it from there when calls are enabled.
+
+    :returns path: `experiments/alerting` under the repository root.
+    """
+    return Path(__file__).resolve().parent.parent / "experiments" / "alerting"
+
+
+def voice_calls_enabled() -> bool:
+    """
+    Tell whether a CRITICAL alert really phones on-call through the alerting module.
+
+    Off by default: the voice client then only records and logs the call, and nobody is
+    phoned. The alerting module has its own gates on top (`DRY_RUN`, `ALLOWED_PHONES`).
+
+    :returns flag: True when `VOICE_CALLS_ENABLED` is `1`, `true`, `yes` or `on`.
+    """
+    value = (os.environ.get("VOICE_CALLS_ENABLED") or "").strip().lower()
+    return value in ("1", "true", "yes", "on")
+
+
 def host() -> str:
     """
     Return the host the server listens on.
@@ -496,6 +523,7 @@ __all__ = [
     "DEFAULT_WIND_MODELS_DIR",
     "DEFAULT_OPEN_METEO_URL",
     "agent_data_source",
+    "alerting_dir",
     "app_env",
     "data_dir",
     "example_service_url",
@@ -517,6 +545,7 @@ __all__ = [
     "supabase_service_key",
     "supabase_url",
     "timezone",
+    "voice_calls_enabled",
     "transport_cache_dir",
     "transport_network_dir",
     "wind_data_dir",

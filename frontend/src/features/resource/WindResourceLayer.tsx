@@ -3,6 +3,7 @@ import { ImageOverlay, Marker, Popup, Tooltip, useMap, useMapEvents } from 'reac
 import L from 'leaflet';
 import {
   HEATMAP_URL,
+  PLAIN_HEATMAP_URL,
   formatChange,
   useResourcePoint,
   type ResourceSite,
@@ -13,16 +14,23 @@ interface WindResourceLayerProps {
   summary: ResourceSummary;
   sites: ResourceSite[];
   focusedRank: number | null;
+  showPlain: boolean;
+  plainSites: ResourceSite[];
+  focusedPlain: number | null;
 }
 
 /**
  * Numbered site pin: white disc with dark ink, readable over both the map and the heatmap.
  */
-function siteIcon(rank: number, focused: boolean) {
+function siteIcon(rank: number, focused: boolean, plain = false) {
   const size = focused ? 34 : 26;
+  // Plain sites are emerald rounded squares, hill sites white discs.
+  const look = plain
+    ? 'rounded-md bg-emerald-500 text-white border-white'
+    : 'rounded-full bg-white text-slate-900 border-slate-900';
   return L.divIcon({
     className: '!bg-transparent !border-none',
-    html: `<div class="flex items-center justify-center rounded-full bg-white text-slate-900 font-bold border-2 border-slate-900 shadow-[0_2px_10px_rgba(15,23,42,0.55)] ${
+    html: `<div class="flex items-center justify-center font-bold border-2 ${look} shadow-[0_2px_10px_rgba(15,23,42,0.55)] ${
       focused ? 'text-sm ring-4 ring-white/60' : 'text-xs'
     } cursor-pointer" style="width:${size}px;height:${size}px">${rank}</div>`,
     iconSize: [size, size],
@@ -105,7 +113,13 @@ function PointPopup({
                       : 'border-slate-300 text-slate-500'
                   }`}
                 >
-                  {data.buildable ? 'Buildable hill' : data.in_band ? 'Too steep' : 'Outside 200–800 m'}
+                  {data.buildable
+                    ? data.in_plain
+                      ? 'Buildable plain'
+                      : 'Buildable hill'
+                    : data.in_band || data.in_plain
+                      ? 'Too steep'
+                      : 'Outside 0–800 m'}
                 </span>
                 {data.elevation_m != null && (
                   <span className="px-1.5 py-0.5 rounded border border-slate-300 text-slate-600">
@@ -137,9 +151,19 @@ function PointPopup({
  * Hill wind atlas overlay: forecast heatmap, numbered candidate sites and click-to-query.
  * Must be rendered inside a react-leaflet MapContainer.
  */
-export function WindResourceLayer({ summary, sites, focusedRank }: WindResourceLayerProps) {
+export function WindResourceLayer({
+  summary,
+  sites,
+  focusedRank,
+  showPlain,
+  plainSites,
+  focusedPlain,
+}: WindResourceLayerProps) {
   const [clicked, setClicked] = useState<{ lat: number; lng: number } | null>(null);
-  const focused = sites.find((s) => s.rank === focusedRank) ?? null;
+  const focused =
+    sites.find((s) => s.rank === focusedRank) ??
+    plainSites.find((s) => s.rank === focusedPlain) ??
+    null;
   const { south, west, north, east } = summary.bounds;
 
   useMapEvents({
@@ -161,23 +185,38 @@ export function WindResourceLayer({ summary, sites, focusedRank }: WindResourceL
         opacity={0.85}
         zIndex={250}
       />
+      {showPlain && (
+        <ImageOverlay
+          url={PLAIN_HEATMAP_URL}
+          bounds={[
+            [south, west],
+            [north, east],
+          ]}
+          opacity={0.85}
+          zIndex={249}
+        />
+      )}
       <FlyToSite site={focused} />
-      {sites.map((site) => (
+      {[
+        ...sites.map((site) => ({ site, plain: false })),
+        ...plainSites.map((site) => ({ site, plain: true })),
+      ].map(({ site, plain }) => (
         <Marker
-          key={site.rank}
+          key={`${plain ? 'plain' : 'hill'}-${site.rank}`}
           position={[site.latitude, site.longitude]}
-          icon={siteIcon(site.rank, site.rank === focusedRank)}
-          zIndexOffset={site.rank === focusedRank ? 1000 : 500 - site.rank}
+          icon={siteIcon(site.rank, site.rank === (plain ? focusedPlain : focusedRank), plain)}
+          zIndexOffset={site.rank === (plain ? focusedPlain : focusedRank) ? 1000 : 500 - site.rank}
         >
           <Tooltip direction="top" offset={[0, -14]} opacity={0.95}>
             <span className="font-sans text-xs font-semibold text-slate-900">
-              #{site.rank} {site.name ?? 'Candidate site'} · {site.wind_p50.toFixed(1)} m/s
+              {plain ? 'Plain ' : ''}#{site.rank} {site.name ?? 'Candidate site'} ·{' '}
+              {site.wind_p50.toFixed(1)} m/s
             </span>
           </Tooltip>
           <Popup>
             <div className="font-sans w-64 space-y-2">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                Candidate site #{site.rank}
+                {plain ? 'Plain' : 'Hill'} candidate site #{site.rank}
               </p>
               <p className="text-sm font-semibold text-slate-900">
                 {site.name ?? `${site.latitude.toFixed(3)}, ${site.longitude.toFixed(3)}`}

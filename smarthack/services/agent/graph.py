@@ -354,6 +354,7 @@ def node_decide_and_dispatch_alerts(state: DispatchAgentState) -> dict[str, Any]
                 park_id=park_id,
                 message=message_body,
                 lead_time_hours=days_to_fail * 24.0,
+                fault_probability=fault_prob,
             )
             dispatched_notifications.append(resp)
             notification_sent = True

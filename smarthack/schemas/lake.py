@@ -90,9 +90,12 @@ class LakeObjectReport(BaseModel):
 
     bucket: str
     key: str
-    status: Literal["logged", "failed", "skipped"]
+    status: Literal["written", "failed", "skipped"]
     rows: int = 0
     columns: int = 0
+    output: str | None = Field(
+        default=None, description="The object the handler wrote, as `s3://bucket/key`."
+    )
     error: str | None = None
 
 

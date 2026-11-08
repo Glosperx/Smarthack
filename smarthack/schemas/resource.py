@@ -79,6 +79,19 @@ class ResourceSummary(BaseModel):
     hill_area_km2: float = Field(description="Area of hill terrain in the elevation band.")
     buildable_area_km2: float = Field(description="Hill area that is also gentle enough.")
     hill_wind_p50_mean: float = Field(description="Mean forecast wind over all hill terrain.")
+    plain_legend: ResourceLegend | None = Field(
+        default=None,
+        description="Colour scale of the plain heatmap (same wind scale as the hill one).",
+    )
+    plain_area_km2: float | None = Field(
+        default=None, description="Area of plain terrain, below the hill band."
+    )
+    plain_buildable_area_km2: float | None = Field(
+        default=None, description="Plain area that is also gentle enough."
+    )
+    plain_wind_p50_mean: float | None = Field(
+        default=None, description="Mean forecast wind over all plain terrain."
+    )
     sources: list[ResourceSource] = Field(description="Datasets used, with licences.")
     generated_at: str = Field(description="When the atlas was built (ISO 8601, UTC).")
 
@@ -109,7 +122,12 @@ class ResourcePoint(BaseModel):
     longitude: float = Field(description="Queried longitude.")
     inside_country: bool = Field(description="False outside Romania (no atlas data).")
     in_band: bool = Field(description="True when the elevation is inside the hill band.")
-    buildable: bool = Field(description="True when in the band and gentle enough to build on.")
+    in_plain: bool = Field(
+        default=False, description="True when the elevation is below the hill band."
+    )
+    buildable: bool = Field(
+        description="True when in the hill band or the plain and gentle enough to build on."
+    )
     elevation_m: float | None = Field(default=None, description="Mean elevation of the cell.")
     slope_deg: float | None = Field(default=None, description="Mean slope of the cell.")
     wind_p50: float | None = Field(default=None, description="Forecast mean wind (m/s).")

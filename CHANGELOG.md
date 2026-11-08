@@ -7,6 +7,16 @@ and [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Real phone calls from the dispatch agent (`docs/lake.md`): with `VOICE_CALLS_ENABLED=true` a
+  CRITICAL alert is handed to the alerting module (`experiments/alerting`), which emails and
+  phones on-call with its allowlist, `DRY_RUN` and once-per-alert gates. Off by default. New
+  `calls` extra (`twilio`, `jinja2`, `requests`).
+- Maintenance pipeline on the local data lake (`docs/lake.md`): three chained Lambda-shaped
+  handlers. `raw` keeps only the features the maintenance model reads (selected, or derived
+  from raw SCADA sensors, following the model's `fault_features.json`) and writes them to
+  `features`; `features` scores every turbine with the model into `predictions`; `predictions`
+  runs the LangGraph dispatch agent for every park with a turbine to repair and writes its
+  plan to `dispatch`. `make lake-sample` puts simulated SCADA into `raw` to run it end to end.
 - Local data lake (`docs/lake.md`): S3 buckets simulated as folders under `LAKE_DIR`
   (`data/lake/`), with atomic uploads (`make lake-put`) and a watcher (`make lake-watch`, also
   started by `make up`) that hands each new CSV file in `raw/` to a Lambda-shaped handler.
