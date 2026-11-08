@@ -146,3 +146,61 @@ def test_every_endpoint_is_503_before_the_atlas_is_built(
             resp = client.get(f"/api/resource/{path}")
             assert resp.status_code == 503
             assert "make resource" in resp.json()["detail"]
+
+
+def test_plain_layer_is_built_from_the_stored_grid(client: TestClient, tmp_path: Path) -> None:
+    """A plain cell (below the hill band) is measured, drawn and described as buildable."""
+    nan = np.nan
+    np.savez(
+        tmp_path / "atlas_grid.npz",
+        p50=np.array([[7.0, 9.0, 6.0, 5.0], [nan] * 4], dtype=np.float16),
+        reference=np.array([[6.9, 8.8, 5.9, 5.0], [nan] * 4], dtype=np.float16),
+        elevation=np.array([[500.0, 1500.0, 100.0, 0.0], [nan] * 4], dtype=np.float16),
+        slope=np.array([[4.0, 20.0, 1.0, 0.0], [nan] * 4], dtype=np.float16),
+        hill_quantiles=np.linspace(4.0, 8.0, 101).astype(np.float32),
+    )
+    summary = resource_service.build_plain_layer(tmp_path, name_sites=False)
+    assert summary.plain_wind_p50_mean == pytest.approx(6.0)  # the sea cell (0 m) is left out
+    assert summary.plain_legend is not None and summary.plain_legend.vmax == 8.0
+    assert resource_service.plain_heatmap_path(tmp_path).read_bytes().startswith(b"\x89PNG")
+
+    point = client.get("/api/resource/point", params={"lat": 45.8, "lon": 25.2}).json()
+    assert point["in_plain"] and point["buildable"] and not point["in_band"]
+    assert "Plain" in point["explanation"]
+
+
+def test_plain_heatmap_route(client: TestClient, tmp_path: Path) -> None:
+    """The plain overlay is 503 until built, then served as a PNG."""
+    assert client.get("/api/resource/heatmap-plain.png").status_code == 503
+    resource_service.build_plain_layer(tmp_path, name_sites=False)
+    resp = client.get("/api/resource/heatmap-plain.png")
+    assert resp.status_code == 200 and resp.headers["content-type"] == "image/png"
+
+
+def test_plain_sites_route(client: TestClient, tmp_path: Path) -> None:
+    """The plain sites are 503 until built, then served windiest first."""
+    assert client.get("/api/resource/sites/plain").status_code == 503
+    (tmp_path / "sites_plain.json").write_text(
+        json.dumps(
+            [
+                ResourceSite(
+                    rank=1,
+                    latitude=44.6,
+                    longitude=28.6,
+                    wind_p50=7.3,
+                    wind_p10=7.0,
+                    wind_p90=7.5,
+                    reference_wind=7.2,
+                    change_pct=0.01,
+                    elevation_m=150.0,
+                    slope_deg=2.0,
+                    buildable_fraction=1.0,
+                    percentile=99.0,
+                    explanation="Flat and windy.",
+                ).model_dump()
+            ]
+        ),
+        encoding="utf-8",
+    )
+    sites = client.get("/api/resource/sites/plain").json()
+    assert sites[0]["rank"] == 1 and sites[0]["wind_p50"] == 7.3

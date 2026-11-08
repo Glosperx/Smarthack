@@ -9,7 +9,13 @@ from typing import Any
 import pytest
 
 from smarthack.clients.object_store import LocalObjectStore
-from smarthack.jobs.lake_job import LakeEventRouter, main, put_file, wait_until_stable
+from smarthack.jobs.lake_job import (
+    DEFAULT_SAMPLE_TURBINES,
+    LakeEventRouter,
+    main,
+    put_file,
+    wait_until_stable,
+)
 from tests.conftest import requires_extra
 
 
@@ -194,6 +200,54 @@ def test_main_put_fails_on_a_key_leaving_its_bucket(
 
     assert main(["put", str(source), "--key", "../../escaped.csv"]) == 1
     assert not (tmp_path / "escaped.csv").exists()
+
+
+@requires_extra("wind")
+def test_main_sample_puts_simulated_scada_into_raw(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """`sample` writes the raw sensors of the asked turbines, one row per 10 minutes."""
+    monkeypatch.setenv("LAKE_DIR", str(tmp_path))
+
+    code = main(
+        [
+            "sample",
+            "--turbine",
+            "3=gearbox_wear",
+            "--turbine",
+            "4",
+            "--hours",
+            "2",
+            "--key",
+            "s.csv",
+        ]
+    )
+
+    assert code == 0
+    lines = (tmp_path / "raw" / "s.csv").read_text().splitlines()
+    header = lines[0].split(",")
+    assert header[:2] == ["time_stamp", "turbine_id"]
+    assert len(lines) == 1 + 2 * 12
+    assert {line.split(",")[header.index("scenario")] for line in lines[1:]} == {
+        "gearbox_wear",
+        "normal",
+    }
+
+
+def test_main_sample_refuses_a_turbine_that_is_not_a_number(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """`--turbine` takes ID=SCENARIO."""
+    monkeypatch.setenv("LAKE_DIR", str(tmp_path))
+
+    with pytest.raises(SystemExit):
+        main(["sample", "--turbine", "seven=normal"])
+
+
+def test_the_default_sample_is_the_seed_fleet_with_failures_in_both_parks() -> None:
+    """Two failing turbines in one park make the agent call the power model."""
+    assert sorted(DEFAULT_SAMPLE_TURBINES) == [0, 1, 2, 10, 11]
+    assert [t for t, s in DEFAULT_SAMPLE_TURBINES.items() if s != "normal"] == [1, 2, 11]
 
 
 @requires_extra("lake")

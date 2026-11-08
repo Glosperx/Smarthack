@@ -10,8 +10,23 @@ make resource ARGS=--no-names # skip the OpenStreetMap locality lookup (offline 
 ```
 
 The build writes `models/resource/` (`summary.json`, `sites.json`, `heatmap.png`,
-`atlas_grid.npz`), served by `GET /api/resource/{summary,sites,heatmap.png,point}` and
-shown by the **Site finder** panel on the map.
+`heatmap_plain.png`, `atlas_grid.npz`), served by
+`GET /api/resource/{summary,sites,heatmap.png,heatmap-plain.png,point}` and shown by the
+**Site finder** panel on the map.
+
+## Plains (green layer)
+
+The same forecast is also drawn for the plains: land below the hill band (2-200 m; the
+Black Sea is left out) with a green ramp. It uses the **same wind scale** as the blue hill
+layer, so equal shade intensity means equal wind speed. The reading is: where the hills
+check out against existing parks, plains of the same or darker shade are as good, and
+they are cheaper to build on. Click a plain for its forecast; the panel has a switch for
+the layer. No sites are ranked on the plains yet, and the forecast has the same caveats
+as on hills (unvalidated against masts, uniform change inside a 50 km cell).
+
+```bash
+python scripts/build_wind_resource.py --plain-only   # add the plains to an existing atlas, no downloads
+```
 
 ## Why not just "predict the wind in two years"?
 

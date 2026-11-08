@@ -8,7 +8,7 @@ UVICORN := $(if $(BIN),$(BIN)/uvicorn,uvicorn)
 PYTEST  := $(if $(BIN),$(BIN)/pytest,pytest)
 
 .DEFAULT_GOAL := help
-.PHONY: help install hooks format lint test test-fast cov docs docs-serve docker-build clean dev dev-servers dev-api dev-web types build serve check test-db predict worker forecast forecast-worker lake-watch lake-put resource transport up
+.PHONY: help install hooks format lint test test-fast cov docs docs-serve docker-build clean dev dev-servers dev-api dev-web types build serve check test-db predict worker forecast forecast-worker lake-watch lake-put lake-sample resource transport up
 
 help:                       # list the targets
 	@grep -E '^[a-z-]+:.*# ' $(MAKEFILE_LIST) | sed -E 's/:[^#]*# /\t/'
@@ -33,6 +33,9 @@ lake-watch:                # run the lake handlers on every new file in data/lak
 
 lake-put:                  # upload FILE=path/to/file.csv into the raw bucket atomically
 	$(PYTHON) -m smarthack.jobs.lake_job put "$(FILE)" $(ARGS)
+
+lake-sample:               # put simulated SCADA telemetry into raw: runs raw -> features -> predictions -> dispatch
+	$(PYTHON) -m smarthack.jobs.lake_job sample $(ARGS)
 
 test-agent:                # run autonomous LangGraph agent dispatch test with live logs
 	$(PYTHON) scripts/test_agent.py $(ARGS)

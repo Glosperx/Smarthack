@@ -9,7 +9,7 @@ Usage (from anywhere):
 
 Steps, in order:
     1. `.env` exists (copied from `.env.example` when missing).
-    2. Python dependencies are importable; `pip install -e ".[wind,lake]"` runs when they are not.
+    2. Python dependencies are importable; `pip install -e ".[wind,lake,calls]"` runs when they are not.
     3. `frontend/node_modules` exists; `npm install` runs when it does not.
     4. Flyway applies pending migrations (needs `db/flyway.conf` and FLYWAY_PASSWORD in the
        environment or in `.env`). Skipped with a note when Flyway is not configured.
@@ -18,7 +18,7 @@ Steps, in order:
          web        Vite on :5173, proxying /api to the API
          maintenance  turbine health predictions (runs at start, then on its schedule)
          forecast   7-day park wind forecast, replaced twice a day (runs at start too)
-         lake       local data lake watcher: logs every new file dropped in data/lake/raw/
+         lake       data lake pipeline: raw/ -> features/ -> predictions/ -> dispatch/ (agent)
 
 Ctrl+C stops everything. If the API or the web server dies, the rest is stopped too.
 Only the standard library is used, so this runs before anything is installed.
@@ -57,6 +57,8 @@ REQUIRED_MODULES = (
     "catboost",
     "pandas",
     "watchdog",
+    "twilio",
+    "jinja2",
 )
 
 IS_WINDOWS = os.name == "nt"
@@ -148,15 +150,15 @@ def ensure_env_file() -> None:
 
 def ensure_python_deps(python: str) -> None:
     """
-    Install the backend with its `wind` and `lake` extras when a required module is missing.
+    Install the backend with its `wind`, `lake` and `calls` extras when a required module is missing.
 
     :param python: Interpreter whose environment is checked and installed into.
     """
     probe = "import importlib.util as u,sys;sys.exit(any(u.find_spec(m) is None for m in %r))"
     missing = subprocess.run([python, "-c", probe % (REQUIRED_MODULES,)]).returncode != 0
     if missing:
-        log("setup", "installing Python dependencies (pip install -e .[wind,lake]) ...")
-        code = run_step("setup", [python, "-m", "pip", "install", "-e", ".[wind,lake]"])
+        log("setup", "installing Python dependencies (pip install -e .[wind,lake,calls]) ...")
+        code = run_step("setup", [python, "-m", "pip", "install", "-e", ".[wind,lake,calls]"])
         if code != 0:
             sys.exit("pip install failed; fix the error above and rerun")
     else:

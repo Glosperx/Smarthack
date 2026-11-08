@@ -292,6 +292,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/resource/heatmap-plain.png": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Plain Heatmap
+         * @description Return the forecast wind heatmap of plain terrain (below the hill band) as a PNG.
+         *
+         *     Same placement and wind scale as `/heatmap.png`.
+         *
+         *     :returns image: The PNG overlay.
+         *     :raises HTTPException: 503 when the plain layer has not been built.
+         */
+        get: operations["get_plain_heatmap_api_resource_heatmap_plain_png_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/resource/sites": {
         parameters: {
             query?: never;
@@ -307,6 +332,29 @@ export interface paths {
          *     :raises HTTPException: 503 when the atlas has not been built.
          */
         get: operations["get_sites_api_resource_sites_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/resource/sites/plain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Plain Sites
+         * @description Return the proposed plain wind park sites, windiest first.
+         *
+         *     :returns sites: Candidate sites below the hill band, with forecast wind and terrain.
+         *     :raises HTTPException: 503 when the plain layer has not been built.
+         */
+        get: operations["get_plain_sites_api_resource_sites_plain_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -626,7 +674,6 @@ export interface components {
             crews_available: number;
             /**
              * Conflict Detected
-             * @description True if repair candidates exceeded available crews in this park.
              * @description True if two or more turbines of this park are predicted to fail in the same interval.
              */
             conflict_detected: boolean;
@@ -773,8 +820,14 @@ export interface components {
              */
             in_band: boolean;
             /**
+             * In Plain
+             * @description True when the elevation is below the hill band.
+             * @default false
+             */
+            in_plain: boolean;
+            /**
              * Buildable
-             * @description True when in the band and gentle enough to build on.
+             * @description True when in the hill band or the plain and gentle enough to build on.
              */
             buildable: boolean;
             /**
@@ -1014,6 +1067,23 @@ export interface components {
              * @description Mean forecast wind over all hill terrain.
              */
             hill_wind_p50_mean: number;
+            /** @description Colour scale of the plain heatmap (same wind scale as the hill one). */
+            plain_legend?: components["schemas"]["ResourceLegend"] | null;
+            /**
+             * Plain Area Km2
+             * @description Area of plain terrain, below the hill band.
+             */
+            plain_area_km2?: number | null;
+            /**
+             * Plain Buildable Area Km2
+             * @description Plain area that is also gentle enough.
+             */
+            plain_buildable_area_km2?: number | null;
+            /**
+             * Plain Wind P50 Mean
+             * @description Mean forecast wind over all plain terrain.
+             */
+            plain_wind_p50_mean?: number | null;
             /**
              * Sources
              * @description Datasets used, with licences.
@@ -1022,78 +1092,6 @@ export interface components {
             /**
              * Generated At
              * @description When the atlas was built (ISO 8601, UTC).
-             */
-            generated_at: string;
-        };
-        /**
-         * SimulateDispatchRequest
-         * @description Request model for triggering a simulated dispatch scenario.
-         */
-        SimulateDispatchRequest: {
-            /**
-             * Park Id
-             * @description Wind park identifier.
-             * @default wind_farm_a
-             */
-            park_id: string;
-            /**
-             * Scenarios
-             * @description Mapping of turbine asset IDs to simulated failure scenario names.
-             */
-            scenarios?: {
-                [key: string]: string;
-            };
-            /**
-             * Active Crew Count
-             * @description Optional override for active available crews in that park.
-             */
-            active_crew_count?: number | null;
-        };
-        /**
-         * TurbinePrediction
-         * @description Single diagnostic maintenance prediction record for a wind turbine.
-         */
-        TurbinePrediction: {
-            /**
-             * Entry Id
-             * @description Unique prediction database sequence identifier.
-             */
-            entry_id: number;
-            /**
-             * Predicted Date
-             * Format: date
-             * @description Target forecast date of the prediction.
-             */
-            predicted_date: string;
-            /**
-             * Daily Fault Probability
-             * @description Probability of failure within 24 hours.
-             */
-            daily_fault_probability: number;
-            /**
-             * Cumulative Fault Probability
-             * @description Multi-day aggregated probability of failure.
-             */
-            cumulative_fault_probability: number;
-            /**
-             * Status
-             * @description Operational health status code or label.
-             */
-            status: string;
-            /**
-             * Suspected Subsystem
-             * @description Primary turbine subsystem at risk.
-             */
-            suspected_subsystem: string;
-        };
-        /**
-         * TurbineToday
-         * @description Turbine operational status with today's maintenance prediction if available.
-         */
-        TurbineToday: {
-            /**
-             * Id
-             * @description Unique numeric turbine identifier.
              */
             generated_at: string;
         };
@@ -1677,7 +1675,47 @@ export interface operations {
             };
         };
     };
+    get_plain_heatmap_api_resource_heatmap_plain_png_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Plain heatmap overlay */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": unknown;
+                };
+            };
+        };
+    };
     get_sites_api_resource_sites_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourceSite"][];
+                };
+            };
+        };
+    };
+    get_plain_sites_api_resource_sites_plain_get: {
         parameters: {
             query?: never;
             header?: never;

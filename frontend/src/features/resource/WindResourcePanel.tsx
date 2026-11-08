@@ -10,6 +10,11 @@ interface WindResourcePanelProps {
   error: unknown;
   focusedRank: number | null;
   onFocusSite: (rank: number) => void;
+  plainOn: boolean;
+  onTogglePlain: () => void;
+  plainSites: ResourceSite[];
+  focusedPlain: number | null;
+  onFocusPlain: (rank: number) => void;
 }
 
 /** Readable names of the forecasting methods the backtest compares. */
@@ -26,13 +31,21 @@ const ESTIMATOR_LABELS: Record<string, string> = {
 /**
  * Horizontal colour bar with its end values.
  */
-function Legend({ summary }: { summary: ResourceSummary }) {
-  const { vmin, vmax, colors } = summary.legend;
+function Legend({
+  summary,
+  label,
+  colors,
+}: {
+  summary: ResourceSummary;
+  label: string;
+  colors: string[];
+}) {
+  const { vmin, vmax } = summary.legend;
   const mid = (vmin + vmax) / 2;
   return (
     <div>
       <div className="flex items-baseline justify-between text-[11px] text-slate-300">
-        <span>Forecast mean wind at 100 m</span>
+        <span>{label}</span>
         <span className="text-slate-400">m/s</span>
       </div>
       <div
@@ -119,6 +132,11 @@ export function WindResourcePanel({
   error,
   focusedRank,
   onFocusSite,
+  plainOn,
+  onTogglePlain,
+  plainSites,
+  focusedPlain,
+  onFocusPlain,
 }: WindResourcePanelProps) {
   const [showMethod, setShowMethod] = useState(false);
 
@@ -161,10 +179,32 @@ export function WindResourcePanel({
           )}
           {summary && (
             <>
-              <Legend summary={summary} />
+              <Legend
+                summary={summary}
+                label="Hills (blue): forecast mean wind at 100 m"
+                colors={summary.legend.colors}
+              />
+              {summary.plain_legend && (
+                <>
+                  <Legend
+                    summary={summary}
+                    label="Plains (green): same scale"
+                    colors={summary.plain_legend.colors}
+                  />
+                  <label className="flex items-center gap-2 text-[11px] text-slate-300 cursor-pointer">
+                    <input type="checkbox" checked={plainOn} onChange={onTogglePlain} />
+                    Show plains below {summary.elevation_band_m[0]} m
+                  </label>
+                  <p className="text-[11px] text-slate-400">
+                    Plains: {Math.round(summary.plain_buildable_area_km2 ?? 0).toLocaleString()}{' '}
+                    km² buildable, mean wind {summary.plain_wind_p50_mean?.toFixed(1)} m/s vs{' '}
+                    {summary.hill_wind_p50_mean.toFixed(1)} m/s on hills.
+                  </p>
+                </>
+              )}
               <p className="text-[11px] text-slate-400">
-                Colour shows hills between {summary.elevation_band_m[0]} and{' '}
-                {summary.elevation_band_m[1]} m. Click anywhere for the local forecast.
+                Hills are {summary.elevation_band_m[0]}–{summary.elevation_band_m[1]} m. Click
+                anywhere for the local forecast.
               </p>
               <ol className="space-y-1">
                 {sites.map((site) => (
@@ -197,6 +237,43 @@ export function WindResourcePanel({
                   </li>
                 ))}
               </ol>
+              {plainOn && plainSites.length > 0 && (
+                <div className="space-y-1">
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300">
+                    Top {plainSites.length} plain sites
+                  </div>
+                  <ol className="space-y-1">
+                    {plainSites.map((site) => (
+                      <li key={site.rank}>
+                        <button
+                          onClick={() => onFocusPlain(site.rank)}
+                          className={`w-full flex items-center gap-3 rounded-lg px-2 py-1.5 text-left cursor-pointer transition-colors ${
+                            site.rank === focusedPlain ? 'bg-slate-700' : 'hover:bg-slate-800'
+                          }`}
+                        >
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-emerald-500 text-[11px] font-bold text-white">
+                            {site.rank}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-xs font-medium">
+                              {site.name ?? `${site.latitude.toFixed(2)}, ${site.longitude.toFixed(2)}`}
+                            </span>
+                            <span className="block text-[11px] text-slate-400">
+                              {site.elevation_m.toFixed(0)} m · slope {site.slope_deg.toFixed(0)}°
+                            </span>
+                          </span>
+                          <span className="text-right font-mono">
+                            <span className="block text-sm font-semibold">
+                              {site.wind_p50.toFixed(1)}
+                            </span>
+                            <span className="block text-[10px] text-slate-400">m/s</span>
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
               <button
                 onClick={() => setShowMethod((v) => !v)}
                 className="text-[11px] font-semibold text-sky-300 hover:text-sky-200 cursor-pointer"

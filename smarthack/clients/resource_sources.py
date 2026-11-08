@@ -14,6 +14,7 @@ The following can be imported from this module:
 - `fetch_gwa_wind_speed`
 - `fetch_nasa_power`
 - `reverse_geocode`
+- `reverse_geocode_place`
 """
 
 import json
@@ -176,6 +177,22 @@ def reverse_geocode(lat: float, lon: float, client: httpx.Client | None = None) 
 
     :returns name: Such as `"Topolog, Tulcea"`, or None when the lookup fails.
     """
+    return reverse_geocode_place(lat, lon, client)[0]
+
+
+def reverse_geocode_place(
+    lat: float, lon: float, client: httpx.Client | None = None
+) -> tuple[str | None, str | None]:
+    """
+    Name the locality and county around a point and report its country.
+
+    :param lat: Latitude.
+    :param lon: Longitude.
+    :param client: Optional HTTP client to reuse.
+
+    :returns place: The name such as `"Topolog, Tulcea"` and the lower-case ISO country code
+        such as `"ro"`; None for what the lookup could not tell.
+    """
     params: dict[str, str | float] = {
         "lat": lat,
         "lon": lon,
@@ -193,17 +210,18 @@ def reverse_geocode(lat: float, lon: float, client: httpx.Client | None = None) 
         address = resp.json().get("address", {})
     except (httpx.HTTPError, ValueError) as exc:
         logger.warning("Nominatim lookup failed for %.3f,%.3f: %s", lat, lon, exc)
-        return None
+        return None, None
     place = next(
         (address[k] for k in ("village", "town", "city", "municipality", "hamlet") if k in address),
         None,
     )
     county = address.get("county")
     parts = [p for p in (place, county) if p]
-    return ", ".join(parts) if parts else None
+    return (", ".join(parts) if parts else None), address.get("country_code")
 
 
 __all__ = [
+    "reverse_geocode_place",
     "dem_tile_name",
     "download_file",
     "fetch_dem_tile",

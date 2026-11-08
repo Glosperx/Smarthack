@@ -7,6 +7,7 @@ The command line of the local lake, standing in for S3 event notifications and t
 ```
 python -m smarthack.jobs.lake_job watch [--polling]
 python -m smarthack.jobs.lake_job put FILE [--key KEY] [--bucket raw]
+python -m smarthack.jobs.lake_job sample [--turbine ID=SCENARIO ...] [--hours 48]
 ```
 
 `watch` follows the lake root with `watchdog` (FSEvents on macOS, ReadDirectoryChangesW on
@@ -19,6 +20,10 @@ folder mounted from a macOS or Windows host, where those events do not cross the
 so the watcher never sees half a file. A file copied in by hand works too: the watcher waits
 until its size stops changing before it reads it.
 
+`sample` puts a simulated SCADA file into `raw`, the 10-minute sensor rows of a few turbines
+with a fault scenario each, to run the whole pipeline without real telemetry. It needs the
+`wind` extra (pandas and the simulator).
+
 A new or overwritten object triggers its handler once. Created, modified and renamed events
 all arrive for the same write, so an object is handled again only when its size or
 modification time has changed, as S3 sends one event per `PutObject`.
@@ -26,12 +31,15 @@ modification time has changed, as S3 sends one event per `PutObject`.
 The following can be imported from this module:
 - `LakeEventRouter`
 - `main`
+- `DEFAULT_SAMPLE_TURBINES`
 - `put_file`
+- `sample_csv`
 - `wait_until_stable`
 - `watch`
 """
 
 import argparse
+from datetime import datetime, timezone
 import logging
 import os
 from pathlib import Path
@@ -54,6 +62,16 @@ SETTLE_INTERVAL_S = 0.25
 
 #: How many size checks a file gets before it is read anyway.
 SETTLE_ATTEMPTS = 40
+
+#: The turbines of `sample` and their fault scenario: the seed fleet of the dispatch agent,
+#: two failing together in one park (so the power model is called), one in the other.
+DEFAULT_SAMPLE_TURBINES: dict[int, str] = {
+    0: "normal",
+    1: "bearing_overheating",
+    2: "gearbox_wear",
+    10: "normal",
+    11: "transformer_overheating",
+}
 
 
 def wait_until_stable(
@@ -220,13 +238,52 @@ def put_file(store: LocalObjectStore, source: Path, bucket: str, key: str | None
     return target_key
 
 
+def sample_csv(turbines: Mapping[int, str], hours: int = 48) -> bytes:
+    """
+    Simulate the raw SCADA telemetry of a few turbines as one CSV file.
+
+    :param turbines: Fault scenario by turbine id, such as `{1: "gearbox_wear"}`.
+    :param hours: Hours of 10-minute rows per turbine.
+
+    :returns body: The CSV file, every turbine's rows in time order.
+    """
+    # Imported here: the simulator needs pandas and numpy, from the `wind` extra.
+    import pandas as pd
+
+    from smarthack.maintenance.simulator import ScadaSimulator
+
+    frames = [
+        ScadaSimulator(seed=42 + turbine_id).generate_stream(
+            asset_id=turbine_id, duration_hours=hours, scenario=scenario
+        )
+        for turbine_id, scenario in sorted(turbines.items())
+    ]
+    table = pd.concat(frames, ignore_index=True).rename(columns={"asset_id": "turbine_id"})
+    return table.to_csv(index=False).encode("utf-8")
+
+
+def _turbine_scenario(text: str) -> tuple[int, str]:
+    """
+    Read one `--turbine` argument.
+
+    :param text: `ID=SCENARIO`, or a bare `ID` for a healthy turbine.
+
+    :returns pair: The turbine id and its scenario.
+    :raises argparse.ArgumentTypeError: When the id is not a whole number.
+    """
+    turbine, _, scenario = text.partition("=")
+    if not turbine.strip().isdigit():
+        raise argparse.ArgumentTypeError(f"expected ID=SCENARIO, got {text!r}")
+    return int(turbine), scenario.strip() or "normal"
+
+
 def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     """
     Parse the command line.
 
     :param argv: Arguments without the program name. Defaults to `sys.argv[1:]`.
 
-    :returns args: The parsed arguments, with `command` set to `watch` or `put`.
+    :returns args: The parsed arguments, with `command` set to `watch`, `put` or `sample`.
     """
     parser = argparse.ArgumentParser(prog="python -m smarthack.jobs.lake_job")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -238,12 +295,23 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     put_cmd.add_argument("file", type=Path, help="the local file to upload")
     put_cmd.add_argument("--bucket", default=LAKE_RAW_BUCKET, help="target bucket (raw)")
     put_cmd.add_argument("--key", default=None, help="object key (the file's name)")
+    sample_cmd = commands.add_parser("sample", help="put simulated SCADA telemetry into raw")
+    sample_cmd.add_argument(
+        "--turbine",
+        type=_turbine_scenario,
+        action="append",
+        dest="turbines",
+        metavar="ID=SCENARIO",
+        help="a turbine and its scenario (repeatable); defaults to the seed fleet",
+    )
+    sample_cmd.add_argument("--hours", type=int, default=48, help="hours of telemetry (48)")
+    sample_cmd.add_argument("--key", default=None, help="object key (samples/scada_<time>.csv)")
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     """
-    Run the `watch` or `put` command.
+    Run the `watch`, `put` or `sample` command.
 
     :param argv: Arguments without the program name. Defaults to `sys.argv[1:]`.
 
@@ -254,6 +322,16 @@ def main(argv: list[str] | None = None) -> int:
     root = config.lake_dir()
     if args.command == "watch":  # pragma: no cover - blocks until Ctrl+C
         watch(root, polling=args.polling)
+        return 0
+
+    if args.command == "sample":
+        turbines = dict(args.turbines) if args.turbines else DEFAULT_SAMPLE_TURBINES
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        key = args.key or f"samples/scada_{stamp}.csv"
+        LocalObjectStore(root).put_object(LAKE_RAW_BUCKET, key, sample_csv(turbines, args.hours))
+        logger.info(
+            "Uploaded %d simulated turbines to s3://%s/%s", len(turbines), LAKE_RAW_BUCKET, key
+        )
         return 0
 
     if not args.file.is_file():
@@ -268,7 +346,15 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-__all__ = ["LakeEventRouter", "main", "put_file", "wait_until_stable", "watch"]
+__all__ = [
+    "DEFAULT_SAMPLE_TURBINES",
+    "LakeEventRouter",
+    "main",
+    "put_file",
+    "sample_csv",
+    "wait_until_stable",
+    "watch",
+]
 
 if __name__ == "__main__":
     sys.exit(main())

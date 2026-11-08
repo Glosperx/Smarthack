@@ -31,6 +31,7 @@ import pytest
 #: tests are concerned. A new extra gets a line here, and
 #: `test_repository_files.py` fails until it has one. Empty until the first extra.
 EXTRA_MODULES: dict[str, tuple[str, ...]] = {
+    "calls": ("jinja2", "requests", "twilio"),
     "lake": ("watchdog",),
     "resource": ("imagecodecs", "numpy", "PIL", "tifffile"),
     "transport": ("numpy", "osmium"),
@@ -75,6 +76,7 @@ _ENVIRONMENT_VARIABLES = (
     "MAINTENANCE_DEMO_SCENARIOS",
     "WIND_FORECAST_INTERVAL_MINUTES",
     "OPEN_METEO_URL",
+    "VOICE_CALLS_ENABLED",
 )
 
 
