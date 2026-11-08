@@ -243,6 +243,7 @@ class Trace:
         tags: list[str] | None = None,
         metadata: dict[str, str] | None = None,
         callbacks: bool = False,
+        model: str | None = None,
     ) -> None:
         """
         Prepare the observation; nothing is sent until the block is entered.
@@ -252,7 +253,10 @@ class Trace:
         :param tags: Tags put on the whole trace.
         :param metadata: String metadata propagated to the whole trace.
         :param callbacks: Whether to give `config` a LangGraph callback handler.
+        :param model: Model name; when set the observation is a `generation`, the only kind
+            Langfuse shows tokens and cost for. `update` then accepts `usage_details`.
         """
+        self._model = model
         self.config: dict[str, Any] = {}
         self._name = name
         self._input = input
@@ -277,11 +281,15 @@ class Trace:
                 from langfuse import propagate_attributes
 
                 stack.enter_context(propagate_attributes(tags=self._tags, metadata=self._metadata))
-            self._observation = stack.enter_context(
-                client.start_as_current_observation(
+            if self._model:
+                observation = client.start_as_current_observation(
+                    as_type="generation", name=self._name, input=self._input, model=self._model
+                )
+            else:
+                observation = client.start_as_current_observation(
                     as_type="span", name=self._name, input=self._input
                 )
-            )
+            self._observation = stack.enter_context(observation)
             if self._callbacks:
                 self.config = {"callbacks": [self._handler()]}
         except Exception as exc:
@@ -354,16 +362,18 @@ def agent_run(park_id: str, input: Any = None) -> Trace:
     )
 
 
-def model_call(name: str, input: Any = None) -> Trace:
+def model_call(name: str, input: Any = None, model: str | None = None) -> Trace:
     """
-    Open the trace of one question to the decision model.
+    Open the trace of one call to a model, the decision model or an LLM.
 
     :param name: Name of the observation, such as `jev.repair_plan`.
-    :param input: The options and state sent to the model.
+    :param input: What was sent to the model.
+    :param model: Model name, such as `jeffan-4b`; makes the observation a `generation`, so
+        `update(usage_details={"input": n, "output": m})` shows as tokens in Langfuse.
 
     :returns trace: A `Trace` whose duration is the model's latency.
     """
-    return Trace(name, input=input)
+    return Trace(name, input=input, model=model)
 
 
 def flush() -> None:

@@ -18,6 +18,7 @@ The following can be imported from this module:
 
 from collections.abc import Mapping
 import math
+import threading
 from typing import Any
 
 import httpx
@@ -61,6 +62,7 @@ class DecisionClient:
         :param transport: An `httpx` transport, to answer in tests without a network.
         """
         self._base_url = base_url.rstrip("/")
+        self._local = threading.local()
         self._http = httpx.Client(
             timeout=httpx.Timeout(timeout, connect=min(timeout, DECISION_CONNECT_TIMEOUT_SECONDS)),
             transport=transport,
@@ -102,7 +104,19 @@ class DecisionClient:
             payload = response.json()
         except ValueError as exc:
             raise DecisionModelError("decision model sent invalid JSON") from exc
-        return _probabilities(payload, list(options))
+        probabilities = _probabilities(payload, list(options))
+        self._local.prompt_tokens = _prompt_tokens(payload)
+        return probabilities
+
+    @property
+    def last_prompt_tokens(self) -> int | None:
+        """
+        The prompt tokens the server counted for this thread's last successful `choice`.
+
+        :returns tokens: The count, or None when the server did not report one or no question
+            has been answered yet.
+        """
+        return getattr(self._local, "prompt_tokens", None)
 
     def close(self) -> None:
         """Close the underlying HTTP connections."""
@@ -136,6 +150,24 @@ def _probabilities(payload: Any, keys: list[str]) -> dict[str, float]:
     if abs(sum(values.values()) - 1.0) > _SUM_TOLERANCE:
         raise DecisionModelError(f"probabilities add up to {sum(values.values()):.4f}, not 1")
     return values
+
+
+def _prompt_tokens(payload: Any) -> int | None:
+    """
+    Read the optional prompt token count the server reports for the question.
+
+    :param payload: The decoded JSON of an answer already checked by `_probabilities`.
+
+    :returns tokens: A non-negative whole number, or None when absent or malformed; a bad count
+        never fails the decision.
+    """
+    try:
+        value = payload["answers"][_QUESTION]["usage"]["prompt_tokens"]
+    except (KeyError, TypeError):
+        return None
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        return None
+    return value
 
 
 _GLOBAL_DECISION_CLIENT: DecisionClient | None = None

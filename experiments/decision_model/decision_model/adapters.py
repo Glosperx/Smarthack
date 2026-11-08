@@ -180,6 +180,7 @@ class JeffanAdapter:
         for code, option in zip(codes, options):
             ids += self._enc(f"\n{code}:") + self._enc(f" {option}")
         ids += self._enc("\n\nReply with only the code of the best option.") + self._enc(self.tail)
+        self.last_prompt_tokens = len(ids)
         device = self.model.device
         x = torch.tensor([ids], device=device)
         full = torch.ones(1, 1, len(ids), len(ids), dtype=torch.bool, device=device)

@@ -355,3 +355,55 @@ def test_a_turbine_with_no_lead_time_does_not_crash_the_rule() -> None:
     decision = choose_channel("p", _item("WATCH", None, 0.1), client=None, mode="umbra")
 
     assert decision.channel == AlertChannel.EMAIL
+
+
+class _Span:
+    """A trace stand-in that remembers what the decision put on it."""
+
+    def __init__(self) -> None:
+        """Start with nothing recorded."""
+        self.updates: list[dict[str, Any]] = []
+        self.model: str | None = None
+
+    def __enter__(self) -> "_Span":
+        """Enter the block."""
+        return self
+
+    def __exit__(self, *exc_info: Any) -> None:
+        """Leave the block; nothing is swallowed."""
+
+    def update(self, **fields: Any) -> None:
+        """Record the fields."""
+        self.updates.append(fields)
+
+
+def test_the_prompt_tokens_of_the_model_go_on_its_observation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The call is a `jeffan-4b` generation and its token count is sent as `usage_details`."""
+    span = _Span()
+
+    def fake_model_call(name: str, input: Any = None, model: str | None = None) -> _Span:
+        span.model = model
+        return span
+
+    monkeypatch.setattr("smarthack.services.agent.tracing.model_call", fake_model_call)
+    client = FakeClient(_channel_for(AlertChannel.EMAIL))
+    client._local.prompt_tokens = 309
+
+    choose_channel("p", _item("WARNING", 4.0, 0.5), client, mode="umbra")
+
+    assert span.model == "jeffan-4b"
+    assert span.updates[-1]["usage_details"] == {"input": 309, "output": 0}
+
+
+def test_no_token_count_means_no_usage_details(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A server that does not count leaves the observation without `usage_details`."""
+    span = _Span()
+    monkeypatch.setattr("smarthack.services.agent.tracing.model_call", lambda *args, **kwargs: span)
+
+    choose_channel(
+        "p", _item("WARNING", 4.0, 0.5), FakeClient(_channel_for(AlertChannel.EMAIL)), "umbra"
+    )
+
+    assert "usage_details" not in span.updates[-1]

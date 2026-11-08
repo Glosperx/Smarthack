@@ -13,6 +13,7 @@ The following can be imported from this module:
 import json
 import logging
 import re
+from typing import Any
 
 from smarthack import config
 from smarthack.constants import (
@@ -21,8 +22,12 @@ from smarthack.constants import (
     CHANNEL_EMAIL_PROBABILITY,
 )
 from smarthack.schemas.dispatch import AlertChannel
+from smarthack.services.agent import tracing
 
 logger = logging.getLogger(__name__)
+
+#: The Gemini model that writes the alert texts, and the name of its `generation` in Langfuse.
+GEMINI_MODEL = "gemini-3.8-flash"
 
 SYSTEM_DISPATCH_PROMPT = """
 You are the Autonomous Fleet Dispatch & Alerting Agent for industrial wind power parks.
@@ -105,6 +110,30 @@ def build_alert_explanation(
             f"Email work order ticket dispatched for routine scheduling. {crew_note}"
         )
     return f"Turbine {turbine_id} in {park_id} is in normal operational condition."
+
+
+def _gemini_usage(resp: Any) -> dict[str, Any]:
+    """
+    Read the token counts of a Gemini answer for Langfuse.
+
+    Thinking tokens are billed as output, so they are added to it.
+
+    :param resp: The `generate_content` response.
+
+    :returns fields: `{"usage_details": {...}}` for `Trace.update`, or `{}` when the response
+        carries no counts.
+    """
+    meta = getattr(resp, "usage_metadata", None)
+    if meta is None:
+        return {}
+    prompt = getattr(meta, "prompt_token_count", None)
+    answer = getattr(meta, "candidates_token_count", None)
+    thoughts = getattr(meta, "thoughts_token_count", None)
+    if not all(isinstance(n, int) or n is None for n in (prompt, answer, thoughts)):
+        return {}
+    if prompt is None and answer is None and thoughts is None:
+        return {}
+    return {"usage_details": {"input": prompt or 0, "output": (answer or 0) + (thoughts or 0)}}
 
 
 def generate_llm_alert_payload(
@@ -202,11 +231,12 @@ def generate_llm_alert_payload(
             f"Respond with JSON ONLY."
         )
 
-        resp = client.models.generate_content(
-            model="gemini-3.8-flash",
-            contents=prompt,
-        )
-        text = (resp.text or "").strip()
+        with tracing.model_call(
+            "gemini.alert_payload", {"prompt": prompt}, model=GEMINI_MODEL
+        ) as span:
+            resp = client.models.generate_content(model=GEMINI_MODEL, contents=prompt)
+            text = (resp.text or "").strip()
+            span.update(output=text, **_gemini_usage(resp))
         m = re.search(r"\{.*\}", text, re.DOTALL)
         if m:
             data = json.loads(m.group(0))

@@ -24,6 +24,7 @@ import sys
 from typing import Any
 
 from smarthack import config
+from smarthack.clients.supabase import park_display_name
 
 logger = logging.getLogger(__name__)
 
@@ -65,8 +66,8 @@ def _place_real_call(
         alert_id = f"SMH-{now:%Y%m%dT%H%M}-{park_id}-T{turbine_id}"
         alert = {
             "alert_id": alert_id,
-            "park": str(park_id),
-            "turbines": [{"turbine_id": f"T{int(turbine_id)}", "probability": probability}],
+            "park": park_display_name(park_id),
+            "turbines": [{"turbine_id": f"T{int(turbine_id):02d}", "probability": probability}],
             "window_start": now.isoformat(),
             "window_end": (now + timedelta(hours=_WINDOW_HOURS)).isoformat(),
             "hours_to_failure": max(hours, 0.0),

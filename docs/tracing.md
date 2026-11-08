@@ -54,6 +54,22 @@ Check this against your own rules before pointing a production sweep at a cloud 
 The free Hobby plan of the cloud service keeps 30 days and 50,000 units a month (checked
 2026-11-08). A sweep of one park costs a handful of observations per node and per question.
 
+## Tokens
+
+Langfuse shows tokens and cost only for observations of type `generation` with `usage_details`,
+and bills in units (traces, observations, scores), never in tokens. Two calls are generations:
+
+- `jev.repair_plan` and `jev.alert_channel`, model `jeffan-4b`. The decision server counts the
+  prompt of each question and returns it as `usage.prompt_tokens`; the client keeps it in
+  `DecisionClient.last_prompt_tokens` and the decision sends it as `input` tokens. Jeffan writes no
+  text, so `output` is 0, and it runs locally, so there is no cost. An older server that does not
+  report the count leaves the observation without tokens.
+- `gemini.alert_payload`, model `gemini-3.8-flash`, one per alert text. `input` is the prompt, `output`
+  is the answer plus the thinking tokens, which Google bills as output. Gemini needs the `llm` extra
+  (`google-genai`); without it, or without `GEMINI_API_KEY`, the templates are used and nothing is
+  traced. Langfuse shows a cost only for a model it has a price for; add one under Settings, Models
+  if `gemini-3.8-flash` has none.
+
 ## Failures
 
 An error from the SDK is logged and swallowed, and so is an SDK that is installed but cannot be
