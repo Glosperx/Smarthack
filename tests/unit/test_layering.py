@@ -43,6 +43,7 @@ RANKS: dict[str, int] = {
     "config": 0,
     "constants": 0,
     "utils": 0,
+    "server": 0,
     "schemas": 1,
     "wind": 1,
     "maintenance": 1,

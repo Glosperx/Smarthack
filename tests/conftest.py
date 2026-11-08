@@ -42,6 +42,7 @@ EXTRA_MODULES: dict[str, tuple[str, ...]] = {
         "sklearn",
         "xgboost",
     ),
+    "monitoring": ("langchain", "langfuse"),
 }
 
 #: Variables of `.env.example` a developer may have set locally, removed for every test.
@@ -63,6 +64,13 @@ _ENVIRONMENT_VARIABLES = (
     "SMARTHACK_TIMEZONE",
     "AGENT_DATA_SOURCE",
     "GEMINI_API_KEY",
+    "DECISION_MODEL_ENABLED",
+    "DECISION_MODEL_URL",
+    "DECISION_MODEL_MODE",
+    "LANGFUSE_ENABLED",
+    "LANGFUSE_PUBLIC_KEY",
+    "LANGFUSE_SECRET_KEY",
+    "LANGFUSE_BASE_URL",
     "SUPABASE_URL",
     "SUPABASE_KEY",
     "SUPABASE_SERVICE_KEY",

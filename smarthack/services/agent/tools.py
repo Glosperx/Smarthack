@@ -157,13 +157,8 @@ def predict_wind_power_mwh(
         forecast_days=forecast_days,
         capacity_kw=capacity_kw,
     )
-    # Total kWh = mean hourly kW * total hours in forecast
-    mean_kw = float(result.get("mean_predicted_kw", 0.0))
-    total_hours = len(result.get("hourly_forecast", []))
-    if total_hours == 0:
-        total_hours = forecast_days * 24
-
-    total_mwh = (mean_kw * total_hours) / 1000.0
+    # The predictor has already summed the hourly power over the whole horizon.
+    total_mwh = float(result["summary"]["total_generation_mwh"])
     logger.info(
         "Power forecast for (%.2f, %.2f) over %d days: %.2f MWh",
         latitude,

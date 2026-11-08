@@ -9,11 +9,17 @@ Imports nothing from the package, so every layer may import from it.
 
 The following can be imported from this module:
 - `APP_NAME`
+- `CHANNEL_CALL_DAYS`
+- `CHANNEL_CALL_PROBABILITY`
+- `CHANNEL_EMAIL_PROBABILITY`
 - `CONFLICT_WINDOW_DAYS`
+- `DECISION_CONNECT_TIMEOUT_SECONDS`
+- `DECISION_TIMEOUT_SECONDS`
 - `DEFAULT_MAINTENANCE_INTERVAL_MINUTES`
 - `DEFAULT_MAINTENANCE_OFFSET_MINUTES`
 - `MAINTENANCE_INPUT_TABLE`
 - `MAINTENANCE_TABLE`
+- `NO_FAILURE_DAYS`
 - `NO_SUBSYSTEM`
 - `PARK_TABLE`
 - `PARK_VIEW`
@@ -65,6 +71,28 @@ WIND_FORECAST_DAYS = 7
 #: treated as failing in the same interval, which makes the agent compare their output.
 CONFLICT_WINDOW_DAYS = 1
 
+#: A lead time of this many days or more (or none at all) means ML1 predicts no failure inside the
+#: 7-day horizon, so the turbine has no failure day and cannot make two failures overlap.
+NO_FAILURE_DAYS = 8
+
+#: An alert includes a phone call when the lead time is at most this many days.
+CHANNEL_CALL_DAYS = 2.0
+
+#: An alert includes a phone call when the fault probability is at least this.
+CHANNEL_CALL_PROBABILITY = 0.70
+
+#: A turbine that is not otherwise flagged still gets an email when its fault probability is at
+#: least this.
+CHANNEL_EMAIL_PROBABILITY = 0.30
+
+#: Longest the agent waits for one answer of the local decision model, in seconds. A constant, not a
+#: setting: past it the rule decides, so a longer wait only delays the sweep.
+DECISION_TIMEOUT_SECONDS = 10.0
+
+#: Part of `DECISION_TIMEOUT_SECONDS` spent opening the connection: a server that is not running
+#: is noticed in this time rather than after the whole timeout.
+DECISION_CONNECT_TIMEOUT_SECONDS = 2.0
+
 #: Supabase table holding the hourly wind forecast per park, fully replaced on every refresh.
 WIND_FORECAST_TABLE = "park_wind_forecast"
 
@@ -73,11 +101,17 @@ WIND_FORECAST_REPLACE_RPC = "replace_park_wind_forecast"
 
 __all__ = [
     "APP_NAME",
+    "CHANNEL_CALL_DAYS",
+    "CHANNEL_CALL_PROBABILITY",
+    "CHANNEL_EMAIL_PROBABILITY",
     "CONFLICT_WINDOW_DAYS",
+    "DECISION_CONNECT_TIMEOUT_SECONDS",
+    "DECISION_TIMEOUT_SECONDS",
     "DEFAULT_MAINTENANCE_INTERVAL_MINUTES",
     "DEFAULT_MAINTENANCE_OFFSET_MINUTES",
     "MAINTENANCE_INPUT_TABLE",
     "MAINTENANCE_TABLE",
+    "NO_FAILURE_DAYS",
     "NO_SUBSYSTEM",
     "PARK_TABLE",
     "PARK_VIEW",

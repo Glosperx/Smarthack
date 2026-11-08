@@ -54,7 +54,13 @@ resource = [
     "pillow==13.0.0",
     "tifffile==2026.10.15",
 ]
-all  = ["smarthack[wind,resource]"]
+# Traces of the dispatch agent in Langfuse. Langfuse's LangGraph handler imports `langchain` itself,
+# not only `langchain-core`.
+monitoring = [
+    "langchain==1.4.9",
+    "langfuse==4.18.0",
+]
+all  = ["smarthack[wind,resource,monitoring]"]
 
 [tool.setuptools.dynamic]
 version = { attr = "smarthack.__version__" }
@@ -99,9 +105,11 @@ module = [
     "google.*",
     "joblib.*",
     "langchain_core.*",
+    "langfuse.*",
     "langgraph.*",
     "lightgbm.*",
     "numpy.*",
+    "opentelemetry.*",
     "pandas.*",
     "requests.*",
     "sklearn.*",
