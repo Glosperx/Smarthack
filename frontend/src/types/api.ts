@@ -446,6 +446,11 @@ export interface components {
              */
             assigned_crew_name?: string | null;
             /**
+             * Repair Date
+             * @description ISO date chosen for the repair, or None when no day was left before failure.
+             */
+            repair_date?: string | null;
+            /**
              * Notification Sent
              * @description Whether the notification was successfully triggered.
              * @default false
@@ -622,6 +627,7 @@ export interface components {
             /**
              * Conflict Detected
              * @description True if repair candidates exceeded available crews in this park.
+             * @description True if two or more turbines of this park are predicted to fail in the same interval.
              */
             conflict_detected: boolean;
             /**
@@ -1016,6 +1022,78 @@ export interface components {
             /**
              * Generated At
              * @description When the atlas was built (ISO 8601, UTC).
+             */
+            generated_at: string;
+        };
+        /**
+         * SimulateDispatchRequest
+         * @description Request model for triggering a simulated dispatch scenario.
+         */
+        SimulateDispatchRequest: {
+            /**
+             * Park Id
+             * @description Wind park identifier.
+             * @default wind_farm_a
+             */
+            park_id: string;
+            /**
+             * Scenarios
+             * @description Mapping of turbine asset IDs to simulated failure scenario names.
+             */
+            scenarios?: {
+                [key: string]: string;
+            };
+            /**
+             * Active Crew Count
+             * @description Optional override for active available crews in that park.
+             */
+            active_crew_count?: number | null;
+        };
+        /**
+         * TurbinePrediction
+         * @description Single diagnostic maintenance prediction record for a wind turbine.
+         */
+        TurbinePrediction: {
+            /**
+             * Entry Id
+             * @description Unique prediction database sequence identifier.
+             */
+            entry_id: number;
+            /**
+             * Predicted Date
+             * Format: date
+             * @description Target forecast date of the prediction.
+             */
+            predicted_date: string;
+            /**
+             * Daily Fault Probability
+             * @description Probability of failure within 24 hours.
+             */
+            daily_fault_probability: number;
+            /**
+             * Cumulative Fault Probability
+             * @description Multi-day aggregated probability of failure.
+             */
+            cumulative_fault_probability: number;
+            /**
+             * Status
+             * @description Operational health status code or label.
+             */
+            status: string;
+            /**
+             * Suspected Subsystem
+             * @description Primary turbine subsystem at risk.
+             */
+            suspected_subsystem: string;
+        };
+        /**
+         * TurbineToday
+         * @description Turbine operational status with today's maintenance prediction if available.
+         */
+        TurbineToday: {
+            /**
+             * Id
+             * @description Unique numeric turbine identifier.
              */
             generated_at: string;
         };

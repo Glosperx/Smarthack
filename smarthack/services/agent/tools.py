@@ -7,6 +7,7 @@ The following can be imported from this module:
 - `dispatch_voice_alert`
 - `dispatch_warning_email`
 - `get_available_crews_tool`
+- `get_daily_wind_forecast`
 - `get_turbine_location`
 - `get_turbines_needing_attention`
 - `predict_wind_power_mwh`
@@ -15,13 +16,17 @@ The following can be imported from this module:
 import logging
 from typing import Any
 
+import httpx
+
 from smarthack import config
 from smarthack.clients.crew_client import get_default_crew_client
 from smarthack.clients.email_client import get_default_email_client
 from smarthack.clients.voice_client import get_default_voice_client
+from smarthack.constants import WIND_FORECAST_DAYS
 from smarthack.schemas.dispatch import CrewStatus
 from smarthack.services.agent import db_tools
 from smarthack.services.fleet_service import get_default_fleet_service
+from smarthack.utils.dates import today_in_tz
 from smarthack.wind.agent_tool import predict_wind_power
 
 logger = logging.getLogger(__name__)
@@ -80,6 +85,29 @@ def get_available_crews_tool(park_id: str) -> list[dict[str, Any]]:
     crew_client = get_default_crew_client()
     crews = crew_client.get_crews_by_park(park_id=park_id, status=CrewStatus.AVAILABLE)
     return [c.model_dump() for c in crews]
+
+
+def get_daily_wind_forecast(park_id: str, days: int = WIND_FORECAST_DAYS) -> list[float | None]:
+    """
+    Read the park's forecast wind speed per day, used to pick the calmest repair day.
+
+    Without a database, or when it cannot be read, returns an empty list: the scheduler then
+    plans every repair on the earliest free day instead of failing the whole sweep.
+
+    :param park_id: The wind park identifier.
+    :param days: How many days from today to return.
+
+    :returns wind: Mean wind speed in m/s per day from today, None where unknown; may be empty.
+    """
+    if not _use_database():
+        return []
+    try:
+        return db_tools.db_get_daily_wind(park_id, days, today_in_tz(config.timezone()))
+    except (httpx.HTTPError, RuntimeError) as exc:
+        logger.warning(
+            "Wind forecast unavailable for park %s; planning without it: %s", park_id, exc
+        )
+        return []
 
 
 def get_turbine_location(turbine_id: int) -> dict[str, float]:
@@ -215,6 +243,7 @@ __all__ = [
     "dispatch_voice_alert",
     "dispatch_warning_email",
     "get_available_crews_tool",
+    "get_daily_wind_forecast",
     "get_turbine_location",
     "get_turbines_needing_attention",
     "predict_wind_power_mwh",

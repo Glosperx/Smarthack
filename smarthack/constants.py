@@ -9,6 +9,7 @@ Imports nothing from the package, so every layer may import from it.
 
 The following can be imported from this module:
 - `APP_NAME`
+- `CONFLICT_WINDOW_DAYS`
 - `DEFAULT_MAINTENANCE_INTERVAL_MINUTES`
 - `DEFAULT_MAINTENANCE_OFFSET_MINUTES`
 - `LAKE_FAILED_BUCKET`
@@ -65,6 +66,10 @@ DEFAULT_WIND_FORECAST_OFFSET_MINUTES = 5
 #: Forecast horizon, in days, stored per park.
 WIND_FORECAST_DAYS = 7
 
+#: Two turbines of one park whose predicted failure days are at most this many days apart are
+#: treated as failing in the same interval, which makes the agent compare their output.
+CONFLICT_WINDOW_DAYS = 1
+
 #: Supabase table holding the hourly wind forecast per park, fully replaced on every refresh.
 WIND_FORECAST_TABLE = "park_wind_forecast"
 
@@ -88,6 +93,7 @@ LAKE_PREVIEW_ROWS = 5
 
 __all__ = [
     "APP_NAME",
+    "CONFLICT_WINDOW_DAYS",
     "DEFAULT_MAINTENANCE_INTERVAL_MINUTES",
     "DEFAULT_MAINTENANCE_OFFSET_MINUTES",
     "LAKE_FAILED_BUCKET",

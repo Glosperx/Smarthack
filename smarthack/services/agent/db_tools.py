@@ -6,16 +6,20 @@ Data tools for the dispatch agent that read the `employees`, `turbine`, `park` t
 
 The following can be imported from this module:
 - `db_get_available_crews`
+- `db_get_daily_wind`
 - `db_get_turbine_location`
 - `db_get_turbines_needing_attention`
 """
 
-from datetime import date
+from datetime import date, datetime
 import logging
 import re
 from typing import Any
+from zoneinfo import ZoneInfo
 
+from smarthack import config
 from smarthack.clients.supabase import select_rows
+from smarthack.constants import WIND_FORECAST_TABLE
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +99,41 @@ def db_get_turbines_needing_attention(park_id: str | None = None) -> list[dict[s
         )
     items.sort(key=lambda i: (-_SEVERITY.get(i["health_status"], 0), i["days_to_failure"]))
     return [i for i in items if i["needs_repair"]]
+
+
+def db_get_daily_wind(park_id: str, days: int, today: date) -> list[float | None]:
+    """
+    Average the park's hourly 100 m wind forecast into one speed per day.
+
+    :param park_id: Park identifier (numeric `park.id`).
+    :param days: How many days from `today` to return.
+    :param today: The calendar day at index 0, in the application timezone.
+
+    :returns wind: Mean wind speed in m/s per day, None for a day with no forecast hours.
+    :raises httpx.HTTPError: When Supabase rejects the request.
+    """
+    rows = select_rows(
+        WIND_FORECAST_TABLE,
+        {
+            **_park_filter(park_id),
+            "select": "forecast_time,wind_speed_100m",
+            "order": "forecast_time.asc",
+        },
+    )
+    tz = ZoneInfo(config.timezone())
+    sums = [0.0] * days
+    counts = [0] * days
+    for row in rows:
+        speed = row.get("wind_speed_100m")
+        if speed is None:
+            continue
+        offset = (
+            datetime.fromisoformat(str(row["forecast_time"])).astimezone(tz).date() - today
+        ).days
+        if 0 <= offset < days:
+            sums[offset] += float(speed)
+            counts[offset] += 1
+    return [sums[i] / counts[i] if counts[i] else None for i in range(days)]
 
 
 def db_get_available_crews(park_id: str) -> list[dict[str, Any]]:
@@ -177,6 +216,7 @@ def db_get_turbine_location(turbine_id: int) -> dict[str, Any] | None:
 
 __all__ = [
     "db_get_available_crews",
+    "db_get_daily_wind",
     "db_get_turbine_location",
     "db_get_turbines_needing_attention",
 ]
