@@ -158,3 +158,60 @@ def test_timezone_accessor(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("SMARTHACK_TIMEZONE", "Invalid/Timezone_Name")
     with pytest.raises(Exception):
         config.timezone()
+
+
+def test_the_decision_model_is_off_by_default() -> None:
+    """With nothing set, the agent decides by rule and makes no call."""
+    assert config.decision_model_enabled() is False
+
+
+@pytest.mark.parametrize("value", ["1", "true", " TRUE ", "Yes", "on"])
+def test_the_decision_model_is_switched_on_by_a_clear_yes(
+    monkeypatch: pytest.MonkeyPatch, value: str
+) -> None:
+    """Only a clear yes turns the model on."""
+    monkeypatch.setenv("DECISION_MODEL_ENABLED", value)
+
+    assert config.decision_model_enabled() is True
+
+
+@pytest.mark.parametrize("value", ["", "0", "false", "no", "off", "tru", "enabled", "2"])
+def test_a_typo_leaves_the_decision_model_off(monkeypatch: pytest.MonkeyPatch, value: str) -> None:
+    """Anything that is not a clear yes is no."""
+    monkeypatch.setenv("DECISION_MODEL_ENABLED", value)
+
+    assert config.decision_model_enabled() is False
+
+
+def test_the_decision_model_mode_defaults_to_shadow() -> None:
+    """The model changes nothing unless asked to."""
+    assert config.decision_model_mode() == config.DEFAULT_DECISION_MODEL_MODE == "umbra"
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("activ", "activ"),
+        (" ACTIV ", "activ"),
+        ("umbra", "umbra"),
+        ("active", "umbra"),
+        ("", "umbra"),
+    ],
+)
+def test_only_activ_makes_the_model_decide(
+    monkeypatch: pytest.MonkeyPatch, value: str, expected: str
+) -> None:
+    """A typo, even a plausible one such as `active`, means shadow."""
+    monkeypatch.setenv("DECISION_MODEL_MODE", value)
+
+    assert config.decision_model_mode() == expected
+
+
+def test_the_decision_model_url_defaults_and_loses_its_trailing_slash(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The default is the local server; a trailing slash is dropped."""
+    assert config.decision_model_url() == config.DEFAULT_DECISION_MODEL_URL
+    monkeypatch.setenv("DECISION_MODEL_URL", " http://host:9/ ")
+
+    assert config.decision_model_url() == "http://host:9"

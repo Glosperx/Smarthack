@@ -1,0 +1,920 @@
+{
+ "ordinea-de-azi::-::7": {
+  "n": 60,
+  "accuracy": 0.36666666666666664,
+  "mean_p_correct": 0.36666666666666664,
+  "auc_pooled": 0.5151917404129793,
+  "same_choice_all_orders": 1.0,
+  "by_category": {
+   "azi_gresit__urgent_gresit": [
+    0,
+    8
+   ],
+   "azi_gresit__urgent_ok": [
+    0,
+    30
+   ],
+   "azi_ok__urgent_gresit": [
+    4,
+    4
+   ],
+   "azi_ok__urgent_ok": [
+    18,
+    18
+   ]
+  },
+  "by_turbines": {
+   "2": [
+    6,
+    18
+   ],
+   "3": [
+    11,
+    31
+   ],
+   "4": [
+    5,
+    11
+   ]
+  },
+  "latency_median_ms": 0.0,
+  "marks": {
+   "pr-01": "proasta",
+   "pr-02": "proasta",
+   "pr-03": "proasta",
+   "pr-04": "proasta",
+   "pr-05": "buna",
+   "pr-06": "proasta",
+   "pr-07": "proasta",
+   "pr-08": "buna",
+   "pr-09": "buna",
+   "pr-10": "proasta",
+   "pr-11": "buna",
+   "pr-12": "proasta",
+   "pr-13": "proasta",
+   "pr-14": "proasta",
+   "pr-15": "proasta",
+   "pr-16": "buna",
+   "pr-17": "buna",
+   "pr-18": "proasta",
+   "pr-19": "buna",
+   "pr-20": "buna",
+   "pr-21": "proasta",
+   "pr-22": "proasta",
+   "pr-23": "proasta",
+   "pr-24": "proasta",
+   "pr-25": "proasta",
+   "pr-26": "proasta",
+   "pr-27": "proasta",
+   "pr-28": "proasta",
+   "pr-29": "proasta",
+   "pr-30": "proasta",
+   "pr-31": "proasta",
+   "pr-32": "buna",
+   "pr-33": "buna",
+   "pr-34": "buna",
+   "pr-35": "buna",
+   "pr-36": "proasta",
+   "pr-37": "proasta",
+   "pr-38": "proasta",
+   "pr-39": "buna",
+   "pr-40": "proasta",
+   "pr-41": "buna",
+   "pr-42": "buna",
+   "pr-43": "proasta",
+   "pr-44": "proasta",
+   "pr-45": "proasta",
+   "pr-46": "proasta",
+   "pr-47": "proasta",
+   "pr-48": "buna",
+   "pr-49": "proasta",
+   "pr-50": "proasta",
+   "pr-51": "proasta",
+   "pr-52": "buna",
+   "pr-53": "buna",
+   "pr-54": "proasta",
+   "pr-55": "proasta",
+   "pr-56": "buna",
+   "pr-57": "buna",
+   "pr-58": "buna",
+   "pr-59": "buna",
+   "pr-60": "proasta"
+  }
+ },
+ "cel-mai-urgent::-::7": {
+  "n": 60,
+  "accuracy": 0.8,
+  "mean_p_correct": 0.8,
+  "auc_pooled": 0.8469026548672567,
+  "same_choice_all_orders": 1.0,
+  "by_category": {
+   "azi_gresit__urgent_gresit": [
+    0,
+    8
+   ],
+   "azi_gresit__urgent_ok": [
+    30,
+    30
+   ],
+   "azi_ok__urgent_gresit": [
+    0,
+    4
+   ],
+   "azi_ok__urgent_ok": [
+    18,
+    18
+   ]
+  },
+  "by_turbines": {
+   "2": [
+    14,
+    18
+   ],
+   "3": [
+    23,
+    31
+   ],
+   "4": [
+    11,
+    11
+   ]
+  },
+  "latency_median_ms": 0.0,
+  "marks": {
+   "pr-01": "proasta",
+   "pr-02": "buna",
+   "pr-03": "buna",
+   "pr-04": "buna",
+   "pr-05": "buna",
+   "pr-06": "buna",
+   "pr-07": "buna",
+   "pr-08": "buna",
+   "pr-09": "proasta",
+   "pr-10": "buna",
+   "pr-11": "buna",
+   "pr-12": "proasta",
+   "pr-13": "buna",
+   "pr-14": "buna",
+   "pr-15": "buna",
+   "pr-16": "buna",
+   "pr-17": "buna",
+   "pr-18": "buna",
+   "pr-19": "buna",
+   "pr-20": "buna",
+   "pr-21": "buna",
+   "pr-22": "proasta",
+   "pr-23": "buna",
+   "pr-24": "buna",
+   "pr-25": "buna",
+   "pr-26": "buna",
+   "pr-27": "buna",
+   "pr-28": "buna",
+   "pr-29": "buna",
+   "pr-30": "proasta",
+   "pr-31": "buna",
+   "pr-32": "buna",
+   "pr-33": "buna",
+   "pr-34": "buna",
+   "pr-35": "proasta",
+   "pr-36": "buna",
+   "pr-37": "buna",
+   "pr-38": "buna",
+   "pr-39": "buna",
+   "pr-40": "buna",
+   "pr-41": "buna",
+   "pr-42": "buna",
+   "pr-43": "buna",
+   "pr-44": "proasta",
+   "pr-45": "buna",
+   "pr-46": "buna",
+   "pr-47": "buna",
+   "pr-48": "buna",
+   "pr-49": "proasta",
+   "pr-50": "proasta",
+   "pr-51": "proasta",
+   "pr-52": "buna",
+   "pr-53": "proasta",
+   "pr-54": "buna",
+   "pr-55": "buna",
+   "pr-56": "buna",
+   "pr-57": "buna",
+   "pr-58": "buna",
+   "pr-59": "proasta",
+   "pr-60": "buna"
+  }
+ },
+ "glide-2b::timeline::7": {
+  "n": 60,
+  "accuracy": 0.65,
+  "mean_p_correct": 0.5041815156454581,
+  "auc_pooled": 0.8542035398230089,
+  "same_choice_all_orders": 0.8833333333333333,
+  "by_category": {
+   "azi_gresit__urgent_gresit": [
+    2,
+    8
+   ],
+   "azi_gresit__urgent_ok": [
+    26,
+    30
+   ],
+   "azi_ok__urgent_gresit": [
+    1,
+    4
+   ],
+   "azi_ok__urgent_ok": [
+    10,
+    18
+   ]
+  },
+  "by_turbines": {
+   "2": [
+    14,
+    18
+   ],
+   "3": [
+    16,
+    31
+   ],
+   "4": [
+    9,
+    11
+   ]
+  },
+  "latency_median_ms": 567.3000000000001,
+  "marks": {
+   "pr-01": "proasta",
+   "pr-02": "buna",
+   "pr-03": "buna",
+   "pr-04": "buna",
+   "pr-05": "proasta",
+   "pr-06": "buna",
+   "pr-07": "buna",
+   "pr-08": "buna",
+   "pr-09": "buna",
+   "pr-10": "buna",
+   "pr-11": "proasta",
+   "pr-12": "buna",
+   "pr-13": "buna",
+   "pr-14": "buna",
+   "pr-15": "buna",
+   "pr-16": "buna",
+   "pr-17": "buna",
+   "pr-18": "buna",
+   "pr-19": "buna",
+   "pr-20": "buna",
+   "pr-21": "proasta",
+   "pr-22": "proasta",
+   "pr-23": "buna",
+   "pr-24": "buna",
+   "pr-25": "proasta",
+   "pr-26": "buna",
+   "pr-27": "buna",
+   "pr-28": "buna",
+   "pr-29": "buna",
+   "pr-30": "proasta",
+   "pr-31": "buna",
+   "pr-32": "proasta",
+   "pr-33": "buna",
+   "pr-34": "proasta",
+   "pr-35": "proasta",
+   "pr-36": "proasta",
+   "pr-37": "buna",
+   "pr-38": "buna",
+   "pr-39": "proasta",
+   "pr-40": "buna",
+   "pr-41": "buna",
+   "pr-42": "buna",
+   "pr-43": "buna",
+   "pr-44": "buna",
+   "pr-45": "proasta",
+   "pr-46": "buna",
+   "pr-47": "buna",
+   "pr-48": "proasta",
+   "pr-49": "proasta",
+   "pr-50": "proasta",
+   "pr-51": "proasta",
+   "pr-52": "proasta",
+   "pr-53": "proasta",
+   "pr-54": "buna",
+   "pr-55": "buna",
+   "pr-56": "buna",
+   "pr-57": "buna",
+   "pr-58": "proasta",
+   "pr-59": "proasta",
+   "pr-60": "buna"
+  }
+ },
+ "jeffan-4b::timeline::7": {
+  "n": 60,
+  "accuracy": 0.65,
+  "mean_p_correct": 0.5779765655907492,
+  "auc_pooled": 0.81976401179941,
+  "same_choice_all_orders": 0.8666666666666667,
+  "by_category": {
+   "azi_gresit__urgent_gresit": [
+    5,
+    8
+   ],
+   "azi_gresit__urgent_ok": [
+    22,
+    30
+   ],
+   "azi_ok__urgent_gresit": [
+    1,
+    4
+   ],
+   "azi_ok__urgent_ok": [
+    11,
+    18
+   ]
+  },
+  "by_turbines": {
+   "2": [
+    14,
+    18
+   ],
+   "3": [
+    18,
+    31
+   ],
+   "4": [
+    7,
+    11
+   ]
+  },
+  "latency_median_ms": 1472.3500000000001,
+  "marks": {
+   "pr-01": "buna",
+   "pr-02": "buna",
+   "pr-03": "buna",
+   "pr-04": "buna",
+   "pr-05": "buna",
+   "pr-06": "proasta",
+   "pr-07": "buna",
+   "pr-08": "proasta",
+   "pr-09": "buna",
+   "pr-10": "buna",
+   "pr-11": "proasta",
+   "pr-12": "buna",
+   "pr-13": "buna",
+   "pr-14": "buna",
+   "pr-15": "buna",
+   "pr-16": "proasta",
+   "pr-17": "buna",
+   "pr-18": "buna",
+   "pr-19": "buna",
+   "pr-20": "buna",
+   "pr-21": "proasta",
+   "pr-22": "buna",
+   "pr-23": "buna",
+   "pr-24": "buna",
+   "pr-25": "proasta",
+   "pr-26": "buna",
+   "pr-27": "proasta",
+   "pr-28": "proasta",
+   "pr-29": "buna",
+   "pr-30": "buna",
+   "pr-31": "proasta",
+   "pr-32": "buna",
+   "pr-33": "buna",
+   "pr-34": "proasta",
+   "pr-35": "proasta",
+   "pr-36": "buna",
+   "pr-37": "proasta",
+   "pr-38": "buna",
+   "pr-39": "proasta",
+   "pr-40": "buna",
+   "pr-41": "buna",
+   "pr-42": "buna",
+   "pr-43": "buna",
+   "pr-44": "proasta",
+   "pr-45": "proasta",
+   "pr-46": "buna",
+   "pr-47": "buna",
+   "pr-48": "proasta",
+   "pr-49": "buna",
+   "pr-50": "proasta",
+   "pr-51": "proasta",
+   "pr-52": "buna",
+   "pr-53": "proasta",
+   "pr-54": "buna",
+   "pr-55": "buna",
+   "pr-56": "buna",
+   "pr-57": "proasta",
+   "pr-58": "buna",
+   "pr-59": "proasta",
+   "pr-60": "buna"
+  }
+ },
+ "ordinea-de-azi::-::11": {
+  "n": 60,
+  "accuracy": 0.45,
+  "mean_p_correct": 0.45,
+  "auc_pooled": 0.5707943925233645,
+  "same_choice_all_orders": 1.0,
+  "by_category": {
+   "azi_gresit__urgent_gresit": [
+    0,
+    8
+   ],
+   "azi_gresit__urgent_ok": [
+    0,
+    25
+   ],
+   "azi_ok__urgent_gresit": [
+    2,
+    2
+   ],
+   "azi_ok__urgent_ok": [
+    25,
+    25
+   ]
+  },
+  "by_turbines": {
+   "2": [
+    15,
+    25
+   ],
+   "3": [
+    7,
+    23
+   ],
+   "4": [
+    5,
+    12
+   ]
+  },
+  "latency_median_ms": 0.0,
+  "marks": {
+   "pr-01": "buna",
+   "pr-02": "proasta",
+   "pr-03": "proasta",
+   "pr-04": "buna",
+   "pr-05": "buna",
+   "pr-06": "proasta",
+   "pr-07": "proasta",
+   "pr-08": "proasta",
+   "pr-09": "proasta",
+   "pr-10": "proasta",
+   "pr-11": "buna",
+   "pr-12": "buna",
+   "pr-13": "buna",
+   "pr-14": "buna",
+   "pr-15": "proasta",
+   "pr-16": "buna",
+   "pr-17": "proasta",
+   "pr-18": "proasta",
+   "pr-19": "buna",
+   "pr-20": "proasta",
+   "pr-21": "buna",
+   "pr-22": "buna",
+   "pr-23": "proasta",
+   "pr-24": "buna",
+   "pr-25": "proasta",
+   "pr-26": "proasta",
+   "pr-27": "proasta",
+   "pr-28": "proasta",
+   "pr-29": "buna",
+   "pr-30": "buna",
+   "pr-31": "proasta",
+   "pr-32": "proasta",
+   "pr-33": "buna",
+   "pr-34": "proasta",
+   "pr-35": "proasta",
+   "pr-36": "proasta",
+   "pr-37": "buna",
+   "pr-38": "proasta",
+   "pr-39": "buna",
+   "pr-40": "buna",
+   "pr-41": "proasta",
+   "pr-42": "proasta",
+   "pr-43": "proasta",
+   "pr-44": "buna",
+   "pr-45": "proasta",
+   "pr-46": "proasta",
+   "pr-47": "proasta",
+   "pr-48": "buna",
+   "pr-49": "buna",
+   "pr-50": "proasta",
+   "pr-51": "buna",
+   "pr-52": "proasta",
+   "pr-53": "buna",
+   "pr-54": "proasta",
+   "pr-55": "proasta",
+   "pr-56": "proasta",
+   "pr-57": "buna",
+   "pr-58": "buna",
+   "pr-59": "buna",
+   "pr-60": "buna"
+  }
+ },
+ "cel-mai-urgent::-::11": {
+  "n": 60,
+  "accuracy": 0.8333333333333334,
+  "mean_p_correct": 0.8333333333333334,
+  "auc_pooled": 0.8699376947040498,
+  "same_choice_all_orders": 1.0,
+  "by_category": {
+   "azi_gresit__urgent_gresit": [
+    0,
+    8
+   ],
+   "azi_gresit__urgent_ok": [
+    25,
+    25
+   ],
+   "azi_ok__urgent_gresit": [
+    0,
+    2
+   ],
+   "azi_ok__urgent_ok": [
+    25,
+    25
+   ]
+  },
+  "by_turbines": {
+   "2": [
+    21,
+    25
+   ],
+   "3": [
+    18,
+    23
+   ],
+   "4": [
+    11,
+    12
+   ]
+  },
+  "latency_median_ms": 0.0,
+  "marks": {
+   "pr-01": "buna",
+   "pr-02": "buna",
+   "pr-03": "buna",
+   "pr-04": "buna",
+   "pr-05": "buna",
+   "pr-06": "buna",
+   "pr-07": "buna",
+   "pr-08": "buna",
+   "pr-09": "proasta",
+   "pr-10": "buna",
+   "pr-11": "buna",
+   "pr-12": "buna",
+   "pr-13": "buna",
+   "pr-14": "buna",
+   "pr-15": "buna",
+   "pr-16": "buna",
+   "pr-17": "buna",
+   "pr-18": "buna",
+   "pr-19": "buna",
+   "pr-20": "proasta",
+   "pr-21": "buna",
+   "pr-22": "buna",
+   "pr-23": "buna",
+   "pr-24": "buna",
+   "pr-25": "buna",
+   "pr-26": "buna",
+   "pr-27": "proasta",
+   "pr-28": "buna",
+   "pr-29": "buna",
+   "pr-30": "buna",
+   "pr-31": "buna",
+   "pr-32": "buna",
+   "pr-33": "buna",
+   "pr-34": "buna",
+   "pr-35": "proasta",
+   "pr-36": "proasta",
+   "pr-37": "buna",
+   "pr-38": "buna",
+   "pr-39": "buna",
+   "pr-40": "proasta",
+   "pr-41": "buna",
+   "pr-42": "proasta",
+   "pr-43": "buna",
+   "pr-44": "buna",
+   "pr-45": "buna",
+   "pr-46": "buna",
+   "pr-47": "buna",
+   "pr-48": "buna",
+   "pr-49": "proasta",
+   "pr-50": "proasta",
+   "pr-51": "buna",
+   "pr-52": "buna",
+   "pr-53": "buna",
+   "pr-54": "proasta",
+   "pr-55": "buna",
+   "pr-56": "buna",
+   "pr-57": "buna",
+   "pr-58": "buna",
+   "pr-59": "buna",
+   "pr-60": "buna"
+  }
+ },
+ "jeffan-4b::features::11": {
+  "n": 60,
+  "accuracy": 0.6166666666666667,
+  "mean_p_correct": 0.5818122067954391,
+  "auc_pooled": 0.7901869158878505,
+  "same_choice_all_orders": 0.9,
+  "by_category": {
+   "azi_gresit__urgent_gresit": [
+    2,
+    8
+   ],
+   "azi_gresit__urgent_ok": [
+    12,
+    25
+   ],
+   "azi_ok__urgent_gresit": [
+    2,
+    2
+   ],
+   "azi_ok__urgent_ok": [
+    21,
+    25
+   ]
+  },
+  "by_turbines": {
+   "2": [
+    19,
+    25
+   ],
+   "3": [
+    12,
+    23
+   ],
+   "4": [
+    6,
+    12
+   ]
+  },
+  "latency_median_ms": 1702.6,
+  "marks": {
+   "pr-01": "buna",
+   "pr-02": "proasta",
+   "pr-03": "proasta",
+   "pr-04": "proasta",
+   "pr-05": "buna",
+   "pr-06": "proasta",
+   "pr-07": "proasta",
+   "pr-08": "buna",
+   "pr-09": "proasta",
+   "pr-10": "proasta",
+   "pr-11": "buna",
+   "pr-12": "buna",
+   "pr-13": "buna",
+   "pr-14": "buna",
+   "pr-15": "proasta",
+   "pr-16": "buna",
+   "pr-17": "buna",
+   "pr-18": "proasta",
+   "pr-19": "buna",
+   "pr-20": "proasta",
+   "pr-21": "buna",
+   "pr-22": "buna",
+   "pr-23": "buna",
+   "pr-24": "proasta",
+   "pr-25": "buna",
+   "pr-26": "buna",
+   "pr-27": "buna",
+   "pr-28": "buna",
+   "pr-29": "proasta",
+   "pr-30": "buna",
+   "pr-31": "buna",
+   "pr-32": "proasta",
+   "pr-33": "buna",
+   "pr-34": "buna",
+   "pr-35": "proasta",
+   "pr-36": "proasta",
+   "pr-37": "buna",
+   "pr-38": "proasta",
+   "pr-39": "buna",
+   "pr-40": "buna",
+   "pr-41": "buna",
+   "pr-42": "buna",
+   "pr-43": "proasta",
+   "pr-44": "buna",
+   "pr-45": "proasta",
+   "pr-46": "buna",
+   "pr-47": "proasta",
+   "pr-48": "buna",
+   "pr-49": "buna",
+   "pr-50": "proasta",
+   "pr-51": "buna",
+   "pr-52": "buna",
+   "pr-53": "buna",
+   "pr-54": "proasta",
+   "pr-55": "buna",
+   "pr-56": "proasta",
+   "pr-57": "proasta",
+   "pr-58": "buna",
+   "pr-59": "buna",
+   "pr-60": "buna"
+  }
+ },
+ "jeffan-4b::plans::11": {
+  "n": 60,
+  "accuracy": 0.8833333333333333,
+  "mean_p_correct": 0.7588147067154447,
+  "auc_pooled": 0.9641744548286605,
+  "same_choice_all_orders": 0.9833333333333333,
+  "by_category": {
+   "azi_gresit__urgent_gresit": [
+    7,
+    8
+   ],
+   "azi_gresit__urgent_ok": [
+    22,
+    25
+   ],
+   "azi_ok__urgent_gresit": [
+    2,
+    2
+   ],
+   "azi_ok__urgent_ok": [
+    22,
+    25
+   ]
+  },
+  "by_turbines": {
+   "2": [
+    23,
+    25
+   ],
+   "3": [
+    21,
+    23
+   ],
+   "4": [
+    9,
+    12
+   ]
+  },
+  "latency_median_ms": 1456.95,
+  "marks": {
+   "pr-01": "buna",
+   "pr-02": "buna",
+   "pr-03": "buna",
+   "pr-04": "buna",
+   "pr-05": "buna",
+   "pr-06": "buna",
+   "pr-07": "buna",
+   "pr-08": "buna",
+   "pr-09": "buna",
+   "pr-10": "buna",
+   "pr-11": "buna",
+   "pr-12": "proasta",
+   "pr-13": "buna",
+   "pr-14": "proasta",
+   "pr-15": "buna",
+   "pr-16": "buna",
+   "pr-17": "buna",
+   "pr-18": "buna",
+   "pr-19": "proasta",
+   "pr-20": "buna",
+   "pr-21": "buna",
+   "pr-22": "buna",
+   "pr-23": "buna",
+   "pr-24": "buna",
+   "pr-25": "buna",
+   "pr-26": "buna",
+   "pr-27": "buna",
+   "pr-28": "proasta",
+   "pr-29": "buna",
+   "pr-30": "buna",
+   "pr-31": "proasta",
+   "pr-32": "buna",
+   "pr-33": "buna",
+   "pr-34": "buna",
+   "pr-35": "buna",
+   "pr-36": "buna",
+   "pr-37": "buna",
+   "pr-38": "buna",
+   "pr-39": "buna",
+   "pr-40": "buna",
+   "pr-41": "buna",
+   "pr-42": "buna",
+   "pr-43": "buna",
+   "pr-44": "buna",
+   "pr-45": "buna",
+   "pr-46": "buna",
+   "pr-47": "buna",
+   "pr-48": "buna",
+   "pr-49": "buna",
+   "pr-50": "proasta",
+   "pr-51": "buna",
+   "pr-52": "buna",
+   "pr-53": "buna",
+   "pr-54": "buna",
+   "pr-55": "proasta",
+   "pr-56": "buna",
+   "pr-57": "buna",
+   "pr-58": "buna",
+   "pr-59": "buna",
+   "pr-60": "buna"
+  }
+ },
+ "jeffan-4b::timeline::11": {
+  "n": 60,
+  "accuracy": 0.6166666666666667,
+  "mean_p_correct": 0.5633411428580681,
+  "auc_pooled": 0.7970404984423676,
+  "same_choice_all_orders": 0.9166666666666666,
+  "by_category": {
+   "azi_gresit__urgent_gresit": [
+    3,
+    8
+   ],
+   "azi_gresit__urgent_ok": [
+    17,
+    25
+   ],
+   "azi_ok__urgent_gresit": [
+    0,
+    2
+   ],
+   "azi_ok__urgent_ok": [
+    17,
+    25
+   ]
+  },
+  "by_turbines": {
+   "2": [
+    17,
+    25
+   ],
+   "3": [
+    12,
+    23
+   ],
+   "4": [
+    8,
+    12
+   ]
+  },
+  "latency_median_ms": 1502.8,
+  "marks": {
+   "pr-01": "buna",
+   "pr-02": "buna",
+   "pr-03": "buna",
+   "pr-04": "buna",
+   "pr-05": "buna",
+   "pr-06": "buna",
+   "pr-07": "proasta",
+   "pr-08": "buna",
+   "pr-09": "buna",
+   "pr-10": "buna",
+   "pr-11": "buna",
+   "pr-12": "buna",
+   "pr-13": "buna",
+   "pr-14": "proasta",
+   "pr-15": "buna",
+   "pr-16": "proasta",
+   "pr-17": "buna",
+   "pr-18": "buna",
+   "pr-19": "buna",
+   "pr-20": "proasta",
+   "pr-21": "proasta",
+   "pr-22": "buna",
+   "pr-23": "buna",
+   "pr-24": "buna",
+   "pr-25": "proasta",
+   "pr-26": "buna",
+   "pr-27": "proasta",
+   "pr-28": "proasta",
+   "pr-29": "buna",
+   "pr-30": "proasta",
+   "pr-31": "proasta",
+   "pr-32": "proasta",
+   "pr-33": "buna",
+   "pr-34": "buna",
+   "pr-35": "buna",
+   "pr-36": "proasta",
+   "pr-37": "proasta",
+   "pr-38": "buna",
+   "pr-39": "buna",
+   "pr-40": "proasta",
+   "pr-41": "buna",
+   "pr-42": "proasta",
+   "pr-43": "buna",
+   "pr-44": "buna",
+   "pr-45": "proasta",
+   "pr-46": "buna",
+   "pr-47": "proasta",
+   "pr-48": "proasta",
+   "pr-49": "proasta",
+   "pr-50": "proasta",
+   "pr-51": "proasta",
+   "pr-52": "buna",
+   "pr-53": "buna",
+   "pr-54": "buna",
+   "pr-55": "proasta",
+   "pr-56": "buna",
+   "pr-57": "buna",
+   "pr-58": "buna",
+   "pr-59": "proasta",
+   "pr-60": "buna"
+  }
+ }
+}

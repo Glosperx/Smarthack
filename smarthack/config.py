@@ -19,9 +19,12 @@ The following can be imported from this module:
 - `DEFAULT_AGENT_DATA_SOURCE`
 - `DEFAULT_APP_ENV`
 - `DEFAULT_DATA_DIR`
+- `DEFAULT_DECISION_MODEL_MODE`
+- `DEFAULT_DECISION_MODEL_URL`
 - `DEFAULT_EXAMPLE_SERVICE_URL`
 - `DEFAULT_HOST`
 - `DEFAULT_HTTP_TIMEOUT`
+- `DEFAULT_LANGFUSE_BASE_URL`
 - `DEFAULT_LAKE_DIR`
 - `DEFAULT_LOG_LEVEL`
 - `DEFAULT_MAINTENANCE_DATA_DIR`
@@ -40,11 +43,18 @@ The following can be imported from this module:
 - `alerting_dir`
 - `app_env`
 - `data_dir`
+- `decision_model_enabled`
+- `decision_model_mode`
+- `decision_model_url`
 - `example_service_url`
 - `frontend_dist_dir`
 - `gemini_api_key`
 - `host`
 - `http_timeout`
+- `langfuse_base_url`
+- `langfuse_enabled`
+- `langfuse_public_key`
+- `langfuse_secret_key`
 - `lake_dir`
 - `log_level`
 - `maintenance_data_dir`
@@ -125,11 +135,21 @@ DEFAULT_PORT = 8000
 #: The default HTTP request timeout in seconds when `SMARTHACK_HTTP_TIMEOUT` is not set.
 DEFAULT_HTTP_TIMEOUT = 30.0
 
+#: The Langfuse cloud region (EU) used when `LANGFUSE_BASE_URL` is not set.
+DEFAULT_LANGFUSE_BASE_URL = "https://cloud.langfuse.com"
+
 #: The default URL for the example upstream service.
 DEFAULT_EXAMPLE_SERVICE_URL = "http://localhost:9000"
 
 #: The Open-Meteo forecast endpoint when `OPEN_METEO_URL` is not set.
 DEFAULT_OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
+
+#: Where the local decision model server listens when `DECISION_MODEL_URL` is not set.
+DEFAULT_DECISION_MODEL_URL = "http://127.0.0.1:8765"
+
+#: How the decision model is used when `DECISION_MODEL_MODE` is not set: `"umbra"`, the code
+#: decides and the model's choice is only logged beside it.
+DEFAULT_DECISION_MODEL_MODE = "umbra"
 
 #: The default data directory relative to repository root.
 DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
@@ -418,6 +438,85 @@ def gemini_api_key() -> str:
     return (os.environ.get("GEMINI_API_KEY") or "").strip()
 
 
+def decision_model_enabled() -> bool:
+    """
+    Tell whether the dispatch agent may ask the local decision model.
+
+    Off unless `DECISION_MODEL_ENABLED` is one of `1`, `true`, `yes` or `on`. Any other value,
+    including a typo, leaves it off: with it off the agent makes no HTTP call and decides by rule.
+
+    :returns enabled: True when the model is switched on.
+    """
+    raw = (os.environ.get("DECISION_MODEL_ENABLED") or "").strip().lower()
+    return raw in ("1", "true", "yes", "on")
+
+
+def decision_model_url() -> str:
+    """
+    Return the base URL of the local decision model server.
+
+    :returns url: The URL without trailing slash. Defaults to `"http://127.0.0.1:8765"`.
+    """
+    return (os.environ.get("DECISION_MODEL_URL") or DEFAULT_DECISION_MODEL_URL).strip().rstrip("/")
+
+
+def decision_model_mode() -> str:
+    """
+    Return how much weight the decision model's answer gets.
+
+    `"umbra"` (shadow): the rule decides and the model's choice is only logged beside it.
+    `"activ"`: the model decides, checked by the code, and the rule is the fallback. Any other
+    value, including a typo, means `"umbra"`, the side where the model changes nothing.
+
+    :returns mode: `"umbra"` or `"activ"`. Defaults to `"umbra"`.
+    """
+    raw = (os.environ.get("DECISION_MODEL_MODE") or DEFAULT_DECISION_MODEL_MODE).strip().lower()
+    return "activ" if raw == "activ" else DEFAULT_DECISION_MODEL_MODE
+
+
+def langfuse_enabled() -> bool:
+    """
+    Tell whether the dispatch agent may send traces to Langfuse.
+
+    Off unless `LANGFUSE_ENABLED` is one of `1`, `true`, `yes` or `on`; anything else, a typo
+    included, leaves it off. Even when on, tracing needs both keys and the `monitoring` extra, and
+    quietly does nothing without them.
+
+    :returns enabled: True when tracing is switched on.
+    """
+    raw = (os.environ.get("LANGFUSE_ENABLED") or "").strip().lower()
+    return raw in ("1", "true", "yes", "on")
+
+
+def langfuse_public_key() -> str:
+    """
+    Return the Langfuse project's public key, if configured.
+
+    :returns key: The key, or an empty string when unset.
+    """
+    return (os.environ.get("LANGFUSE_PUBLIC_KEY") or "").strip()
+
+
+def langfuse_secret_key() -> str:
+    """
+    Return the Langfuse project's secret key, if configured.
+
+    :returns key: The key, or an empty string when unset.
+    """
+    return (os.environ.get("LANGFUSE_SECRET_KEY") or "").strip()
+
+
+def langfuse_base_url() -> str:
+    """
+    Return the Langfuse server the traces are sent to.
+
+    :returns url: The URL without trailing slash. Defaults to the EU cloud,
+        `"https://cloud.langfuse.com"`.
+    """
+    raw = os.environ.get("LANGFUSE_BASE_URL") or DEFAULT_LANGFUSE_BASE_URL
+    return raw.strip().rstrip("/")
+
+
 def timezone() -> str:
     """
     Return the application timezone for daily business logic.
@@ -505,9 +604,12 @@ __all__ = [
     "DEFAULT_AGENT_DATA_SOURCE",
     "DEFAULT_APP_ENV",
     "DEFAULT_DATA_DIR",
+    "DEFAULT_DECISION_MODEL_MODE",
+    "DEFAULT_DECISION_MODEL_URL",
     "DEFAULT_EXAMPLE_SERVICE_URL",
     "DEFAULT_HOST",
     "DEFAULT_HTTP_TIMEOUT",
+    "DEFAULT_LANGFUSE_BASE_URL",
     "DEFAULT_LAKE_DIR",
     "DEFAULT_LOG_LEVEL",
     "DEFAULT_MAINTENANCE_DATA_DIR",
@@ -526,11 +628,18 @@ __all__ = [
     "alerting_dir",
     "app_env",
     "data_dir",
+    "decision_model_enabled",
+    "decision_model_mode",
+    "decision_model_url",
     "example_service_url",
     "frontend_dist_dir",
     "gemini_api_key",
     "host",
     "http_timeout",
+    "langfuse_base_url",
+    "langfuse_enabled",
+    "langfuse_public_key",
+    "langfuse_secret_key",
     "lake_dir",
     "log_level",
     "maintenance_data_dir",

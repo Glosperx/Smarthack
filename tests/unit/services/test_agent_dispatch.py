@@ -167,6 +167,18 @@ def test_overlapping_failures_invoke_power_model_even_with_enough_crews() -> Non
     assert result["power_model_invoked"] is True
 
 
+def test_turbines_of_another_park_never_make_a_conflict() -> None:
+    """Two turbines due the same day but in different parks do not compete for anything."""
+    get_default_crew_client().reset_crews()
+    other_park = {**_failing(10, 4.0), "park_id": "wind_farm_b"}
+
+    result = run_park_dispatch_agent("wind_farm_a", triage_items=[_failing(0, 4.0), other_park])
+
+    assert result["has_conflict"] is False
+    assert result["power_model_invoked"] is False
+    assert [d["turbine_id"] for d in result["alert_decisions"]] == [0]
+
+
 def test_failures_far_apart_skip_power_model_even_with_one_crew() -> None:
     """Turbines due days apart need no comparison, however few crews there are."""
     crew_client = get_default_crew_client()

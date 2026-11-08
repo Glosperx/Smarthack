@@ -1,0 +1,15 @@
+{
+ "id": "teodorapanait/care-fault-forecast-lstm-attention",
+ "title": "CARE fault forecast LSTM attention",
+ "code_file": "care_lstm_attention.ipynb",
+ "language": "python",
+ "kernel_type": "notebook",
+ "is_private": true,
+ "enable_gpu": true,
+ "enable_internet": false,
+ "dataset_sources": [
+  "azizkasimov/wind-turbine-scada-data-for-early-fault-detection"
+ ],
+ "competition_sources": [],
+ "kernel_sources": []
+}

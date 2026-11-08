@@ -1,0 +1,9 @@
+{
+  "model": "glide-0.8b",
+  "device": "mps",
+  "load_s": 3.42,
+  "peak_rss_gb": 1.03,
+  "mps_peak_gb": 2.41,
+  "decisions": 960,
+  "wall_s": 240.8
+}

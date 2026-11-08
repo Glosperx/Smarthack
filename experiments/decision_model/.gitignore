@@ -1,0 +1,4 @@
+# Local runtime output: smoke-test results, model snapshots, leaderboard downloads.
+.venv/
+out/
+models/

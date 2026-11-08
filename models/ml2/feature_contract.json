@@ -1,0 +1,246 @@
+{
+  "name": "ML2 baseline: hourly available production per turbine",
+  "created": "2026-11-08",
+  "notebook": "notebooks/care_ml2_power_baseline.ipynb",
+  "results": "notebooks/care_ml2_power_baseline.md",
+  "target": {
+    "name": "cf",
+    "unit": "capacity factor (1.0 = rated power)",
+    "definition": "hourly mean power of a healthy turbine in operation, without stops and curtailment (section 3)"
+  },
+  "output_to_energy": "MWh over the horizon = sum over forecast hours of clip(cf, 0, 1) * capacity_kw / 1000 (each row is one hour)",
+  "expected_production": "expected = available x availability; availability is a per-turbine or per-park history factor, not part of the model",
+  "source_table": "park_wind_forecast",
+  "time_column": "forecast_time (timestamptz, start of the hour, UTC)",
+  "row_unit": "one park and one hour; every turbine of the park gets the same weather inputs",
+  "features": {
+    "ws": {
+      "source": "wind_speed_100m",
+      "unit": "m/s",
+      "transform": "identity",
+      "care_training_proxy": "hourly mean nacelle wind speed (A wind_speed_3_avg, B wind_speed_61_avg, C wind_speed_236_avg)"
+    },
+    "ws_d1": {
+      "source": "wind_speed_100m",
+      "unit": "m/s",
+      "transform": "ws(t) - ws(t - 1 h) within the park's hourly series; NaN for the first hour"
+    },
+    "ws_sd3": {
+      "source": "wind_speed_100m",
+      "unit": "m/s",
+      "transform": "sample standard deviation (ddof=1) of ws over t-1 h, t, t+1 h, at least 2 values"
+    },
+    "temp": {
+      "source": "temperature_2m",
+      "unit": "degC",
+      "transform": "temperature_2m minus the park's reference temperature (long-term median at the site)",
+      "care_training_proxy": "ambient temperature minus the farm median (A sensor_0, B sensor_8, C sensor_7; exact zeros are missing)",
+      "care_reference_degC": {
+        "A": 20.0,
+        "B": 12.58,
+        "C": 28.11
+      }
+    },
+    "wd_sin": {
+      "source": "wind_direction_100m",
+      "unit": "deg",
+      "transform": "sin(radians(direction))",
+      "care_training_proxy": "A sensor_1, B sensor_4; C none"
+    },
+    "wd_cos": {
+      "source": "wind_direction_100m",
+      "unit": "deg",
+      "transform": "cos(radians(direction))",
+      "care_training_proxy": "A sensor_1, B sensor_4; C none"
+    },
+    "hod_sin": {
+      "source": "forecast_time",
+      "unit": "h",
+      "transform": "sin(2 pi h / 24), h = local solar hour = (UTC hour + longitude / 15) mod 24"
+    },
+    "hod_cos": {
+      "source": "forecast_time",
+      "unit": "h",
+      "transform": "cos(2 pi h / 24), h as above"
+    },
+    "doy_sin": {
+      "source": "forecast_time",
+      "unit": "day",
+      "transform": "sin(2 pi doy / 365.25), doy = day of year of the UTC date (northern hemisphere)"
+    },
+    "doy_cos": {
+      "source": "forecast_time",
+      "unit": "day",
+      "transform": "cos(2 pi doy / 365.25)"
+    },
+    "turbine": {
+      "source": "CARE turbine id (string, e.g. 'C17')",
+      "unit": null,
+      "transform": "categorical",
+      "note": "only meaningful for CARE turbines; database turbines are not CARE turbines"
+    },
+    "farm": {
+      "source": "CARE farm id ('A', 'B', 'C')",
+      "unit": null,
+      "transform": "categorical"
+    }
+  },
+  "unused_forecast_columns": {
+    "wind_speed_10m": "no counterpart at hub height in CARE",
+    "wind_direction_10m": "no counterpart in CARE",
+    "wind_gusts_10m": "only a loose counterpart (nacelle 10-minute max); tested as an ablation, not used",
+    "relative_humidity_2m": "not measured in CARE",
+    "dew_point_2m": "not measured in CARE",
+    "surface_pressure": "not measured in CARE"
+  },
+  "models": {
+    "ml2_cf_generic.cbm": {
+      "features": [
+        "ws",
+        "ws_d1",
+        "ws_sd3",
+        "hod_sin",
+        "hod_cos",
+        "doy_sin",
+        "doy_cos"
+      ],
+      "trained_on": "farms A, B, C",
+      "use": "parks and turbines outside CARE (the database fleet)",
+      "leave_one_farm_out": {
+        "A": {
+          "R2": 0.981,
+          "WAPE_7d": 0.048
+        },
+        "B": {
+          "R2": 0.888,
+          "WAPE_7d": 0.163
+        },
+        "C": {
+          "R2": 0.913,
+          "WAPE_7d": 0.133
+        }
+      }
+    },
+    "ml2_cf_pooled.cbm": {
+      "features": [
+        "ws",
+        "ws_d1",
+        "ws_sd3",
+        "temp",
+        "wd_sin",
+        "wd_cos",
+        "hod_sin",
+        "hod_cos",
+        "doy_sin",
+        "doy_cos",
+        "farm",
+        "turbine"
+      ],
+      "trained_on": "farms A, B, C",
+      "use": "CARE turbines only"
+    },
+    "ml2_cf_farm_A.cbm": {
+      "features": [
+        "ws",
+        "ws_d1",
+        "ws_sd3",
+        "temp",
+        "wd_sin",
+        "wd_cos",
+        "hod_sin",
+        "hod_cos",
+        "doy_sin",
+        "doy_cos",
+        "turbine"
+      ],
+      "trained_on": "farm A",
+      "use": "CARE farm A turbines only",
+      "new_turbines": {
+        "R2": 0.994,
+        "MAE": 0.0156,
+        "WAPE_7d": 0.032,
+        "pair_accuracy_own_wind": 0.8,
+        "pair_accuracy_park_wind": 0.452
+      },
+      "future": {
+        "R2": 0.997,
+        "MAE": 0.0102,
+        "WAPE_7d": 0.013,
+        "pair_accuracy_own_wind": 0.966,
+        "pair_accuracy_park_wind": 0.627
+      }
+    },
+    "ml2_cf_farm_B.cbm": {
+      "features": [
+        "ws",
+        "ws_d1",
+        "ws_sd3",
+        "temp",
+        "wd_sin",
+        "wd_cos",
+        "hod_sin",
+        "hod_cos",
+        "doy_sin",
+        "doy_cos",
+        "turbine"
+      ],
+      "trained_on": "farm B",
+      "use": "CARE farm B turbines only",
+      "new_turbines": {
+        "R2": 0.972,
+        "MAE": 0.0306,
+        "WAPE_7d": 0.036,
+        "pair_accuracy_own_wind": 0.882,
+        "pair_accuracy_park_wind": 0.487
+      },
+      "future": {
+        "R2": 0.981,
+        "MAE": 0.0248,
+        "WAPE_7d": 0.02,
+        "pair_accuracy_own_wind": 0.8,
+        "pair_accuracy_park_wind": 0.5
+      }
+    },
+    "ml2_cf_farm_C.cbm": {
+      "features": [
+        "ws",
+        "ws_d1",
+        "ws_sd3",
+        "temp",
+        "hod_sin",
+        "hod_cos",
+        "doy_sin",
+        "doy_cos",
+        "turbine"
+      ],
+      "trained_on": "farm C",
+      "use": "CARE farm C turbines only",
+      "new_turbines": {
+        "R2": 0.96,
+        "MAE": 0.0381,
+        "WAPE_7d": 0.058,
+        "pair_accuracy_own_wind": 0.867,
+        "pair_accuracy_park_wind": 0.474
+      },
+      "future": {
+        "R2": 0.969,
+        "MAE": 0.0304,
+        "WAPE_7d": 0.04,
+        "pair_accuracy_own_wind": 0.957,
+        "pair_accuracy_park_wind": 0.468
+      }
+    }
+  },
+  "postprocess": "clip cf to [0, 1] before converting to energy",
+  "categorical_features": "pass turbine and farm as strings",
+  "missing_values": "NaN is allowed (CatBoost default handling); wd_sin and wd_cos are NaN for farm C",
+  "availability_care": {
+    "A": 0.954,
+    "B": 0.808,
+    "C": 0.785
+  },
+  "limits": [
+    "trained on measured nacelle wind, served on forecast 100 m wind: CARE metrics are an upper bound (section 9)",
+    "with one forecast row per park, turbines of the same park can only be ordered through what the model knows about each turbine"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "model": "pplx-flash-4b",
+  "device": "mps",
+  "load_s": 7.06,
+  "peak_rss_gb": 0.72,
+  "mps_peak_gb": 9.48,
+  "decisions": 960,
+  "wall_s": 807.4
+}

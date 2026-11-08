@@ -7,7 +7,12 @@ within the window of each other make a conflict.
 
 import pytest
 
-from smarthack.services.agent.failure_overlap import failure_day, overlapping_failures
+from smarthack.services.agent.failure_overlap import (
+    failure_day,
+    item_failure_day,
+    lead_time_days,
+    overlapping_failures,
+)
 
 
 @pytest.mark.parametrize(
@@ -54,3 +59,41 @@ def test_chain_of_close_turbines_all_overlap() -> None:
 def test_fewer_than_two_turbines_never_overlap(failure_days: dict[int, int]) -> None:
     """A lone turbine has nothing to compete with."""
     assert overlapping_failures(failure_days, window_days=1) == set()
+
+
+@pytest.mark.parametrize(
+    ("item", "expected"),
+    [
+        ({"days_to_failure": 4.7}, 4),
+        ({"days_to_failure": 0.3}, 0),
+        ({"days_to_failure": 7.9}, 7),
+        ({"days_to_failure": 8.0}, None),
+        ({"days_to_failure": 10.2}, None),
+        ({"days_to_failure": None}, None),
+        ({}, None),
+        ({"days_to_failure": float("nan")}, None),
+        ({"days_to_failure": "soon"}, None),
+    ],
+)
+def test_a_lead_time_of_eight_days_or_none_is_no_failure_day(
+    item: dict[str, object], expected: int | None
+) -> None:
+    """ML1 expects such a turbine to last the week: it has no day to overlap on."""
+    assert item_failure_day(item) == expected
+
+
+@pytest.mark.parametrize(
+    ("item", "expected"),
+    [
+        ({"days_to_failure": 4.7}, 4.7),
+        ({"days_to_failure": 10.2}, 10.2),
+        ({"days_to_failure": None}, 8.0),
+        ({}, 8.0),
+        ({"days_to_failure": float("inf")}, 8.0),
+    ],
+)
+def test_a_missing_lead_time_reads_as_no_failure_predicted(
+    item: dict[str, object], expected: float
+) -> None:
+    """Missing or unusable is the "no failure predicted" value, never a crash."""
+    assert lead_time_days(item) == expected

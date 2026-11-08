@@ -445,9 +445,12 @@ export interface components {
         /**
          * AlertChannel
          * @description Notification channels selected by the autonomous alerting agent.
+         *
+         *     The values are the option keys the decision model answers with. `VOICE_CALL` sends the call
+         *     and the email: a call alone leaves the crew nothing written to act from.
          * @enum {string}
          */
-        AlertChannel: "VOICE_CALL" | "EMAIL" | "NONE";
+        AlertChannel: "email_si_apel" | "doar_email" | "nimic";
         /**
          * CrewStatus
          * @description Operational status of a wind park maintenance crew.
@@ -481,7 +484,7 @@ export interface components {
              * @description Dispatch priority rank within the park (1 = highest).
              */
             priority_rank: number;
-            /** @description Channel selected: VOICE_CALL, EMAIL, or NONE. */
+            /** @description Channel selected: email_si_apel (call and email), doar_email (email only), or nimic (no alert). */
             alert_channel: components["schemas"]["AlertChannel"];
             /**
              * Assigned Crew Id

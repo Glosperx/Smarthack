@@ -1,0 +1,9 @@
+{
+  "model": "knowline-4b",
+  "device": "mps",
+  "load_s": 7.25,
+  "peak_rss_gb": 0.97,
+  "mps_peak_gb": 12.73,
+  "decisions": 960,
+  "wall_s": 1702.7
+}

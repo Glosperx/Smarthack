@@ -15,6 +15,11 @@ import logging
 import re
 
 from smarthack import config
+from smarthack.constants import (
+    CHANNEL_CALL_DAYS,
+    CHANNEL_CALL_PROBABILITY,
+    CHANNEL_EMAIL_PROBABILITY,
+)
 from smarthack.schemas.dispatch import AlertChannel
 
 logger = logging.getLogger(__name__)
@@ -49,9 +54,13 @@ def classify_alert_channel(
     :returns channel: AlertChannel.VOICE_CALL for urgent emergencies, AlertChannel.EMAIL for warnings.
     """
     status_upper = health_status.upper()
-    if status_upper == "CRITICAL" or days_to_failure <= 2.0 or fault_probability >= 0.70:
+    if (
+        status_upper == "CRITICAL"
+        or days_to_failure <= CHANNEL_CALL_DAYS
+        or fault_probability >= CHANNEL_CALL_PROBABILITY
+    ):
         return AlertChannel.VOICE_CALL
-    if status_upper in ("WARNING", "WATCH") or fault_probability >= 0.30:
+    if status_upper in ("WARNING", "WATCH") or fault_probability >= CHANNEL_EMAIL_PROBABILITY:
         return AlertChannel.EMAIL
     return AlertChannel.NONE
 
@@ -194,7 +203,7 @@ def generate_llm_alert_payload(
         )
 
         resp = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.8-flash",
             contents=prompt,
         )
         text = (resp.text or "").strip()
