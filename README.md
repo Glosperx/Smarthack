@@ -1,5 +1,3 @@
-# Smarthack
-
 A wind energy platform for Romania. It watches the telemetry of running turbines, predicts
 which ones will fail in the next 7 days, and lets an agent decide who gets an email and who
 gets a phone call. On the planning side, it maps where the wind will be strongest over the
