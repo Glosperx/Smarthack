@@ -5,6 +5,9 @@ Validates conditional power model prioritization, crew conflict resolution,
 park-scoped crew alerts, and dual-channel (TTS vs Email) alerting.
 """
 
+from types import SimpleNamespace
+from typing import Any
+
 import pytest
 
 from smarthack.clients.crew_client import get_default_crew_client
@@ -13,6 +16,7 @@ from smarthack.clients.voice_client import get_default_voice_client
 from smarthack.schemas.dispatch import AlertChannel, CrewStatus
 from smarthack.services.agent.graph import run_park_dispatch_agent
 from smarthack.services.agent.prompts import (
+    _gemini_usage,
     classify_alert_channel,
     generate_llm_alert_payload,
 )
@@ -295,3 +299,36 @@ def test_generate_llm_alert_payload_fallback() -> None:
     )
     assert "Alpha Team" in payload["speech_text"]
     assert "CRITICAL" in payload["decision_reason"]
+
+
+def test_gemini_usage_adds_thinking_tokens_to_the_output() -> None:
+    """Thinking is billed as output, so Langfuse gets it under `output`."""
+    meta = SimpleNamespace(
+        prompt_token_count=208, candidates_token_count=120, thoughts_token_count=380
+    )
+
+    usage = _gemini_usage(SimpleNamespace(usage_metadata=meta))
+
+    assert usage == {"usage_details": {"input": 208, "output": 500}}
+
+
+@pytest.mark.parametrize(
+    "resp",
+    [
+        SimpleNamespace(),
+        SimpleNamespace(usage_metadata=None),
+        SimpleNamespace(
+            usage_metadata=SimpleNamespace(
+                prompt_token_count=None, candidates_token_count=None, thoughts_token_count=None
+            )
+        ),
+        SimpleNamespace(
+            usage_metadata=SimpleNamespace(
+                prompt_token_count="x", candidates_token_count=1, thoughts_token_count=1
+            )
+        ),
+    ],
+)
+def test_gemini_usage_is_empty_without_counts(resp: Any) -> None:
+    """No counts, or counts that are not numbers, mean no `usage_details` rather than a guess."""
+    assert _gemini_usage(resp) == {}

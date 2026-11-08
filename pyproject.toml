@@ -60,6 +60,10 @@ monitoring = [
     "langchain==1.4.9",
     "langfuse==4.18.0",
 ]
+# Gemini, which writes the alert texts of the dispatch agent; without it the templates are used.
+llm = [
+    "google-genai==3.0.0",
+]
 # The oversize transport network: OpenStreetMap .pbf reading.
 transport = [
     "numpy==2.5.4",
@@ -75,7 +79,7 @@ calls = [
     "requests==2.34.2",
     "twilio==9.13.0",
 ]
-all  = ["smarthack[wind,resource,monitoring,transport,lake,calls]"]
+all  = ["smarthack[wind,resource,monitoring,llm,transport,lake,calls]"]
 
 [tool.setuptools.dynamic]
 version = { attr = "smarthack.__version__" }

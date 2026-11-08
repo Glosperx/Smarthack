@@ -151,7 +151,7 @@ def test_an_enabled_call_goes_to_the_alerting_module(monkeypatch: pytest.MonkeyP
     [sent] = calls
     alert, decision = sent["alert"], sent["decision"]
     assert alert["park"] == "wind_farm_a"
-    assert alert["turbines"] == [{"turbine_id": "T7", "probability": 0.97}]
+    assert alert["turbines"] == [{"turbine_id": "T07", "probability": 0.97}]
     assert alert["hours_to_failure"] == 29.0
     assert alert["alert_id"] == decision["alert_id"]
     assert sent["env"]["CALL_RETRIES_PER_PERSON"] == "0"  # rings once
@@ -204,3 +204,86 @@ def test_the_alert_id_does_not_depend_on_the_process(monkeypatch: pytest.MonkeyP
     assert re.fullmatch(r"SMH-\d{8}T\d{4}-wind_farm_a-T7", first)
     assert different.endswith("-T8")
     assert again[:-3] == first[:-3] or again != first  # the minute may have turned
+
+
+def _ticket(client: EmailNotificationClient, real_alert: dict[str, Any] | None) -> dict[str, Any]:
+    """
+    Dispatch one work ticket for turbine 7 of a park.
+
+    :param client: The client under test.
+    :param real_alert: What the graph passes for an email-only alert, or None.
+
+    :returns record: The ticket record.
+    """
+    return client.dispatch_work_ticket(
+        recipient_email="crew@x.test",
+        crew_name="Alpha",
+        turbine_id=7,
+        park_id="wind_farm_a",
+        subject="s",
+        body="b",
+        real_alert=real_alert,
+    )
+
+
+_EMAIL_ONLY = {"health_status": "WARNING", "lead_time_hours": 144.0, "fault_probability": 0.45}
+
+
+def test_no_real_email_unless_enabled(monkeypatch: pytest.MonkeyPatch) -> None:
+    """By default the ticket is only recorded: the alerting module is never reached."""
+    calls = _fake_alerting(monkeypatch, {"status": "dispatched"})
+
+    record = _ticket(EmailNotificationClient(), _EMAIL_ONLY)
+
+    assert "real_email" not in record
+    assert calls == []
+
+
+def test_an_enabled_email_only_alert_never_asks_for_a_call(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The decision handed to the module is `doar_email`, so on-call is emailed and not phoned."""
+    monkeypatch.setenv("REAL_EMAILS_ENABLED", "true")
+    calls = _fake_alerting(monkeypatch, {"status": "dispatched", "alert_id": "x", "email": []})
+
+    record = _ticket(EmailNotificationClient(), _EMAIL_ONLY)
+
+    [sent] = calls
+    assert sent["decision"]["channel"] == "doar_email"
+    assert sent["decision"]["severity"] == "medie"
+    assert sent["alert"]["turbines"] == [{"turbine_id": "T07", "probability": 0.45}]
+    assert sent["alert"]["hours_to_failure"] == 144.0
+    assert record["real_email"]["status"] == "dispatched"
+
+
+def test_the_email_that_goes_with_a_call_is_not_sent_twice(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Without `real_alert` the module is not reached: the call's own dispatch emails on-call."""
+    monkeypatch.setenv("REAL_EMAILS_ENABLED", "true")
+    calls = _fake_alerting(monkeypatch, {"status": "dispatched"})
+
+    record = _ticket(EmailNotificationClient(), None)
+
+    assert "real_email" not in record
+    assert calls == []
+
+
+def test_a_failing_mail_backend_does_not_stop_the_sweep(monkeypatch: pytest.MonkeyPatch) -> None:
+    """An error from the alerting module is recorded, not raised."""
+    monkeypatch.setenv("REAL_EMAILS_ENABLED", "true")
+    _fake_alerting(monkeypatch, RuntimeError("smtp is down"))
+
+    record = _ticket(EmailNotificationClient(), _EMAIL_ONLY)
+
+    assert record["real_email"] == {"status": "error", "error": "RuntimeError: smtp is down"}
+    assert record["status"] == "DELIVERED"
+
+
+def test_real_emails_enabled_reads_only_truthy_words(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A typo leaves real emails off."""
+    from smarthack import config
+
+    for value, expected in [("true", True), ("ON", True), ("yess", False), ("", False)]:
+        monkeypatch.setenv("REAL_EMAILS_ENABLED", value)
+        assert config.real_emails_enabled() is expected

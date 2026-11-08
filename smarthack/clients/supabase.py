@@ -12,6 +12,7 @@ The following can be imported from this module:
 - `fetch_parks`
 - `fetch_rows`
 - `fetch_turbines_with_predictions`
+- `park_display_name`
 - `parse_ewkb_point`
 - `replace_wind_forecast`
 - `select_rows`
@@ -376,6 +377,39 @@ async def replace_wind_forecast(http: httpx.AsyncClient, rows: list[dict[str, An
     return int(resp.json())
 
 
+#: Park names already read, by park id: a name is read once per process, not once per alert.
+_PARK_NAMES: dict[str, str] = {}
+
+
+def park_display_name(park_id: str | int) -> str:
+    """
+    Find the name a person knows a park by, such as `Valea Nucarilor (Agighiol)`.
+
+    Only the Supabase data source has names, and only for numeric ids. In the memory source, or
+    when the database cannot be read or has no such park, the id itself comes back, so an alert is
+    never held back for want of a name.
+
+    :param park_id: The park's id.
+
+    :returns name: The park's name, or `str(park_id)`.
+    """
+    key = str(park_id)
+    if key in _PARK_NAMES:
+        return _PARK_NAMES[key]
+    if config.agent_data_source() != "supabase" or not key.isdigit():
+        return key
+    try:
+        rows = select_rows(PARK_TABLE, {"select": "id,name", "id": f"eq.{key}"})
+    except (httpx.HTTPError, RuntimeError) as exc:
+        logger.warning("could not read the name of park %s: %s", key, exc)
+        return key
+    name = str(rows[0].get("name") or "").strip() if rows else ""
+    if not name:
+        return key
+    _PARK_NAMES[key] = name
+    return name
+
+
 __all__ = [
     "_headers",
     "_write_headers",
@@ -384,6 +418,7 @@ __all__ = [
     "fetch_parks",
     "fetch_rows",
     "fetch_turbines_with_predictions",
+    "park_display_name",
     "parse_ewkb_point",
     "replace_wind_forecast",
     "select_rows",

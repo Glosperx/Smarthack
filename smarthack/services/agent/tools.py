@@ -211,6 +211,7 @@ def dispatch_warning_email(
     subject: str,
     body: str,
     diagnostics: dict[str, Any] | None = None,
+    real_alert: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Dispatch a maintenance work order ticket email to the park's crew.
@@ -222,6 +223,8 @@ def dispatch_warning_email(
     :param subject: Email subject line.
     :param body: Detailed diagnostic body text.
     :param diagnostics: Optional sensor telemetry and risk payload.
+    :param real_alert: For an email-only alert, the turbine's `health_status`, `lead_time_hours`
+        and `fault_probability`, so the email can really be sent when that is switched on.
 
     :returns record: Confirmation record of the email dispatch.
     """
@@ -234,6 +237,7 @@ def dispatch_warning_email(
         subject=subject,
         body=body,
         diagnostics=diagnostics,
+        real_alert=real_alert,
     )
 
 

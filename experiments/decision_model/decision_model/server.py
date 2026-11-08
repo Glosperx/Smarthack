@@ -6,7 +6,9 @@ Serves one decision model over HTTP in the System One format, so the dispatch ag
 model on MPS: Docker on a Mac cannot see the Metal GPU.
 
     POST /v1/systemone   {"state": ..., "questions": {"q": {"type": "choice", ...}}}
-                         -> {"answers": {"q": {"probabilities": {option: p}}}}
+                         -> {"answers": {"q": {"probabilities": {option: p},
+                                               "usage": {"prompt_tokens": n}}}}
+                         (`usage` only when the model counts its prompt)
     GET  /health         -> {"status": "ok", "model": "jeffan-4b"}
 
 Answers: 400 for a body that is not the agreed shape, 413 for one over a megabyte, 422 for a
@@ -113,6 +115,11 @@ def answer(adapter: Adapter, payload: Any) -> dict[str, Any]:
     for key, question in checked.items():
         request = {"state": payload["state"], "questions": {key: question}}
         answers[key] = {"probabilities": adapter.choice(request)}
+        # Only an adapter that counts its prompt (Jeffan) reports it; the lock the caller holds
+        # keeps the count of this question from being overwritten by another one.
+        prompt_tokens = getattr(adapter, "last_prompt_tokens", None)
+        if isinstance(prompt_tokens, int):
+            answers[key]["usage"] = {"prompt_tokens": prompt_tokens}
     return {"answers": answers}
 
 

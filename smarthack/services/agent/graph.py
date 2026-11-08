@@ -436,6 +436,15 @@ def node_decide_and_dispatch_alerts(state: DispatchAgentState) -> dict[str, Any]
                     "projected_mwh_7d": mwh,
                     "repair_date": repair_date,
                 },
+                real_alert=(
+                    {
+                        "health_status": status,
+                        "lead_time_hours": days_to_fail * 24.0,
+                        "fault_probability": fault_prob,
+                    }
+                    if channel == AlertChannel.EMAIL
+                    else None
+                ),
             )
             dispatched_notifications.append(resp)
             notification_sent = True

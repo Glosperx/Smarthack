@@ -33,6 +33,7 @@ import pytest
 EXTRA_MODULES: dict[str, tuple[str, ...]] = {
     "calls": ("jinja2", "requests", "twilio"),
     "lake": ("watchdog",),
+    "llm": ("google.genai",),
     "resource": ("imagecodecs", "numpy", "PIL", "tifffile"),
     "transport": ("numpy", "osmium"),
     "wind": (
@@ -85,6 +86,7 @@ _ENVIRONMENT_VARIABLES = (
     "WIND_FORECAST_INTERVAL_MINUTES",
     "OPEN_METEO_URL",
     "VOICE_CALLS_ENABLED",
+    "REAL_EMAILS_ENABLED",
 )
 
 

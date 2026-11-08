@@ -60,6 +60,26 @@ logger = logging.getLogger(__name__)
 #: The mode in which the model decides; any other mode only records its choice.
 _ACTIVE_MODE = "activ"
 
+#: Name of the served model, shown on its `generation` observations in Langfuse.
+_MODEL_NAME = "jeffan-4b"
+
+
+def _usage(client: DecisionClient) -> dict[str, Any]:
+    """
+    Tell Langfuse how many tokens the last question cost, when the server counted them.
+
+    Jeffan reads the prompt in one forward pass and writes no text, so only input tokens exist;
+    it runs locally, so there is no cost.
+
+    :param client: The client that just got an answer.
+
+    :returns fields: `{"usage_details": {...}}` for `Trace.update`, or `{}` when unknown.
+    """
+    tokens = getattr(client, "last_prompt_tokens", None)
+    if isinstance(tokens, int) and not isinstance(tokens, bool):
+        return {"usage_details": {"input": tokens, "output": 0}}
+    return {}
+
 
 @dataclass(frozen=True)
 class PlanDecision:
@@ -173,7 +193,9 @@ def choose_plan(
     request, by_name = build_plan_request(park_id, turbines, requests, plans, wind)
     record["options"] = dict(request.options)
     with tracing.model_call(
-        "jev.repair_plan", {"mode": mode, "state": request.state, "options": request.options}
+        "jev.repair_plan",
+        {"mode": mode, "state": request.state, "options": request.options},
+        model=_MODEL_NAME,
     ) as span:
         started = time.perf_counter()
         try:
@@ -230,7 +252,7 @@ def choose_plan(
             record["probabilities"],
             record["latency_ms"],
         )
-        span.update(output=record)
+        span.update(output=record, **_usage(client))
         return PlanDecision(chosen, record, False)
 
 
@@ -298,7 +320,9 @@ def choose_channel(
 
     request = build_channel_request(park_id, item)
     with tracing.model_call(
-        "jev.alert_channel", {"mode": mode, "state": request.state, "options": request.options}
+        "jev.alert_channel",
+        {"mode": mode, "state": request.state, "options": request.options},
+        model=_MODEL_NAME,
     ) as span:
         started = time.perf_counter()
         try:
@@ -347,7 +371,7 @@ def choose_channel(
             record["probabilities"],
             record["latency_ms"],
         )
-        span.update(output=record)
+        span.update(output=record, **_usage(client))
         return ChannelDecision(used, record, False)
 
 

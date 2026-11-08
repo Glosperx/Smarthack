@@ -148,3 +148,37 @@ def test_the_default_client_follows_the_configured_url(monkeypatch: pytest.Monke
     assert second is not None and second._base_url == "http://two.test"
     second.close()
     monkeypatch.setattr(decision_client, "_GLOBAL_DECISION_CLIENT", None)
+
+
+def test_the_prompt_tokens_the_server_counts_are_kept() -> None:
+    """A `usage.prompt_tokens` in the answer shows in `last_prompt_tokens`; before a call, None."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = {
+            "answers": {
+                "q": {"probabilities": {"a": 0.5, "b": 0.5}, "usage": {"prompt_tokens": 309}}
+            }
+        }
+        return httpx.Response(200, json=body)
+
+    client = _client(handler)
+    assert client.last_prompt_tokens is None
+
+    client.choice({}, "Which?", OPTIONS)
+
+    assert client.last_prompt_tokens == 309
+
+
+@pytest.mark.parametrize(
+    "usage", [None, {}, {"prompt_tokens": -1}, {"prompt_tokens": "9"}, {"prompt_tokens": True}]
+)
+def test_a_missing_or_bad_token_count_never_fails_the_decision(usage: Any) -> None:
+    """The count is optional: the probabilities still come back and the count is None."""
+    answer: dict[str, Any] = {"probabilities": {"a": 0.5, "b": 0.5}}
+    if usage is not None:
+        answer["usage"] = usage
+
+    client = _client(lambda request: httpx.Response(200, json={"answers": {"q": answer}}))
+
+    assert client.choice({}, "Which?", OPTIONS) == {"a": 0.5, "b": 0.5}
+    assert client.last_prompt_tokens is None

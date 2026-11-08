@@ -332,6 +332,20 @@ def voice_calls_enabled() -> bool:
     return value in ("1", "true", "yes", "on")
 
 
+def real_emails_enabled() -> bool:
+    """
+    Tell whether an email-only alert really goes out through the alerting module.
+
+    Off by default: the email client then only records and logs the ticket. The module has its
+    own gates on top (`DRY_RUN`, `ALLOWED_EMAILS`) and writes to its on-call rotation, never to
+    the crew addresses of the dispatch agent. An email-only decision never starts a call.
+
+    :returns flag: True when `REAL_EMAILS_ENABLED` is `1`, `true`, `yes` or `on`.
+    """
+    value = (os.environ.get("REAL_EMAILS_ENABLED") or "").strip().lower()
+    return value in ("1", "true", "yes", "on")
+
+
 def host() -> str:
     """
     Return the host the server listens on.
