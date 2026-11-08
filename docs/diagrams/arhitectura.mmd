@@ -1,0 +1,83 @@
+flowchart TD
+    subgraph DATE["Surse de date"]
+        OM["Open-Meteo API: prognoza meteo"]
+        CARE[("Dataset CARE SCADA")]
+        WDS[("data/wind: 4 locatii, putere + meteo")]
+        PROD["Telemetrie SCADA: fisier CSV, sute de coloane"]
+    end
+
+    subgraph STOC["Ingestie si stocare"]
+        subgraph LAKE["Data lake local: S3 + Lambda simulat"]
+            RAW["raw/"]
+            FEAT["features/: un rand pe turbina"]
+            PRED["predictions/"]
+            DISP["dispatch/: plan, echipe, alerte, decizii"]
+            FAIL["failed/"]
+        end
+        METEO[("Supabase park_wind_forecast: parc, ora, vant 100 m")]
+        INPUT[("Supabase turbine_maintenance_input")]
+        MENT[("Supabase turbine_mentenance: predictii zilnice")]
+    end
+
+    subgraph MODELE["Modele ML"]
+        ML1["ML1 LightGBM, defect + subsistem: status, probabilitate, zile pana la defect, prognoza pe 7 zile"]
+        ML2["ML2 ansamblu CatBoost + LightGBM + XGBoost: energie per turbina pe 7 zile"]
+    end
+
+    OM -->|"wind_forecast_job, de 2 ori pe zi"| METEO
+    OM -->|"prognoza orara: vant 100 m, temperatura"| ML2
+    CARE -.->|"antrenare"| ML1
+    WDS -.->|"antrenare"| ML2
+
+    PROD -->|"lake_job put / sample"| RAW
+    RAW -->|"lambda 1: doar feature-urile modelului"| FEAT
+    RAW -.->|"fisier invalid"| FAIL
+    FEAT -->|"lambda 2"| ML1
+    ML1 --> PRED
+    INPUT -->|"maintenance_job, la 10 min"| ML1
+    ML1 --> MENT
+
+    subgraph AGENT["Agent LangGraph: un parc pe rulare"]
+        TRI["triage_park: turbinele WARNING / CRITICAL"]
+        OVL{{"REGULA: defecte la cel mult 1 zi distanta?"}}
+        SCH["schedule_repairs: 1 echipa, o reparatie pe zi, vant minim inainte de failure_day, optim exact"]
+        PLAN{{"JEV 1: alege planul de reparatii"}}
+        CREW["rank_and_match_crews: echipele in ordinea planului"]
+        CHAN{{"JEV 2: canalul alertei. CRITICAL: apel mereu"}}
+        TXT["Gemini scrie emailul si textul apelului; sablon daca lipseste cheia"]
+    end
+
+    PRED -->|"lambda 3: agentul, pentru fiecare parc cu reparatii"| TRI
+    MENT -.->|"AGENT_DATA_SOURCE=supabase"| TRI
+    TRI --> OVL
+    OVL -->|"da"| ML2
+    ML2 -->|"ROI: MWh pe 7 zile = ponderi, productia mare in ziua calma"| SCH
+    OVL -->|"nu"| SCH
+    METEO -->|"vant mediu pe zi"| SCH
+    SCH --> PLAN --> CREW --> CHAN
+    CHAN -->|"nimic"| FIN["Nimic de trimis"]
+    CHAN -->|"doar_email / email_si_apel"| TXT
+    TXT -->|"doar_email"| EM["Email"]
+    TXT -->|"email_si_apel"| ALR["Modul alerting: email + apel TTS in romana, Infobip / Twilio. Lista de numere permise, DRY_RUN, o alerta per turbina pe minut, un singur apel"]
+    EM --> ANG["Persoana de garda / echipa parcului"]
+    ALR --> ANG
+    TXT -.->|"rezultatul rularii"| DISP
+    AGENT -.->|"trace, optional"| LF["Langfuse"]
+
+    subgraph PARC["Parc nou: separat, in afara agentului"]
+        GEO["NASA POWER + Global Wind Atlas + Copernicus DEM"] --> ML3["ML3: vant mediu 100 m pe 2 ani, metoda aleasa prin backtest, banda P10-P90"]
+        ML3 --> ROIMAP["ROI MAP: heatmap dealuri 200-800 m + 15 situri candidate"]
+        OSMD["OpenStreetMap"] --> TR["Drumuri pentru transport agabaritic: convoi 60 m, 120 t, din porturi"]
+    end
+
+    subgraph APP["Aplicatie"]
+        API["FastAPI /api"] --> WEB["Harta React"]
+    end
+
+    MENT --> API
+    ROIMAP --> API
+    TR --> API
+    API -.->|"POST /api/dispatch"| TRI
+
+    classDef ramura stroke-dasharray: 5 5,stroke:#7b3fb3,fill:#f3ebfa
+    class PLAN,CHAN,LF ramura
