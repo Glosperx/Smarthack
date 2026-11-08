@@ -1,0 +1,15 @@
+{
+ "id": "teodorapanait/care-kumo-tabular-15min",
+ "title": "CARE Kumo Tabular 15min",
+ "code_file": "care_kumo_tabular.ipynb",
+ "language": "python",
+ "kernel_type": "notebook",
+ "is_private": true,
+ "enable_gpu": true,
+ "enable_internet": true,
+ "dataset_sources": [
+  "azizkasimov/wind-turbine-scada-data-for-early-fault-detection"
+ ],
+ "competition_sources": [],
+ "kernel_sources": []
+}

@@ -1,0 +1,64 @@
+# Standalone uv project: its own venv (.venv here) and its own uv.lock.
+# It is NOT a member of the root workspace, and the root pyproject.toml must not
+# mention it: run every uv command from this directory.
+[project]
+name = "smarthack-decision-model"
+version = "0.1.0"
+description = "Chooses and tests a small local Jev-style decision model for the two dispatch-agent decisions."
+requires-python = ">=3.13,<3.14"
+# Pins follow the model cards of the candidates (GLiDE, Perplexity Decider, Cerno, Jeffan):
+# torch 2.14 and transformers 5.17 are the versions their reference code was validated with;
+# torchvision, pillow (Perplexity processor) and requests (KnowLine front end) are imported by them.
+dependencies = [
+    "huggingface-hub==1.33.0",
+    "jinja2==3.1.6",
+    "numpy==2.5.3",
+    "pillow==12.3.0",
+    "requests==2.34.2",
+    "safetensors==0.8.0",
+    "tokenizers==0.23.2",
+    "torch==2.14.0",
+    "torchvision==0.29.0",
+    "transformers==5.17.0",
+]
+
+[dependency-groups]
+dev = [
+    "black==26.10.1",
+    "flake8==7.5.0",
+    "isort==9.0.2",
+    "mypy==2.4.1",
+    "pytest==9.2.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.13.7,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "decision_model"
+module-root = ""
+
+[tool.black]
+line-length = 100
+target-version = ["py313"]
+
+[tool.isort]
+profile = "black"
+force_sort_within_sections = true
+line_length = 100
+known_first_party = ["decision_model"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+
+[tool.mypy]
+files = ["decision_model", "tests"]
+disallow_untyped_defs = true
+warn_unused_ignores = true
+
+# The model repositories ship their own untyped inference packages, loaded at run time.
+[[tool.mypy.overrides]]
+module = ["glide", "glide.*", "pplx_decider.*", "knowline_server", "knowline_layout", "evals.*"]
+ignore_missing_imports = true

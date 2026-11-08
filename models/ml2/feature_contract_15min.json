@@ -1,0 +1,144 @@
+{
+  "name": "ML2 15-minute variant: available production per turbine and quarter hour",
+  "created": "2026-11-08",
+  "notebook": "notebooks/care_ml2_power_15min.ipynb",
+  "results": "notebooks/care_ml2_power_15min.md",
+  "hourly_contract": "models/ml2/feature_contract.json (same target definition and hourly features)",
+  "target": {
+    "name": "cf15",
+    "unit": "capacity factor (1.0 = rated power)",
+    "definition": "mean power over the quarter hour of a healthy turbine in operation, without stops and curtailment"
+  },
+  "source_table": "park_wind_forecast (hourly, unchanged)",
+  "output": "one row per quarter hour: quarter_start (UTC), cf; 7 days of forecast = 168 hourly rows = 672 quarters",
+  "output_to_energy": "kWh per quarter = clip(cf, 0, 1) * capacity_kw * 0.25; MWh over the week = sum / 1000",
+  "quarter_rows": {
+    "starts": "for each forecast hour T: T, T+15 min, T+30 min, T+45 min",
+    "ws": "wind_speed_100m interpolated linearly to the quarter centre (T + 7.5 + 15 k min) between the values at T and T + 1 h; the last forecast hour holds its value",
+    "ws_d1, ws_sd3": "computed on the hourly wind_speed_100m series as in the hourly contract, applied to the hour's four quarters",
+    "temp": "temperature_2m of the hour minus the park reference temperature (farm models only)",
+    "wd_sin, wd_cos": "sin/cos of wind_direction_100m of the hour (farm models A and B only)",
+    "hod_sin, hod_cos": "local solar time of the quarter centre: (UTC hour + minutes / 60 + (7.5 + 15 k) / 60 + longitude / 15) mod 24",
+    "doy_sin, doy_cos": "day of year of the UTC date",
+    "quarter": "k = 0, 1, 2, 3 (position in the hour)",
+    "turbine, farm": "CARE ids as strings (farm models only)"
+  },
+  "time_convention": "training placed each hourly mean at the centre of its hour; serving treats each Open-Meteo hourly value as the instantaneous wind at forecast_time. Both interpolate a smooth wind to the quarter centre.",
+  "models": {
+    "ml2_cf15_generic.cbm": {
+      "features": [
+        "ws",
+        "ws_d1",
+        "ws_sd3",
+        "hod_sin",
+        "hod_cos",
+        "doy_sin",
+        "doy_cos",
+        "quarter"
+      ],
+      "use": "parks and turbines outside CARE",
+      "new_turbines": {
+        "A": {
+          "R2_15min": 0.966,
+          "shape_R2": 0.251,
+          "WAPE_7d": 0.036
+        },
+        "B": {
+          "R2_15min": 0.906,
+          "shape_R2": 0.191,
+          "WAPE_7d": 0.133
+        },
+        "C": {
+          "R2_15min": 0.941,
+          "shape_R2": 0.179,
+          "WAPE_7d": 0.062
+        }
+      }
+    },
+    "ml2_cf15_farm_A.cbm": {
+      "features": [
+        "ws",
+        "ws_d1",
+        "ws_sd3",
+        "temp",
+        "wd_sin",
+        "wd_cos",
+        "hod_sin",
+        "hod_cos",
+        "doy_sin",
+        "doy_cos",
+        "quarter",
+        "turbine"
+      ],
+      "use": "CARE farm A turbines only",
+      "new_turbines": {
+        "R2_15min": 0.969,
+        "shape_R2": 0.26,
+        "WAPE_7d": 0.037
+      },
+      "future": {
+        "R2_15min": 0.972,
+        "shape_R2": 0.256,
+        "WAPE_7d": 0.016
+      }
+    },
+    "ml2_cf15_farm_B.cbm": {
+      "features": [
+        "ws",
+        "ws_d1",
+        "ws_sd3",
+        "temp",
+        "wd_sin",
+        "wd_cos",
+        "hod_sin",
+        "hod_cos",
+        "doy_sin",
+        "doy_cos",
+        "quarter",
+        "turbine"
+      ],
+      "use": "CARE farm B turbines only",
+      "new_turbines": {
+        "R2_15min": 0.953,
+        "shape_R2": 0.222,
+        "WAPE_7d": 0.035
+      },
+      "future": {
+        "R2_15min": 0.96,
+        "shape_R2": 0.228,
+        "WAPE_7d": 0.02
+      }
+    },
+    "ml2_cf15_farm_C.cbm": {
+      "features": [
+        "ws",
+        "ws_d1",
+        "ws_sd3",
+        "temp",
+        "hod_sin",
+        "hod_cos",
+        "doy_sin",
+        "doy_cos",
+        "quarter",
+        "turbine"
+      ],
+      "use": "CARE farm C turbines only",
+      "new_turbines": {
+        "R2_15min": 0.941,
+        "shape_R2": 0.177,
+        "WAPE_7d": 0.064
+      },
+      "future": {
+        "R2_15min": 0.949,
+        "shape_R2": 0.174,
+        "WAPE_7d": 0.038
+      }
+    }
+  },
+  "categorical_features": "turbine and farm as strings",
+  "missing_values": "NaN allowed; wd_sin and wd_cos are NaN for farm C",
+  "limits": [
+    "trained on measured nacelle wind (hourly mean, interpolated), served on forecast wind: metrics are an upper bound",
+    "the forecast is hourly, so detail inside the hour cannot be predicted; the quarter profile is a smooth interpolation"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+ "model": "glide-0.4b",
+ "checks": [
+  {
+   "request": "model card",
+   "same_choice": true,
+   "max_abs_diff": 0.2598
+  }
+ ]
+}

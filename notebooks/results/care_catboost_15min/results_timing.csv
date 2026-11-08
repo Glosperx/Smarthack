@@ -1,0 +1,10 @@
+farm,model,anchors,events,median |error| (h),uniform curve: median |error| (h),true onset day = predicted median day,80% interval coverage,80% interval width (h),note
+A,"CatBoost 15 min (k=1..7, seed 0)",1440,10.0,32.75,36.0,0.21,0.77,106.25,"this run, 15-minute anchors"
+B,"CatBoost 15 min (k=1..7, seed 0)",144,1.0,41.12,36.0,0.21,0.75,112.75,"this run, 15-minute anchors"
+C,"CatBoost 15 min (k=1..7, seed 0)",2160,15.0,35.25,36.0,0.17,0.75,116.0,"this run, 15-minute anchors"
+A,"CatBoost, all channels",70,,52.12,44.62,0.13,0.77,128.0,"LSTM session, daily anchors"
+A,"LSTM-attention, all channels",70,,67.12,44.62,0.11,0.36,37.25,"LSTM session, daily anchors"
+B,"CatBoost, all channels",7,,75.25,43.38,0.14,0.14,33.75,"LSTM session, daily anchors"
+B,"LSTM-attention, all channels",7,,79.5,43.38,0.0,0.0,0.0,"LSTM session, daily anchors"
+C,"CatBoost, all channels",104,,69.38,45.88,0.13,0.48,81.12,"LSTM session, daily anchors"
+C,"LSTM-attention, all channels",104,,67.5,45.88,0.16,0.57,103.75,"LSTM session, daily anchors"
