@@ -61,10 +61,7 @@ correlation of each model's scores with the CatBoost baseline.
 
 ## Architecture
 
-The diagrams are in [`docs/diagrams/`](docs/diagrams/). Open
-[`arhitectura_pipeline.drawio`](docs/diagrams/arhitectura_pipeline.drawio) in
-[draw.io](https://app.diagrams.net) for the pipelines above. The layers of the code and
-where new code goes are in [`docs/architecture.md`](docs/architecture.md).
+![Wind farm architecture: operational monitoring with two ML models, the decision agent and the alerts, and long-term planning from regional wind data](docs/diagrams/wind-farm-architecture.png)
 
 | Part | Technology |
 |---|---|
