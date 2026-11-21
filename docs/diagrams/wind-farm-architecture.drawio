@@ -1,0 +1,76 @@
+<mxfile host="Electron" agent="Claude Code">
+  <diagram id="wind-farm-arch" name="Wind Farm Architecture">
+    <mxGraphModel dx="2054" dy="1201" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="grpOps" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#9E9E9E;verticalAlign=top;align=left;spacingLeft=16;spacingTop=4;fontSize=15;fontStyle=1;fontColor=#333333;" value="Operational monitoring (turbines)" vertex="1">
+          <mxGeometry height="580" width="1620" x="20" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="grpPlan" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#9E9E9E;verticalAlign=top;align=left;spacingLeft=16;spacingTop=4;fontSize=15;fontStyle=1;fontColor=#333333;" value="Long-term planning (regions of Romania)" vertex="1">
+          <mxGeometry height="300" width="1620" x="20" y="630" as="geometry" />
+        </mxCell>
+        <mxCell id="grpLambda" parent="1" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;dashPattern=8 8;fillColor=none;strokeColor=#D79B00;verticalAlign=top;align=center;spacingTop=2;fontSize=13;fontStyle=2;fontColor=#D79B00;" value="Local Lambda function" vertex="1">
+          <mxGeometry height="250" width="350" x="430" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="wx" parent="1" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" value="&lt;b&gt;Weather forecast&lt;/b&gt;&lt;br&gt;future data (API)" vertex="1">
+          <mxGeometry height="100" width="250" x="70" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="tele" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" value="&lt;b&gt;Telemetry data&lt;/b&gt;&lt;br&gt;wind turbines" vertex="1">
+          <mxGeometry height="120" width="250" x="50" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="mlProd" parent="1" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=13;" value="&lt;b&gt;ML model&lt;/b&gt;&lt;br&gt;input: weather forecast&lt;br&gt;+ turbine telemetry" vertex="1">
+          <mxGeometry height="140" width="290" x="460" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="mlFail" parent="1" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=13;" value="&lt;b&gt;ML model &amp;#8211; failure prediction&lt;/b&gt;&lt;br&gt;failure probability&lt;br&gt;for each of the next 7 days" vertex="1">
+          <mxGeometry height="120" width="290" x="460" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="agent" parent="1" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;" value="&lt;b&gt;Decision agent&lt;/b&gt;&lt;br&gt;JEV&lt;br&gt;decides based on the outputs&lt;br&gt;of the two models" vertex="1">
+          <mxGeometry height="160" width="310" x="930" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="mail" parent="1" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" value="&lt;b&gt;Email alert&lt;/b&gt;" vertex="1">
+          <mxGeometry height="75" width="240" x="1360" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="call" parent="1" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" value="&lt;b&gt;Phone call&lt;/b&gt;" vertex="1">
+          <mxGeometry height="75" width="240" x="1360" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="wind" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" value="&lt;b&gt;Wind data&lt;/b&gt;&lt;br&gt;regions of Romania" vertex="1">
+          <mxGeometry height="120" width="250" x="50" y="730" as="geometry" />
+        </mxCell>
+        <mxCell id="stats" parent="1" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="&lt;b&gt;Statistical computation&lt;/b&gt;" vertex="1">
+          <mxGeometry height="90" width="290" x="460" y="745" as="geometry" />
+        </mxCell>
+        <mxCell id="avgWind" parent="1" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="&lt;b&gt;Average wind speed&lt;/b&gt;&lt;br&gt;2-year forecast, per region&lt;br&gt;hill / plain" vertex="1">
+          <mxGeometry height="130" width="310" x="930" y="725" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="wx" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.35;entryDx=0;entryDy=0;strokeColor=#4D4D4D;strokeWidth=2;" target="mlProd">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="tele" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;strokeColor=#4D4D4D;strokeWidth=2;" target="mlProd">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="tele" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#4D4D4D;strokeWidth=2;" target="mlFail">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="mlProd" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;strokeColor=#4D4D4D;strokeWidth=2;verticalAlign=bottom;fontSize=12;" target="agent" value="Expected production">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="mlFail" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;strokeColor=#4D4D4D;strokeWidth=2;verticalAlign=bottom;fontSize=12;" target="agent" value="P(failure) / day, 7 days">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="agent" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#B85450;strokeWidth=2;verticalAlign=bottom;fontSize=12;fontColor=#333333;" target="mail" value="and/or">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="agent" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#B85450;strokeWidth=2;verticalAlign=bottom;fontSize=12;fontColor=#333333;" target="call" value="and/or">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="wind" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#4D4D4D;strokeWidth=2;" target="stats">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="stats" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#4D4D4D;strokeWidth=2;" target="avgWind">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
